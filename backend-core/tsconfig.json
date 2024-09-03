@@ -1,0 +1,9 @@
+{
+  "extends": "@tsconfig/node21/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "removeComments": true,
+    "sourceMap": true
+  }
+}
