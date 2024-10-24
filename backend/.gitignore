@@ -1,0 +1,7 @@
+node_modules
+dist
+.idea
+npm-debug.log
+pnpm-lock.yaml
+.vscode
+.yarn

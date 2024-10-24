@@ -1,0 +1,51 @@
+{
+  "url": "0.0.0.0",
+  "port": 8090,
+  "urlRoot": "",
+  "userApiUrlPrefix": "/api",
+  "adminApiUrlPrefix": "/admin-api",
+  "imagesDirectory": "./static/images",
+  "database": {
+    "connecter": "Mysql",
+    "connection": {
+      "host": "localhost",
+      "port": "3307",
+      "user": "savage_grove_primary",
+      "password": "1234",
+      "database": "savage_grove",
+      "waitForConnections": true,
+      "connectionLimit": 100,
+      "queueLimit": 100
+    }
+  },
+  "auth": {
+    "session": {
+      "userExpireTime": 2419200,
+      "adminExpireTime": 2419200
+    },
+    "security": {
+      "password": {
+        "saltRounds": 13
+      },
+      "authRequired": true,
+      "userAuthFreeEndpoints": [
+        "/auth/register",
+        "/auth/login"
+      ],
+      "adminAuthFreeEndpoints": [
+        "/auth/login_username",
+        "/auth/login_email"
+      ],
+      "defaultAdmins": [
+        {
+          "username": "root",
+          "password": "1234",
+          "role": "root",
+          "email": "korlend51@gmail.com"
+        }
+      ],
+      "defaultRoles": [
+      ]
+    }
+  }
+}

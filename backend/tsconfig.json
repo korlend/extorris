@@ -1,0 +1,28 @@
+{
+  "extends": "@tsconfig/node21/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "removeComments": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "paths": {
+      "@src/*": ["src/*"],
+    },
+    "plugins": [
+      /* Transform paths in output .js files */
+      {
+        "transform": "typescript-transform-paths"
+      },
+      /* Transform paths in output .d.ts files */
+      {
+        "transform": "typescript-transform-paths",
+        "afterDeclarations": true
+      }
+    ],
+  },
+  "ts-node": {
+    "transpileOnly": true,
+    "files": true
+  }
+}
