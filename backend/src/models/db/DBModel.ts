@@ -1,7 +1,10 @@
+import "reflect-metadata";
+
 import * as changeCase from "change-case";
 
 import ParametersLimit from "@src/models/ParametersLimit.js";
 import IParsable from "@src/interfaces/IParsable.js";
+import MetadataHelper from "@src/core/decorators/MetadataHelper.js";
 
 export default abstract class DBModel<T extends IParsable<T>> {
   // [key: string]: any
@@ -58,6 +61,10 @@ export default abstract class DBModel<T extends IParsable<T>> {
   // equal(model: Model, fields: ParametersLimit = new ParametersLimit()) {
   //   return this.cutHash(fields) === model.cutHash(fields)
   // }
+
+  parameterAnnotations(parameterName: string) {
+    return MetadataHelper.getPropertyMetadata(parameterName, this);
+  };
 
   hasDeleted(): boolean {
     return this.deleted !== undefined;

@@ -20,6 +20,7 @@ import { dbDataInit } from "@src/initialization/startup.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
 import ExpressResponseGenerator from "@src/core/router/ExpressResponseGenerator.js";
 import AdminModel from "@src/models/db/AdminModel.js";
+import AdminSessionModel from "@src/models/db/AdminSessionModel.js";
 
 // import { createRequire } from "module";
 // const require = createRequire(import.meta.url);
@@ -27,11 +28,12 @@ import AdminModel from "@src/models/db/AdminModel.js";
 
 let healthcheck = 0;
 
-declare global {
-  interface NextFunction {
-    (result?: ExpressNext): void;
-  }
-}
+// doesn't work
+// declare global {
+//   interface NextFunction {
+//     (result?: ExpressNext): void;
+//   }
+// }
 
 async function loadConfig() {
   await ConfigLoader.reload();
@@ -73,7 +75,9 @@ async function init() {
     // console.log(req.originalUrl);
     // console.log(req.path);
     // throw new PropagatedError();
-    console.log(typeof new AdminModel().id);
+    // console.log(typeof new AdminModel().id);
+    const adminModel = new AdminModel();
+    console.log(adminModel.parameterAnnotations("id"));
     next(ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS));
   });
 
@@ -113,7 +117,7 @@ async function init() {
         });
         return;
       }
-      console.log('test2')
+      console.log("test2");
     },
   );
 
