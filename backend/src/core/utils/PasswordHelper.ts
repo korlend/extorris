@@ -1,7 +1,7 @@
 // const bcrypt = require('bcrypt')
 import bcrypt from "bcrypt";
 
-export default class PasswordReaper {
+export default class PasswordHelper {
   static async encryptPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 7);
   }

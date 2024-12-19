@@ -5,18 +5,20 @@ import * as changeCase from "change-case";
 import ParametersLimit from "@src/models/ParametersLimit.js";
 import IParsable from "@src/interfaces/IParsable.js";
 import MetadataHelper from "@src/core/decorators/MetadataHelper.js";
+import ModelPropertyMetadata from "../ModelPropertyMetadata.js";
+import EntityType from "@src/enums/EntityType.js";
 
 export default abstract class DBModel<T extends IParsable<T>> {
   // [key: string]: any
 
   id: number = 0;
   deleted?: boolean = undefined;
+  abstract _tableName: string;
+  abstract _entityType: EntityType;
   // name: string = '';
   // title: string = '';
   // link: string = '';
   // src: string = '';
-
-  _immutables: Array<string> = [];
 
   // _hashKeysExclude: Array<string> = [];
   /**
@@ -28,7 +30,6 @@ export default abstract class DBModel<T extends IParsable<T>> {
   // _migrationExclude: Array<string> = [];
   _crudExclude: Array<string> = [];
   _RESTExclude: Array<string> = [
-    "_immutables",
     "_transformParamsValues",
     "_crudExclude",
     "_RESTExclude",
@@ -62,9 +63,18 @@ export default abstract class DBModel<T extends IParsable<T>> {
   //   return this.cutHash(fields) === model.cutHash(fields)
   // }
 
-  parameterAnnotations(parameterName: string) {
+  getValue(name: string) {
+    // @ts-expect-error: otherwise [key: string]: any
+    return this[name];
+  }
+
+  getParameterAnnotations(parameterName: string): ModelPropertyMetadata {
     return MetadataHelper.getPropertyMetadata(parameterName, this);
   };
+
+  isImmutable(parameterName: string): boolean {
+    return !!MetadataHelper.getPropertyMetadata(parameterName, this)?.isImmutable;
+  }
 
   hasDeleted(): boolean {
     return this.deleted !== undefined;

@@ -5,8 +5,12 @@ import userAuthMiddleware from "@src/middleware/userAuth.js";
 
 import adminAuthRouter from "./admin/adminAuth.js";
 import entitiesRouter from "./admin/entities.js";
+import mainMapRouter from "./admin/mainMap.js";
+import imagesRouter from "./admin/images.js";
 
 import userAuthRouter from "./user/userAuth.js";
+import userMainMapRouter from "./user/mainMap.js";
+import userShipManagementRouter from "./user/shipManagement.js";
 
 import ExpressNext from "@src/models/ExpressNext.js";
 import ExpressAPIType from "@src/enums/ExpressAPIType.js";
@@ -25,6 +29,8 @@ adminRouter.use(adminAuthMiddleware)
 
 adminRouter.use("/auth", adminAuthRouter);
 adminRouter.use("/entities", entitiesRouter);
+adminRouter.use("/main_map", mainMapRouter);
+adminRouter.use("/images", imagesRouter);
 
 // next propagation
 // adminRouter.use((prev: ExpressNext, req: Request, res: Response, next: NextFunction) => {
@@ -46,6 +52,8 @@ userRouter.get(
 userRouter.use(userAuthMiddleware);
 
 userRouter.use("/auth", userAuthRouter);
+userRouter.use("/main_map", userMainMapRouter);
+userRouter.use("/ship", userShipManagementRouter);
 
 // next propagation
 // userRouter.use((prev: ExpressNext, req: Request, res: Response, next: NextFunction) => {

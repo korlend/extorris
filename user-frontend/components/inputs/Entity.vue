@@ -1,0 +1,175 @@
+<template>
+  <span class="entity__selection__input" @click.stop="">
+    <v-autocomplete
+      v-model="localModel"
+      :label="label"
+      :clearable="clearable"
+      :items="items"
+      :custom-filter="filterFunction"
+      :loading="isLoading"
+      :disabled="disabled"
+      @update:search="search"
+      @update:model-value="updateValue">
+      <template v-slot:item="{ props, item }">
+        <v-list-item v-bind="props" :title="getItemLabel(item)"> </v-list-item>
+      </template>
+      <template v-slot:selection="{ item }">
+        {{ getItemLabel(item) }}
+      </template>
+    </v-autocomplete>
+  </span>
+</template>
+
+<script setup lang="ts">
+import { useEntitiesStore } from "@/store/entities";
+import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
+import MittEvents from "~/core/enums/MittEvents";
+import type DBFilter from "~/core/models/db/DBFilter";
+
+const { $mittOn } = useNuxtApp();
+
+const entitiesStore = useEntitiesStore();
+
+const model = defineModel({ type: Number });
+const emit = defineEmits(["update:model-value"]);
+
+const props = defineProps({
+  entity: {
+    type: String,
+    required: true,
+  },
+  modelEntityKey: {
+    type: String,
+    default: "id",
+  },
+  filters: {
+    type: Object as PropType<{ [key: string]: any }>,
+    default: null,
+  },
+  maxSize: {
+    type: Number,
+    default: 10,
+  },
+  label: {
+    type: String,
+  },
+  clearable: {
+    type: Boolean,
+    default: true,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const isLoading: Ref<boolean> = ref(true);
+
+const items: Ref<Array<any>> = ref([]);
+
+const localModel: Record<string, any> = ref({});
+
+const total: Ref<number> = ref(0);
+
+const loadedEntityKeys: Ref<Array<string>> = ref([]);
+const loadedEntityKeysMetadata: Ref<{ [key: string]: ModelPropertyMetadata }> =
+  ref({});
+
+watch(model, (newValue) => {
+  trySetLocalModel(newValue);
+});
+
+watch(
+  () => props.filters,
+  () => {
+    reload();
+  }
+);
+
+onMounted(async () => {
+  const response = await entitiesStore.loadEntityKeys(props.entity);
+  loadedEntityKeys.value = response.keys;
+  loadedEntityKeysMetadata.value = response.keysMetadata;
+  await reload();
+  if (model.value) {
+    trySetLocalModel(model.value);
+  }
+  $mittOn(MittEvents.RELOAD_ENTITY_AUTOCOMPLETE, () => {
+    reload(model.value);
+  });
+});
+
+const search = async (value: string) => {
+  await reload(value);
+};
+
+const updateValue = (value: any) => {
+  if (!value) {
+    model.value = undefined;
+    emit("update:model-value", undefined);
+    return;
+  }
+  if (value[props.modelEntityKey] === model.value) {
+    return;
+  }
+  model.value = value[props.modelEntityKey];
+  emit("update:model-value", value[props.modelEntityKey]);
+};
+
+const getItemLabel = (item: any) => {
+  const data = typeof item.raw === "object" ? item.raw : item;
+  if (data.name) {
+    return `${data[props.modelEntityKey]} - ${data.name}`;
+  }
+  if (data.code) {
+    return `${data[props.modelEntityKey]} - ${data.code}`;
+  }
+  return `${data[props.modelEntityKey]}`;
+};
+
+const trySetLocalModel = (id?: number) => {
+  if (id !== null && id !== undefined) {
+    const item = items.value.find((v) => v.id == id);
+    localModel.value = item;
+    return;
+  }
+  localModel.value = undefined;
+};
+
+const filterFunction = () => {
+  // every value applicable, because we filter by request
+  return true;
+};
+
+const reload = async (text?: string | number) => {
+  isLoading.value = true;
+  let dbFilters: Array<DBFilter> = [];
+  if (props.filters) {
+    dbFilters = createDBFilters(props.filters, loadedEntityKeysMetadata.value);
+  }
+  let sortBy = "id";
+  const sortDirection = "desc";
+  if (loadedEntityKeys.value.some((v) => v === "updated")) {
+    sortBy = "updated";
+  }
+  const response = await entitiesStore.fastFilterEntity(
+    props.entity,
+    text,
+    0,
+    props.maxSize,
+    dbFilters,
+    sortBy,
+    sortDirection,
+  );
+  items.value = response.items;
+  total.value = response.total;
+  trySetLocalModel(localModel.value?.id || model.value);
+  isLoading.value = false;
+};
+</script>
+
+<style lang="scss" scoped>
+.entity__selection__input {
+  width: 100%;
+}
+</style>

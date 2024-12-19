@@ -19,8 +19,7 @@ import ExpressNext from "@src/models/ExpressNext.js";
 import { dbDataInit } from "@src/initialization/startup.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
 import ExpressResponseGenerator from "@src/core/router/ExpressResponseGenerator.js";
-import AdminModel from "@src/models/db/AdminModel.js";
-import AdminSessionModel from "@src/models/db/AdminSessionModel.js";
+import AdminRoleTypes from "@src/enums/AdminRoleTypes.js";
 
 // import { createRequire } from "module";
 // const require = createRequire(import.meta.url);
@@ -54,11 +53,14 @@ async function init() {
 
   const app = express();
 
+  app.use(cors());
+  app.use(express.static('public'));
+
   const port = normalizePort(config.get("port"));
+  const host = normalizePort(config.get("host"));
   app.set("port", port);
 
   app.use(bodyParser.json({}));
-  app.use(cors());
 
   // app.use(express.Router);
   app.use(adminApiUrlPrefix, adminRouter);
@@ -76,8 +78,13 @@ async function init() {
     // console.log(req.path);
     // throw new PropagatedError();
     // console.log(typeof new AdminModel().id);
-    const adminModel = new AdminModel();
-    console.log(adminModel.parameterAnnotations("id"));
+    // const adminModel = new AdminModel();
+    // console.log(adminModel.parameterAnnotations("id"));
+    console.log(Object.keys(AdminRoleTypes));
+    console.log(Object.values(AdminRoleTypes));
+
+    // @ts-ignore
+    console.log(Object.keys(AdminRoleTypes).map((v: any) => AdminRoleTypes[v]));
     next(ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS));
   });
 
@@ -94,7 +101,7 @@ async function init() {
   // next handler
   app.use(
     (
-      prev: ExpressNext | PropagatedError,
+      prev: ExpressNext | PropagatedError | Error,
       req: Request,
       res: Response,
       next: NextFunction,
@@ -105,24 +112,42 @@ async function init() {
       // console.log(Object.getPrototypeOf(prev));
 
       if (prev instanceof PropagatedError) {
-        res.status(prev.responseCode).send(prev);
+        res.status(prev.responseCode).send({
+          status: prev.responseCode,
+          result: {
+            message: prev.message,
+            stack: prev.stack,
+          },
+        });
+        console.error(new Date(), prev.responseCode, prev.responseType);
+        return;
+      }
+
+      if (prev instanceof Error) {
+        res.status(500).send({
+          status: 500,
+          result: {
+            message: prev.message,
+            stack: prev.stack,
+          },
+        });
+        console.error(new Date(), prev.message, prev.stack);
         return;
       }
 
       if (prev instanceof ExpressNext) {
-        res.status(prev.statusCode).send({
+        res.status(prev.statusCode || 200).send({
           status: prev.statusCode,
           result: prev.responseObject || null,
-          description: prev.text || "",
+          description: prev.text || undefined,
         });
         return;
       }
-      console.log("test2");
     },
   );
 
   const server = http.createServer(app);
-  server.listen(port);
+  server.listen(port, host);
   server.on("error", onError);
   server.on("listening", onListening);
 }

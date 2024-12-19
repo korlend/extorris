@@ -1,11 +1,11 @@
 import type { $Fetch, NitroFetchRequest } from "nitropack";
+import type ResponseAPI from "~/core/interfaces/ResponseAPI";
 
-import type APIResponse from "~/interfaces/APIResponse";
 import { useAuthStore } from "~/store/auth";
 
 declare module "#app" {
   interface NuxtApp {
-    $api: $Fetch<APIResponse, NitroFetchRequest>;
+    $api: $Fetch<ResponseAPI, NitroFetchRequest>;
   }
 }
 
@@ -13,22 +13,18 @@ export default defineNuxtPlugin((nuxtApp) => {
   const session = useAuthStore();
 
   const api = $fetch.create({
-    baseURL: "http://localhost:8090",
+    baseURL: getBackendUrl(),
     onRequest({ request, options, error }) {
       const token = session.getToken;
       if (token) {
         options.headers.set("Authorization", `Bearer ${token}`);
       }
     },
-    async onResponseError({ response }) {
-      // if (response.status === 401) {
-      //   await nuxtApp.runWithContext(() => navigateTo("/login"));
-      // }
-      console.log("from custom fetch", response);
+    onResponseError({ response }) {
+      handleAPIError(response._data);
     },
   });
 
-  // Expose to useNuxtApp().$api
   return {
     provide: {
       api,

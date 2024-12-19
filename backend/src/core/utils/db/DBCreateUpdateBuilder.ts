@@ -13,97 +13,96 @@ type BuiltUpdateData = {
 };
 
 export default class DBCreateUpdateBuilder {
-  public static buildCreateData<T extends DBModel<T>>(
+  public static buildArrayCreateData<T extends DBModel<T>>(
     data: Array<T>,
     fields: ParametersLimit,
-  ): BuiltCreateData;
-  public static buildCreateData<T extends DBModel<T>>(
-    data: T,
-    fields: ParametersLimit,
-  ): BuiltCreateData;
-  public static buildCreateData<T extends DBModel<T>>(
-    data: T | Array<T>,
-    fields: ParametersLimit = new ParametersLimit(),
   ): BuiltCreateData {
-    //single data model
-    if (data instanceof DBModel) {
-      const dataMap = data.getParamsAndValues(fields);
-      const immutables = data._immutables;
-
-      const names: Array<string> = [];
-      const values: Array<any> = [];
-
-      dataMap.forEach((value: any, key: string) => {
-        if (value === undefined || immutables.some((name) => key === name)) {
-          return;
-        }
-
-        names.push(key);
-        values.push(value);
-      });
-
-      const queryParameters = names.join(",");
-      const queryValues = names.map(() => "?").join(",");
-
-      return {
-        values,
-        queryParameters,
-        queryValues,
-      };
-    }
-
     // multiple data models
     // INSERT INTO {target} ({queryParameters})
     // VALUES (),()... --> {queryValues}
-    if (data instanceof Array && data.length) {
-      const firstModel = data[0];
+    if (!(data instanceof Array) || !data.length) {
+      return {
+        values: [],
+        queryParameters: "",
+        queryValues: "",
+      };
+    }
+    const firstModel = data[0];
 
-      const firstDataMap = firstModel.getParamsAndValues(fields);
-      const firstImmutables = firstModel._immutables;
+    const firstDataMap = firstModel.getParamsAndValues(fields);
 
-      const names: Array<string> = [];
+    const names: Array<string> = [];
 
-      firstDataMap.forEach((value: any, key: string) => {
-        if (firstImmutables.some((name) => key === name)) {
-          return;
-        }
+    firstDataMap.forEach((value: any, key: string) => {
+      if (firstModel.isImmutable(key)) {
+        return;
+      }
 
-        names.push(key);
-      });
+      names.push(key);
+    });
 
-      const queryParameters = names.join(",");
-      const queryValuesArray: Array<string> = [];
+    const queryParameters = names.join(",");
+    const queryValuesArray: Array<string> = [];
+    const values: Array<any> = [];
+
+    for (let i = 0; i < data.length; i++) {
+      const model = data[i];
+      const dataMap = model.getParamsAndValues(fields);
+
       const values: Array<any> = [];
 
-      for (let i = 0; i < data.length; i++) {
-        const model = data[i];
-        const dataMap = model.getParamsAndValues(fields);
-        const immutables = model._immutables;
-
-        const values: Array<any> = [];
-
-        for (let j = 0; j < names.length; j++) {
-          const name = names[i];
-          if (immutables.some((immutableName) => name === immutableName)) {
-            continue;
-          }
-          const value = dataMap.get(name);
-          values.push(value);
+      for (let j = 0; j < names.length; j++) {
+        const name = names[i];
+        if (model.isImmutable(name)) {
+          continue;
         }
-
-        queryValuesArray.push(`(${names.map(() => "?").join(",")})`);
+        const value = dataMap.get(name);
+        values.push(value);
       }
+
+      queryValuesArray.push(`(${names.map(() => "?").join(",")})`);
+    }
+    return {
+      values,
+      queryParameters,
+      queryValues: queryValuesArray.join(","),
+    };
+  }
+
+  public static buildCreateData<T extends DBModel<T>>(
+    data: T,
+    fields: ParametersLimit,
+  ): BuiltCreateData {
+    //single data model
+    if (!data) {
       return {
-        values,
-        queryParameters,
-        queryValues: queryValuesArray.join(","),
+        values: [],
+        queryParameters: "",
+        queryValues: "",
       };
     }
 
+    const dataMap = data.getParamsAndValues(fields);
+
+    const names: Array<string> = [];
+    const values: Array<any> = [];
+
+    dataMap.forEach((value: any, key: string) => {
+      if (value === undefined || data.isImmutable(key)) {
+        return;
+      }
+
+      names.push(key);
+      values.push(value);
+    });
+
+    const queryParameters = names.join(",");
+    const queryValues = names.map(() => "?").join(",");
+
     return {
-      values: [],
-      queryParameters: "",
-      queryValues: "",
+      values,
+      queryParameters,
+      queryValues,
     };
   }
 
@@ -116,13 +115,12 @@ export default class DBCreateUpdateBuilder {
     // SET column1 = value1, column2 = value2, ... --> {queryParametersAndValues}
     // WHERE condition;
     const dataMap = data.getParamsAndValues(fields);
-    const immutables = data._immutables;
 
     const names: Array<string> = [];
     const values: Array<any> = [];
 
     dataMap.forEach((value: any, key: string) => {
-      if (value === undefined || immutables.some((name) => key === name)) {
+      if (value === undefined || data.isImmutable(key)) {
         return;
       }
 
@@ -153,7 +151,6 @@ export default class DBCreateUpdateBuilder {
     const firstModel = data[0];
 
     const firstDataMap = firstModel.getParamsAndValues(fields);
-    const firstImmutables = firstModel._immutables;
 
     const names: Array<string> = [];
 
@@ -161,7 +158,7 @@ export default class DBCreateUpdateBuilder {
     const endSetRowQueries: Array<string> = [];
 
     firstDataMap.forEach((value: any, key: string) => {
-      if (firstImmutables.some((name) => key === name)) {
+      if (firstModel.isImmutable(key)) {
         return;
       }
 
@@ -179,14 +176,13 @@ export default class DBCreateUpdateBuilder {
     for (let i = 0; i < data.length; i++) {
       const model = data[i];
       const dataMap = model.getParamsAndValues(fields);
-      const immutables = model._immutables;
 
       // we ignore immutables (which always has id), so put it manually
       values.push(dataMap.get("id"));
 
       for (let j = 0; j < names.length; j++) {
         const name = names[i];
-        if (immutables.some((immutableName) => name === immutableName)) {
+        if (model.isImmutable(name)) {
           continue;
         }
         const value = dataMap.get(name);

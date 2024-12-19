@@ -1,11 +1,11 @@
 <template>
-  <div class="global-alerts">
-    <div class="global-alerts__internal">
+  <div class="global__alerts">
+    <div class="global__alerts-internal">
       <template
         v-for="(internalAlert, index) in internalLocalAlerts"
         :key="internalAlert.localAlert.uuid">
         <div
-          class="global-alerts__internal-alert"
+          class="global__alerts-internal-alert"
           :class="{
             disabled: !internalAlert.enabled,
             enabled: internalAlert.enabled && !internalAlert.inFirstAnimation,
@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { useLocalAlertsStore } from "@/store/local_alerts";
-import type LocalAlert from "~/models/local_alerts/LocalAlert";
+import type LocalAlert from "~/core/models/local_alerts/LocalAlert";
 
 const step = 10;
 const localAlertHeight = 100;
@@ -100,15 +100,15 @@ const getLocalAlertStyle = (index: number) => {
 </script>
 
 <style lang="scss" scoped>
-.global-alerts {
+.global__alerts {
   position: fixed;
-  z-index: 10;
+  z-index: 200;
   right: 0;
   bottom: 0;
   display: block;
   margin: 20px;
 
-  &__internal {
+  &-internal {
     position: relative;
     display: flex;
     flex-direction: column-reverse;

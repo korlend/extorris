@@ -8,9 +8,9 @@
 
 installation is similar to all projects
 
-1. activate, requires admin privileges "corepack enable"
+1. activate "corepack enable" (requires admin privileges)
 2. install packages "yarn"
-3. for backend install mysql TODO: add db init script
+3. for backend install mysql TODO: add db init script (probably DB creation from DBModel annotations)
 4. run applications "yarn dev"
 
 
@@ -29,16 +29,17 @@ installation is similar to all projects
 
 
 
+## something
 
+tree like borders
 
-
-Savagrove
-Savage Grove
 
 Extorris
-ExtORRiS
+## ExtORRiS
 
-a bunch of angry trees
+like banished, exiled
+
+## Logs
 
 couldn't read values from package json, i'm stupid
 
@@ -52,7 +53,8 @@ trying to run server lol
 
 three.js
 
-Lore:
+## Lore
+
 There once was a great people of ? which ruled this world, but nature suddenly evolved fast and volatile.
 Great trees grew all around this planet, reaching height of a few kilometres.
 Those trees filled the space between them with some kind of magic, which allows even islands to float.
@@ -65,19 +67,37 @@ People built big ships and discovered that even above tree crowns islands were f
 
 You are a crew captain, late descendant of once great nation.
 Your purpose is to reclaim this planet or die trying.
-Build your settlement and wage your rightful place among the surface dwellers.
+Build your settlement and take your rightful place among the surface dwellers.
 
-Terminology:
-artifact
-relic
-building
-island
-stronghold - of the past
-debris
-nest
-anomaly
-settlement
-wormhole
+Ooh my gawdth, so coool
+
+## Terminology:
+
+1. artifact
+2. relic
+3. building
+4. island
+5. stronghold - of the past
+6. debris
+7. nest
+8. anomaly ?
+9. settlement
+10. wormhole
+
+
+## Races
+
+### Ebur
+elephant creatures
+
+### Lupus
+wolf creatures
+
+### Felis
+cat creatures
+
+### Mus
+rat creatures
 
 
 Professions:

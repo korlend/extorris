@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { useAuthStore } from "@/store/auth";
 import { useLocalAlertsStore } from "@/store/local_alerts";
-import AlertTypes from "~/models/local_alerts/LocalAlertTypes";
+import AlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 
 const authStore = useAuthStore();
 const localAlertsStore = useLocalAlertsStore();
@@ -30,15 +30,16 @@ definePageMeta({
 const username: Ref<string> = ref("");
 const password: Ref<string> = ref("");
 
-const dataResult: Ref<string> = ref("");
-
 onMounted(() => {});
 
 const auth = async () => {
   try {
-    dataResult.value = await authStore.login(username.value, password.value);
+    const session = await authStore.login(username.value, password.value);
+    if (!session?.token) {
+      return;
+    }
     localAlertsStore.createAlert(
-      `Hello ${authStore.getUsername}`,
+      `Hello ${session?.username}`,
       AlertTypes.ERROR
     );
     navigateTo("/");

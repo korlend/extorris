@@ -3,35 +3,90 @@
     <div class="auth-block">
       <v-text-field
         v-model="username"
-        class="auth-block__username"
-      />
+        class="auth-block-username"
+        label="Username"
+        @keydown.enter="send" />
+      <v-text-field
+        v-if="newAccount"
+        v-model="email"
+        class="auth-block-email"
+        label="Email"
+        @keydown.enter="send" />
       <v-text-field
         v-model="password"
-        class="auth-block__password"
+        class="auth-block-password"
         type="password"
-      />
-      <v-btn @click="auth">Login</v-btn>
-      <!-- <v-input class="auth-block__username" />
-      <v-input class="auth-block__password" type="password" /> -->
-
+        label="Password"
+        @keydown.enter="send" />
+      <v-btn class="auth-block-btn" @click="send">{{ newAccount ? 'register' : 'Login' }}</v-btn>
+      <v-switch v-model="newAccount" label="New account"></v-switch>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from "@/store/auth";
+import AlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
+
+const authStore = useAuthStore();
 
 definePageMeta({
-  layout: 'empty'
-})
+  layout: "empty",
+});
 
 const username: Ref<string> = ref("");
+const email: Ref<string> = ref("");
 const password: Ref<string> = ref("");
+
+const newAccount: Ref<boolean> = ref(false);
 
 onMounted(() => {});
 
-const auth = () => {
-  console.log("TEST button? LOGIN")
+const send = async () => {
+  if (newAccount.value) {
+    register();
+  } else {
+    login();
+  }
 }
+
+const login = async () => {
+  try {
+    const session = await authStore.login(username.value, password.value);
+    if (!session?.token) {
+      return;
+    }
+    createAlert(
+      `Hello ${session?.username}`,
+      AlertTypes.SUCCESS
+    );
+    navigateTo("/");
+  } catch (ex) {
+    createAlert(
+      "Wrong username or password",
+      AlertTypes.ERROR
+    );
+  }
+};
+
+const register = async () => {
+  try {
+    const session = await authStore.register(username.value, email.value, password.value);
+    if (!session?.token) {
+      return;
+    }
+    createAlert(
+      `Registration complete, now you can login`,
+      AlertTypes.SUCCESS
+    );
+    newAccount.value = false;
+  } catch (ex) {
+    createAlert(
+      "Username or Email is already taken",
+      AlertTypes.ERROR
+    );
+  }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -49,13 +104,23 @@ const auth = () => {
     max-width: 80dvw;
     // color: white;
 
-    &__username {
+    &-username {
       // width: 200px;
       // max-width: 80dvw;
     }
 
-    &__password {
+    &-email {
       // width: 200px;
+      // max-width: 80dvw;
+    }
+
+    &-password {
+      // width: 200px;
+      // max-width: 80dvw;
+    }
+
+    &-btn {
+      width: 100%;
       // max-width: 80dvw;
     }
   }

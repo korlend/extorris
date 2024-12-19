@@ -1,6 +1,6 @@
 <template>
-  <div class="sidebar-block">
-    <div class="sidebar-block__inner">
+  <div class="sidebar-block custom-scroll">
+    <div class="sidebar-block__inner custom-scroll">
       <template v-for="page in getPages" :key="page.name">
         <router-link
           v-if="!page.collapsable"
@@ -76,7 +76,17 @@ const getPages = computed(() => {
 
   pages.push({
     name: "Main Map",
-    path: "/mainMap",
+    path: "/main_map/0",
+  });
+
+  pages.push({
+    name: "Hub 0",
+    path: "/main_map/hub/0",
+  });
+
+  pages.push({
+    name: "Hub test",
+    path: "/main_map/hub/test",
   });
 
   pages.push({
@@ -129,20 +139,20 @@ const getPagesOfParent = (parent: SidebarPage) => {
 
 <style lang="scss" scoped>
 .sidebar-block {
-  position: fixed;
+  position: sticky;
   z-index: 100;
   width: 200px;
-  height: 100dvh;
   backdrop-filter: blur(10px);
 
   &__inner {
-    position: absolute;
-    top: 50px;
+    // position: absolute;
+    overflow: auto;
+    // top: 50px;
     left: 0px;
     z-index: 20;
     width: 200px;
-    height: 100dvh;
-    border-right: solid 1px rgb(65, 114, 75);
+    height: calc(100dvh - 50px);
+    border-right: solid 1px;
 
     &-link {
       width: 100%;

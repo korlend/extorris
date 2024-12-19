@@ -3,6 +3,6 @@ import Repository from "./Repository.js";
 
 export default class DummyRepository extends Repository<DummyModel> {
   constructor() {
-    super(new DummyModel(), "");
+    super(new DummyModel());
   }
 }

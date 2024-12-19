@@ -3703,6 +3703,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"extorris-admin-frontend@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "extorris-admin-frontend@workspace:."
+  dependencies:
+    "@mdi/font": "npm:^7.4.47"
+    "@pinia/nuxt": "npm:^0.5.5"
+    "@types/uuid": "npm:^10"
+    mitt: "npm:^3.0.1"
+    nuxt: "npm:^3.13.0"
+    pinia: "npm:^2.2.4"
+    sass: "npm:^1.79.5"
+    sass-loader: "npm:^16.0.2"
+    uuid: "npm:^10.0.0"
+    vite-plugin-vuetify: "npm:^2.0.4"
+    vue: "npm:latest"
+    vue-router: "npm:latest"
+    vuetify: "npm:^3.7.2"
+    vuetify-nuxt-module: "npm:^0.18.3"
+  languageName: unknown
+  linkType: soft
+
 "fast-fifo@npm:^1.2.0, fast-fifo@npm:^1.3.2":
   version: 1.3.2
   resolution: "fast-fifo@npm:1.3.2"
@@ -5389,26 +5410,6 @@ __metadata:
   checksum: 10c0/efe17a28ebb544676ae47d998f56f3734f2d95d14884720becfce9ce584002a4693541bd09df3de3fe0930b13293d8b1d5bba3d130c8f527699a82ab08d80c2b
   languageName: node
   linkType: hard
-
-"nuxt-app@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "nuxt-app@workspace:."
-  dependencies:
-    "@mdi/font": "npm:^7.4.47"
-    "@pinia/nuxt": "npm:^0.5.5"
-    "@types/uuid": "npm:^10"
-    nuxt: "npm:^3.13.0"
-    pinia: "npm:^2.2.4"
-    sass: "npm:^1.79.5"
-    sass-loader: "npm:^16.0.2"
-    uuid: "npm:^10.0.0"
-    vite-plugin-vuetify: "npm:^2.0.4"
-    vue: "npm:latest"
-    vue-router: "npm:latest"
-    vuetify: "npm:^3.7.2"
-    vuetify-nuxt-module: "npm:^0.18.3"
-  languageName: unknown
-  linkType: soft
 
 "nuxt@npm:^3.13.0":
   version: 3.13.2

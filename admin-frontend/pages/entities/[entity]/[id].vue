@@ -14,6 +14,10 @@ const route = useRoute();
 
 const entityName: Ref<string> = ref(route.params.entity as string);
 const entityId: Ref<number> = ref(parseInt(route.params.entity as string));
+
+watch(route, (newRoute) => {
+  entityName.value = newRoute.params.entity as string;
+});
 // const loadedEntityKeys: Ref<Array<string>> = ref([]);
 // const loadedEntities: Ref<Array<any>> = ref([]);
 
@@ -39,17 +43,10 @@ const entityId: Ref<number> = ref(parseInt(route.params.entity as string));
 //   total.value = response.total;
 //   totalPages.value = Math.ceil(response.total / pageSize.value);
 // };
-// </script>
+//
+</script>
 
 <style lang="scss" scoped>
-
 .entity {
-
-  &__pagination {
-    position: fixed;
-    bottom: 0;
-    backdrop-filter: blur(10px);
-    width: calc(100% - 200px);
-  }
 }
 </style>

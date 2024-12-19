@@ -6,11 +6,11 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const createError = require("http-errors");
 
-import AdminSessionService from "@src/services/AdminSessionService.js";
-import AdminService from "@src/services/AdminService.js";
-import AdminSessionModel from "@src/models/db/AdminSessionModel.js";
 import PropagatedError from "@src/models/PropagatedError.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
+import { AdminSessionModel } from "@src/models/db/index.js";
+import AdminService from "@src/services/admin/AdminService.js";
+import AdminSessionService from "@src/services/admin/AdminSessionService.js";
 
 const router = express.Router();
 
@@ -46,7 +46,7 @@ router.all(
     }
     const session: AdminSessionModel =
       await sessionService.getSessionByToken(token);
-    if (!session.expire || session.expire < new Date()) {
+    if (!session || !session.expire || session.expire < new Date()) {
       throw new PropagatedError(ExpressResponseTypes.SESSION_EXPIRED);
     }
     const admin = await adminService.getAdminBySessionToken(session.token);

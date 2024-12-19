@@ -9,6 +9,9 @@ import DBFilter from "@src/models/DBFilter.js";
 import DBFilterBuilder from "@src/core/utils/db/DBFilterBuilder.js";
 import ConfigLoader from "@src/core/config/ConfigLoader.js";
 import DBCreateUpdateBuilder from "@src/core/utils/db/DBCreateUpdateBuilder.js";
+import ModelPropertyMetadata from "@src/models/ModelPropertyMetadata.js";
+import FieldTypes from "@src/enums/FieldTypes.js";
+import DBOperand from "@src/types/DBOperands.js";
 
 export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   model: T;
@@ -18,11 +21,11 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   keyAsId: string;
   config: ConfigLoader | null;
 
-  constructor(model: T, tableName: string, keyAsId: string = "id") {
+  constructor(model: T, keyAsId: string = "id") {
     this.config = ConfigLoader.getInstance();
     const dbConnection = this.config?.get("database.connection");
     this.model = model;
-    this.tableName = tableName;
+    this.tableName = model._tableName;
     this.connector = MySQLConnector.getInstance(dbConnection);
     this.target = `${dbConnection.database}.${this.tableName}`;
     this.keyAsId = keyAsId;
@@ -60,6 +63,44 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   get(id: number, fields: ParametersLimit = new ParametersLimit()): Promise<T> {
     return this._get(id, fields);
+  }
+
+  getByModel(model: T): Promise<T> {
+    const fields = this.processFields();
+    const sort_by = "id";
+    const sort_direction = "desc";
+    const parameters = this.model.parametersKeysSnake(fields);
+
+    const filters: Array<DBFilter> = [];
+
+    if (model.id) {
+      filters.push(new DBFilter("id", model.id));
+    } else {
+      for (let i = 0; i < parameters.length; i++) {
+        const parameter = parameters[i];
+        const value = model.getValue(parameter);
+        if (!value) {
+          continue;
+        }
+        filters.push(new DBFilter(parameter, value));
+      }
+    }
+
+    const filterBuilder = new DBFilterBuilder(filters);
+
+    return this.connector
+      .query(
+        `
+      select ${parameters.join(",")} from ${this.target}
+      where id is not null
+      ${this.defaultFilters()}
+      ${filterBuilder.query}
+      order by ?? ${sort_direction}
+      limit ?,?
+    `,
+        filterBuilder.values.concat([sort_by]),
+      )
+      .then((resp) => this.modelFromDataPacket(resp));
   }
 
   processFields(fields: ParametersLimit = new ParametersLimit()) {
@@ -287,9 +328,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
       order by id
       ${pageSize ? `limit ${from},${pageSize}` : ""}
     `,
-        filterBuilder.names
-          .concat(filterBuilder.values)
-          .concat(pageSize ? [from, pageSize] : []),
+        filterBuilder.values.concat(pageSize ? [from, pageSize] : []),
       )
       .then(async (resp) => this.modelsFromDataPacket(resp));
   }
@@ -333,9 +372,103 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
       order by ?? ${sort_direction}
       limit ?,?
     `,
-        filterBuilder.names
-          .concat(filterBuilder.values)
-          .concat([sort_by, from, size]),
+        filterBuilder.values.concat([sort_by, from, size]),
+      )
+      .then(async (resp) => {
+        const searchData = new SearchData<T>();
+        searchData.items = await this.modelsFromDataPacket(resp);
+        searchData.total = await this.getAllCount(filters);
+        return searchData;
+      });
+  }
+
+  getSearchSingle(
+    filters?: Array<DBFilter>,
+    searchRequestData?: SearchRequestData,
+    fields: ParametersLimit = new ParametersLimit(),
+  ): Promise<T> {
+    fields = this.processFields(fields);
+    const sort_by = searchRequestData?.sort_by || "id";
+    const sort_direction = searchRequestData?.sort_direction || "asc";
+
+    const filterBuilder = new DBFilterBuilder(filters);
+
+    return this.connector
+      .query(
+        `
+      select ${this.model.parametersKeysSnake(fields).join(",")} from ${this.target}
+      where id is not null
+      ${this.defaultFilters()}
+      ${filterBuilder.query}
+      order by ?? ${sort_direction}
+    `,
+        filterBuilder.values.concat([sort_by]),
+      )
+      .then((resp) => this.modelFromDataPacket(resp));
+  }
+
+  getFastSearchAll(
+    searchRequestData: SearchRequestData,
+    searchText: string,
+    fields: ParametersLimit = new ParametersLimit(),
+    filters: Array<DBFilter> = [],
+  ): Promise<SearchData<T>> {
+    fields = this.processFields(fields);
+    const { from, size, sort_by, sort_direction } = searchRequestData;
+
+    const model = this.model;
+    const keys = model.parametersKeys(fields);
+    if (!filters) {
+      filters = [];
+    }
+
+    if (searchText) {
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        const metadata: ModelPropertyMetadata =
+          model.getParameterAnnotations(key);
+        let ignore = false;
+        let operand: DBOperand = "=";
+        let value: string | number = searchText;
+
+        switch (metadata.fieldType) {
+          case FieldTypes.FLOAT:
+            value = parseFloat(value);
+            break;
+          case FieldTypes.INT:
+          case FieldTypes.PRIMARY_KEY:
+            value = parseInt(value);
+            break;
+          case FieldTypes.STRING:
+          case FieldTypes.STRING_SELECT:
+            value = `%${value}%`;
+            operand = "like";
+            break;
+          // TODO: entity link search
+          default:
+            ignore = true;
+            break;
+        }
+        if (ignore) {
+          continue;
+        }
+        filters.push(new DBFilter(key, value, operand, "OR"));
+      }
+    }
+
+    const filterBuilder = new DBFilterBuilder(filters);
+
+    return this.connector
+      .query(
+        `
+      select ${this.model.parametersKeysSnake(fields).join(",")} from ${this.target}
+      where id is not null
+      ${this.defaultFilters()}
+      ${filterBuilder.query}
+      order by ?? ${sort_direction}
+      limit ?,?
+    `,
+        filterBuilder.values.concat([sort_by, from, size]),
       )
       .then(async (resp) => {
         const searchData = new SearchData<T>();
@@ -356,7 +489,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
       ${this.defaultFilters()}
       ${filterBuilder.query}
     `,
-        filterBuilder.names.concat(filterBuilder.values),
+        filterBuilder.values,
       )
       .then((resp) => {
         if (resp && resp.length) {
@@ -511,10 +644,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
     }
     fields = this.processFields(fields);
 
-    const updateData = DBCreateUpdateBuilder.buildUpdateData<T>(
-      model,
-      fields,
-    );
+    const updateData = DBCreateUpdateBuilder.buildUpdateData<T>(model, fields);
     return this.connector
       .query(
         `
@@ -522,10 +652,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
         SET ${updateData.queryParametersAndValues}
         WHERE id = ?
       `,
-        [
-          ...updateData.values,
-          model.id,
-        ],
+        [...updateData.values, model.id],
       )
       .then((resp) => {
         return this._get(model.id);
@@ -577,9 +704,11 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
     }
     fields = this.processFields(fields);
     fields.exclude = [...fields.exclude, "id"];
-    const params = this.model.parametersKeysSnake(fields);
 
-    const createData = DBCreateUpdateBuilder.buildCreateData<T>(models, fields);
+    const createData = DBCreateUpdateBuilder.buildArrayCreateData<T>(
+      models,
+      fields,
+    );
 
     return this.connector
       .query(

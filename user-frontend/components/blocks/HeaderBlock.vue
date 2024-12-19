@@ -1,15 +1,89 @@
 <template>
-  <div class="header-block"></div>
+  <div class="header__block">
+    <div class="header__block-links">
+      <router-link class="header__block-links-link" to="/">World Map</router-link>
+      <router-link class="header__block-links-link" to="/home">My Island</router-link>
+    </div>
+    <div class="header__block-auth">
+      <client-only>
+        <v-btn @click="testbtn">test</v-btn>
+        <v-chip color="primary" class="header__block-username">
+          {{ session.username }}
+        </v-chip>
+        <v-chip color="primary" class="header__block-email">
+          {{ session.email }}
+        </v-chip>
+        <span class="header__block-auth-logout__btn">
+          <v-btn icon @click="logout">
+            <v-icon>mdi-logout</v-icon>
+          </v-btn>
+        </span>
+      </client-only>
+    </div>
+  </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useAuthStore } from "@/store/auth";
+import { useLocalAlertsStore } from "@/store/local_alerts";
+import AlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 
-<style scoped>
-.header-block {
-  z-index: 20;
+const authStore = useAuthStore();
+const localAlertsStore = useLocalAlertsStore();
+
+const session = computed(() => {
+  return authStore.getSession;
+})
+
+const logout = async () => {
+  await authStore.logout();
+  navigateTo("/auth");
+  localAlertsStore.createAlert("Logout successful", AlertTypes.SUCCESS);
+};
+
+const testbtn = () => {
+  openModalWindow({});
+}
+</script>
+
+<style lang="scss" scoped>
+.header__block {
+  position: fixed;
+  z-index: 100;
   width: 100%;
   height: 50px;
   border-bottom: 1px solid;
   backdrop-filter: blur(10px);
+
+  display: flex;
+  justify-content: space-between;
+
+  &-links {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+
+    & > * {
+      margin: 0 10px;
+    }
+
+    &-link {
+      text-decoration: none;
+      color: white;
+    }
+  }
+
+  &-auth {
+    display: flex;
+    justify-content: right;
+    align-items: center;
+
+    &-logout__btn {
+      // padding: auto;
+      height: 100%;
+      float: right;
+    }
+  }
+
 }
 </style>

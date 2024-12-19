@@ -19,7 +19,6 @@ onMounted(() => {
 });
 
 const themeChange = () => {
-  console.log("theme change");
   settingsStore.setTheme(theme.value);
 };
 </script>

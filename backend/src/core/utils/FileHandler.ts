@@ -24,7 +24,7 @@ export default class FileHandler {
 
   static getDirFilenames(path: string): Array<string> {
     try {
-      const files = fs.readdirSync('./static/builds/agent')
+      const files = fs.readdirSync(path)
       return files
     } catch (e) {
       return []

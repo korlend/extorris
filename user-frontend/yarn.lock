@@ -3696,6 +3696,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"extorris-user-frontend@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "extorris-user-frontend@workspace:."
+  dependencies:
+    "@mdi/font": "npm:^7.4.47"
+    "@pinia/nuxt": "npm:^0.5.5"
+    mitt: "npm:^3.0.1"
+    nuxt: "npm:^3.13.0"
+    pinia: "npm:^2.2.4"
+    sass: "npm:^1.79.5"
+    sass-loader: "npm:^16.0.2"
+    uuid: "npm:^10.0.0"
+    vite-plugin-vuetify: "npm:^2.0.4"
+    vue: "npm:latest"
+    vue-router: "npm:latest"
+    vuetify: "npm:^3.7.2"
+    vuetify-nuxt-module: "npm:^0.18.3"
+  languageName: unknown
+  linkType: soft
+
 "fast-fifo@npm:^1.2.0, fast-fifo@npm:^1.3.2":
   version: 1.3.2
   resolution: "fast-fifo@npm:1.3.2"
@@ -5382,24 +5402,6 @@ __metadata:
   checksum: 10c0/efe17a28ebb544676ae47d998f56f3734f2d95d14884720becfce9ce584002a4693541bd09df3de3fe0930b13293d8b1d5bba3d130c8f527699a82ab08d80c2b
   languageName: node
   linkType: hard
-
-"nuxt-app@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "nuxt-app@workspace:."
-  dependencies:
-    "@mdi/font": "npm:^7.4.47"
-    "@pinia/nuxt": "npm:^0.5.5"
-    nuxt: "npm:^3.13.0"
-    pinia: "npm:^2.2.4"
-    sass: "npm:^1.79.5"
-    sass-loader: "npm:^16.0.2"
-    vite-plugin-vuetify: "npm:^2.0.4"
-    vue: "npm:latest"
-    vue-router: "npm:latest"
-    vuetify: "npm:^3.7.2"
-    vuetify-nuxt-module: "npm:^0.18.3"
-  languageName: unknown
-  linkType: soft
 
 "nuxt@npm:^3.13.0":
   version: 3.13.2
@@ -7431,6 +7433,15 @@ __metadata:
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
   checksum: 10c0/41a5bdd214df2f6c3ecf8622745e4a366c4adced864bc3c833739791aeeeb1838119af7daed4ba36428114b5c67dcda034a79c882e97e43c03e66a4dd7389942
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^10.0.0":
+  version: 10.0.0
+  resolution: "uuid@npm:10.0.0"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 10c0/eab18c27fe4ab9fb9709a5d5f40119b45f2ec8314f8d4cf12ce27e4c6f4ffa4a6321dc7db6c515068fa373c075b49691ba969f0010bf37f44c37ca40cd6bf7fe
   languageName: node
   linkType: hard
 

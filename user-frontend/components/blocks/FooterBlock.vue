@@ -6,7 +6,7 @@
 
 <style scoped>
 .footer-block {
-  z-index: 10;
+  z-index: 100;
   position: fixed;
   bottom: 0;
   width: 100%;

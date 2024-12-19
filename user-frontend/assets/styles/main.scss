@@ -4,9 +4,45 @@
 // @import "variables";
 // @import "mixins";
 
+.custom-scroll {
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  /* Track */
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  /* Handle */
+  &::-webkit-scrollbar-thumb {
+    background: #888;
+  }
+
+  /* Handle on hover */
+  &::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}
+
+* {
+  // overflow: hidden;
+}
+
+html {
+  overflow-y: hidden;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  max-height: 100dvh;
+  max-width: 100dvw;
+}
+
 body {
   margin: 0;
   padding: 0;
+
   // background-color: blue;
   /* overflow: visible; */
 }

@@ -1,10 +1,10 @@
 {
-  "url": "0.0.0.0",
+  "host": "0.0.0.0",
   "port": 8090,
   "urlRoot": "",
   "userApiUrlPrefix": "/api",
   "adminApiUrlPrefix": "/admin-api",
-  "imagesDirectory": "./static/images",
+  "imagesDirectory": "./public/images",
   "database": {
     "connecter": "Mysql",
     "connection": {

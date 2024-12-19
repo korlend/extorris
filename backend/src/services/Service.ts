@@ -14,7 +14,6 @@ export default abstract class Service<
 > {
   repo: T1;
   // operationLogService: OperationLogService
-  indexConfiguration: any;
 
   constructor(repo: T1) {
     this.repo = repo;
@@ -25,6 +24,12 @@ export default abstract class Service<
     fields: ParametersLimit = new ParametersLimit(),
   ): Promise<T> {
     return this.repo.get(id, fields);
+  }
+
+  async getByModel(
+    model: T,
+  ): Promise<T> {
+    return this.repo.getByModel(model);
   }
 
   async getBy(key: string, value: any): Promise<T> {
@@ -58,8 +63,30 @@ export default abstract class Service<
   async getSearchAll(
     searchRequestData: SearchRequestData,
     fields: ParametersLimit = new ParametersLimit(),
+    filters?: Array<DBFilter>,
   ): Promise<SearchData<T>> {
-    return this.repo.getSearchAll(searchRequestData, fields);
+    return this.repo.getSearchAll(searchRequestData, fields, filters);
+  }
+
+  async getSearchSingle(
+    filters?: Array<DBFilter>,
+    searchRequestData?: SearchRequestData,
+    fields: ParametersLimit = new ParametersLimit(),
+  ): Promise<T> {
+    return this.repo.getSearchSingle(filters, searchRequestData, fields);
+  }
+
+  async getFastSearchAll(
+    searchRequestData: SearchRequestData,
+    searchText: string,
+    fields: ParametersLimit = new ParametersLimit(),
+    filters: Array<DBFilter> = [],
+  ): Promise<SearchData<T>> {
+    return this.repo.getFastSearchAll(searchRequestData, searchText, fields, filters);
+  }
+
+  async getAllCount(filters?: Array<DBFilter>): Promise<number> {
+    return this.repo.getAllCount(filters);
   }
 
   async getAllByIds(ids: Array<number>): Promise<Array<T>> {
@@ -123,7 +150,10 @@ export default abstract class Service<
     updateLinks = true,
   ): Promise<T> {
     if (!model.id) {
-      throw new PropagatedError(ExpressResponseTypes.ERROR, "ID is not specified to update entity");
+      throw new PropagatedError(
+        ExpressResponseTypes.ERROR,
+        "ID is not specified to update entity",
+      );
     }
     return this._update(model, fields, updateLinks);
   }

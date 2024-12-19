@@ -1,10 +1,24 @@
 <template>
-  <div class="main-map" :style="listStyles" @mousedown.prevent="dragStart">
-    <div class="main-map__coordinates">(x: {{ currentShift.x }}) - (y: {{ currentShift.y }})</div>
-    <div class="main-map__windows-size">(width: {{ windowSizes.width }}) - (height: {{ windowSizes.height }})</div>
-    <div class="main-map__extra">(x limit: {{ windowSizes.width - fieldSize.x - cameraLimit }}) - (y limit: {{ windowSizes.height - fieldSize.y - cameraLimit }})</div>
-    <div class="main-map__inner" :style="innerStyles">
-      <HexagonList :depth="depth" :hexagon-size="hexagonSize" :field-size="fieldSize"/>
+  <div
+    class="main__map"
+    :style="listStyles"
+    @mousedown.prevent.stop="dragStart"
+    @wheel="scrollEvent">
+    <div class="main__map-coordinates">
+      (x: {{ currentShift.x }}) - (y: {{ currentShift.y }})
+    </div>
+    <div class="main__map-windows__size">
+      (width: {{ windowSizes.width }}) - (height: {{ windowSizes.height }})
+    </div>
+    <div class="main__map-extra">
+      (x limit: {{ windowSizes.width - fieldSize.x - cameraLimit }}) - (y limit:
+      {{ windowSizes.height - fieldSize.y - cameraLimit }})
+    </div>
+    <div class="main__map-inner" :style="innerStyles">
+      <HexagonList
+        :depth="depth"
+        :hexagon-size="hexagonSize"
+        :field-size="fieldSize" />
     </div>
   </div>
 </template>
@@ -23,27 +37,13 @@ const props = defineProps({
   },
 });
 
-onBeforeMount(() => {
-  window.addEventListener("mousemove", dragEvent);
-  window.addEventListener("touchmove", dragEvent);
-  window.addEventListener("resize", windowResize);
-  window.addEventListener("resize", windowResize);
-});
+const dragDelay = 50;
+const scalingStep = 0.1;
+const maxScaling = 2.0;
+const minScaling = 0.5;
 
-onBeforeUnmount(() => {
-  window.removeEventListener("mousemove", dragEvent);
-  window.removeEventListener("touchmove", dragEvent);
-  window.removeEventListener("resize", windowResize);
-  window.removeEventListener("resize", windowResize);
-});
-
-onMounted(() => {
-  setWindowSizes();
-  moveCameraCenter();
-});
-
-const extraSpace = 200;
-const cameraLimit = 150;
+const extraSpace = 500;
+const cameraLimit = 1000;
 // const mouseCoordinates
 // let fieldSize: { x: number, y: number } = { x: 0, y: 0 };
 
@@ -52,13 +52,34 @@ let draggingEndPosX: number = 0;
 let draggingStartPosY: number = 0;
 let draggingEndPosY: number = 0;
 
-
 /** refs start */
+const currentScaling: Ref<number> = ref(1.0);
 const isDragging: Ref<boolean> = ref(false);
-const windowSizes: Ref<{ height: number, width: number }> = ref({ height: 0, width: 0 });
-const prevShift: Ref<{ x: number; y: number }> = ref({ x: 0, y: 0 });
+const windowSizes: Ref<{ height: number; width: number }> = ref({
+  height: 0,
+  width: 0,
+});
+// const prevShift: Ref<{ x: number; y: number }> = ref({ x: 0, y: 0 });
+const prevShift: { x: number; y: number } = { x: 0, y: 0 };
 const currentShift: Ref<{ x: number; y: number }> = ref({ x: 0, y: 0 });
 /** refs end */
+
+onMounted(() => {
+  window.addEventListener("mousemove", throttle(dragEvent, dragDelay));
+  window.addEventListener("touchmove", throttle(dragEvent, dragDelay));
+  window.addEventListener("resize", windowResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("mousemove", throttle(dragEvent, dragDelay));
+  window.removeEventListener("touchmove", throttle(dragEvent, dragDelay));
+  window.removeEventListener("resize", windowResize);
+});
+
+onMounted(() => {
+  setWindowSizes();
+  moveCameraCenter();
+});
 
 /** computed start */
 const fieldSize = computed(() => {
@@ -79,21 +100,45 @@ const innerStyles = computed(() => {
   return {
     "--shift-x": `${currentShift.value.x}px`,
     "--shift-y": `${currentShift.value.y}px`,
-    "--cursor": isDragging.value ? 'move' : 'default',
+    "--cursor": isDragging.value ? "move" : "default",
+    "--scaling": currentScaling.value,
   };
 });
 /** computed end */
 
+const scrollEvent = (event: WheelEvent) => {
+  let newCurrentScaling = currentScaling.value;
+  if (event.deltaY > 0) {
+    newCurrentScaling -= scalingStep;
+  } else {
+    newCurrentScaling += scalingStep;
+  }
+  if (newCurrentScaling > maxScaling || newCurrentScaling < minScaling) {
+    return;
+  }
+  currentScaling.value = newCurrentScaling;
+  // event.preventDefault();
+  // event.stopPropagation();
+};
+
 const moveCameraCenter = () => {
-  const x = -fieldSize.value.x / 2 + windowSizes.value.width / 2 + props.hexagonSize / 2;
-  const y = -fieldSize.value.y / 2 + windowSizes.value.height / 2 + props.hexagonSize / 2;
+  const x =
+    -fieldSize.value.x / 2 +
+    windowSizes.value.width / 2 +
+    props.hexagonSize / 2;
+  const y =
+    -fieldSize.value.y / 2 +
+    windowSizes.value.height / 2 +
+    props.hexagonSize / 2;
   currentShift.value.x = x;
   currentShift.value.y = y;
-  prevShift.value.x = x;
-  prevShift.value.y = y;
-}
+  prevShift.x = x;
+  prevShift.y = y;
+};
 
 const dragStart = (event: MouseEvent | TouchEvent) => {
+  event.stopPropagation();
+  event.preventDefault();
   let x = 0;
   let y = 0;
   if (event instanceof MouseEvent) {
@@ -126,8 +171,8 @@ const dragEnd = () => {
   draggingEndPosX = 0;
   draggingStartPosY = 0;
   draggingEndPosY = 0;
-  prevShift.value.x = currentShift.value.x;
-  prevShift.value.y = currentShift.value.y;
+  prevShift.x = currentShift.value.x;
+  prevShift.y = currentShift.value.y;
   window.removeEventListener("mouseup", dragEnd);
   window.removeEventListener("touchend", dragEnd);
 };
@@ -140,7 +185,7 @@ const dragEvent = (event: MouseEvent | TouchEvent) => {
     if (event instanceof MouseEvent) {
       x = event.x;
       y = event.y;
-    } else if (event instanceof TouchEvent) {
+    } else if (event?.touches) {
       x = event?.touches?.[0].clientX;
       y = event?.touches?.[0].clientY;
     }
@@ -148,14 +193,20 @@ const dragEvent = (event: MouseEvent | TouchEvent) => {
     draggingEndPosX = x;
     draggingEndPosY = y;
 
-    const newShiftX = prevShift.value.x + draggingEndPosX - draggingStartPosX;
-    const newShiftY = prevShift.value.y + draggingEndPosY - draggingStartPosY;
+    const newShiftX = prevShift.x + draggingEndPosX - draggingStartPosX;
+    const newShiftY = prevShift.y + draggingEndPosY - draggingStartPosY;
 
-    if (newShiftX > windowSizes.value.width - fieldSize.value.x - cameraLimit && newShiftX < cameraLimit) {
+    if (
+      newShiftX > windowSizes.value.width - fieldSize.value.x - cameraLimit &&
+      newShiftX < cameraLimit
+    ) {
       currentShift.value.x = newShiftX;
     }
 
-    if (newShiftY > windowSizes.value.height - fieldSize.value.y - cameraLimit && newShiftY < cameraLimit) {
+    if (
+      newShiftY > windowSizes.value.height - fieldSize.value.y - cameraLimit &&
+      newShiftY < cameraLimit
+    ) {
       currentShift.value.y = newShiftY;
     }
   }
@@ -169,50 +220,53 @@ const setWindowSizes = () => {
   windowSizes.value.height = window.innerHeight;
   windowSizes.value.width = window.innerWidth;
 };
-
 </script>
 
 <style lang="scss" scoped>
-.main-map {
+.main__map {
   position: relative;
   width: var(--field-size-x);
   height: var(--field-size-y);
-  transition: all 0.3s ease-out;
+  transition: all 0.2s ease-out;
   cursor: var(--cursor);
-  background-image: url('/img/sky_2.avif');
+  background-image: url("/img/sky_2.avif");
 
-  &__inner {
+  &-inner {
     position: absolute;
     width: var(--field-size-x);
     height: var(--field-size-y);
-    left: var(--shift-x);
-    top: var(--shift-y);
+    // left: var(--shift-x);
+    // top: var(--shift-y);
+    transform: translate(var(--shift-x), var(--shift-y)) scale(var(--scaling));
     backdrop-filter: blur(10px);
     color: black;
   }
 
-  &__coordinates {
+  &-coordinates {
     z-index: 11;
-    position: absolute;
-    top: 10px;
-    left: 20px;
+    position: fixed;
+    bottom: 10px;
+    left: 220px;
     color: white;
+    backdrop-filter: blur(20px);
   }
 
-  &__windows-size {
+  &-windows__size {
     z-index: 11;
-    position: absolute;
-    top: 10px;
-    left: 200px;
+    position: fixed;
+    bottom: 10px;
+    left: 400px;
     color: white;
+    backdrop-filter: blur(20px);
   }
 
-  &__extra {
+  &-extra {
     z-index: 11;
-    position: absolute;
-    top: 10px;
-    left: 450px;
+    position: fixed;
+    bottom: 10px;
+    left: 650px;
     color: white;
+    backdrop-filter: blur(20px);
   }
 }
 </style>

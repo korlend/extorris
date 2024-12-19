@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "extorris-admin-frontend",
   "private": true,
   "type": "module",
   "packageManager": "yarn@4.5.0",
@@ -13,6 +13,7 @@
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@pinia/nuxt": "^0.5.5",
+    "mitt": "^3.0.1",
     "nuxt": "^3.13.0",
     "pinia": "^2.2.4",
     "uuid": "^10.0.0",

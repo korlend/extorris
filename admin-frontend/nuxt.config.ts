@@ -4,7 +4,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   devServer: {
-    port: 8080,
+    host: "0.0.0.0",
+    port: parseInt(process.env.PORT as string) || 8081,
   },
 
   css: ['~/assets/styles/main.scss'],

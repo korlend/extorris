@@ -1,4 +1,3 @@
+type DBOperands = "=" | ">" | "<" | ">=" | "<=" | "<>" | "!=" | "like";
 
-type DBOperand = '=' | '>' | '<' | '>=' | '<=' | '<>' | '!=';
-
-export default DBOperand;
+export default DBOperands;

@@ -1,80 +1,85 @@
 // import { getItem } from "~/utils/localStorage";
 import { defineStore } from "pinia";
+import type ResponseAPI from "~/core/interfaces/ResponseAPI";
+import type Session from "~/core/interfaces/Session";
 
 export interface AuthState {
-  username: string;
-  email: string;
-  token: string;
-  expire?: Date;
+  session: Session;
 }
 
 export const useAuthStore = defineStore("auth", {
   state: (): AuthState => {
     return {
-      username: "",
-      email: "",
-      token: "",
-      expire: undefined,
+      session: {},
     };
   },
   getters: {
-    getUsername: (state: AuthState) => {
-      return state.username;
-    },
-    getEmail: (state: AuthState) => {
-      return state.email;
+    getSession: (state: AuthState) => {
+      return state.session;
     },
     getToken: (state: AuthState) => {
-      if (!state.token) {
-        state.token = getLocalStorageItem("token");
+      const localStorageToken = getLocalStorageItem("token");
+      if (localStorageToken) {
+        return localStorageToken;
       }
-      return state.token;
-    },
-    getExpire: (state: AuthState) => {
-      return state.expire;
+      if (state.session.token) {
+        return state.session.token;
+      }
+      return null;
     },
   },
   actions: {
-    setUserData(sessionData: any) {
+    setUserData(sessionData: any): Session {
       const { admin, session } = sessionData;
-      this.username = admin.username;
-      this.email = admin.email;
-      this.expire = new Date(session.expire);
+      if (!admin || !session) {
+        this.session.username = "";
+        this.session.email = "";
+        this.session.expire = undefined;
+        setLocalStorageItem("token", "");
+        this.session.token = "";
+        return this.session;
+      }
+      this.session.username = admin.username;
+      this.session.email = admin.email;
+      this.session.expire = new Date(session.expire);
       setLocalStorageItem("token", session.token);
-      this.token = session.token;
+      this.session.token = session.token;
+      return this.session;
     },
     async logout() {
-      const { $api } = useNuxtApp();
-      await $api("/admin-api/auth/logout", {
+      await useAPI("/admin-api/auth/logout", {
         method: "PUT",
       });
-      setLocalStorageItem("token", "");
-      this.username = "";
-      this.email = "";
-      this.token = "";
-      this.expire = undefined;
+      this.setUserData({});
     },
-    async login(username: string, password: string): Promise<any> {
-      const { $api } = useNuxtApp();
-      const response = await $api("/admin-api/auth/login_username", {
-        method: "POST",
-        body: {
-          username,
-          password,
-        },
-      });
+    async login(username: string, password: string): Promise<Session | null> {
+      const { data } = await useAPI<ResponseAPI>(
+        "/admin-api/auth/login_username",
+        {
+          method: "POST",
+          body: {
+            username,
+            password,
+          },
+        }
+      );
 
-      this.setUserData(response.result);
-      return response.result;
+      if (!data.value) {
+        return null;
+      }
+
+      return this.setUserData(data.value.result);
     },
-    async me(): Promise<any> {
-      const { $api } = useNuxtApp();
-      const response = await $api("/admin-api/auth/me", {
+    async me(): Promise<Session | null> {
+      const { data } = await useAPI<ResponseAPI>("/admin-api/auth/me", {
         method: "GET",
       });
 
-      this.setUserData(response.result);
-      return response.result;
+      if (!data.value) {
+        return null;
+      }
+
+      return this.setUserData(data.value.result);
     },
   },
 });
