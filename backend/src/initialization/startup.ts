@@ -46,6 +46,7 @@ async function dbDataInit(config: any) {
     }),
   );
 
+  /*
   // default ship parts
   promises.push(
     new Promise(async (resolve) => {
@@ -83,6 +84,7 @@ async function dbDataInit(config: any) {
       resolve(true);
     }),
   );
+  */
 
   await Promise.all(promises);
 }

@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import CanvasCursors from "~/core/enums/canvas/CanvasCursors";
+import CanvasCursors from "~/core/enums/CanvasCursors";
 import type CanvasBlock from "~/core/interfaces/canvas/CanvasBlock";
 import type CanvasClickEvent from "~/core/interfaces/canvas/CanvasClickEvent";
 import type DrawOptions from "~/core/interfaces/canvas/DrawOptions";
@@ -21,8 +21,10 @@ import {
 } from "@/store/modal_window";
 
 import ShipyardMenu from "~/components/game/ShipyardMenu.vue";
+import { useHomeIslandStore } from "~/store/home_island";
 
 const modalWindowStore = useModalWindowStore();
+const homeIslandStore = useHomeIslandStore()
 
 const mouseOnClickable: Ref<boolean> = ref(false);
 
@@ -30,7 +32,9 @@ let isMenuOpen: boolean = false;
 
 const canvasBlocks: Ref<Array<CanvasBlock>> = ref([]);
 
-onBeforeMount(() => {});
+onBeforeMount(async () => {
+  await homeIslandStore.loadHomeIslandInfo();
+});
 
 onMounted(() => {
   /*

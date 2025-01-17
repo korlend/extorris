@@ -7,36 +7,36 @@ import SearchRequestData from "@src/models/SearchRequestData.js";
 import SearchData from "@src/models/SearchData.js";
 import PropagatedError from "@src/models/PropagatedError.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
+import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
 
 export default abstract class Service<
   T extends DBModel<T> & IParsable<T>,
-  T1 extends Repository<T>,
+  TRepo extends Repository<T>,
+  DBDataKeys extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>,
 > {
-  repo: T1;
+  repo: TRepo;
   // operationLogService: OperationLogService
 
-  constructor(repo: T1) {
+  constructor(repo: TRepo) {
     this.repo = repo;
   }
 
   async get(
     id: number,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this.repo.get(id, fields);
   }
 
-  async getByModel(
-    model: T,
-  ): Promise<T> {
+  async getByModel(model: T): Promise<T> {
     return this.repo.getByModel(model);
   }
 
-  async getBy(key: string, value: any): Promise<T> {
+  async getBy(key: DBDataKeys, value: T[DBDataKeys]): Promise<T> {
     return this.repo.getBy(key, value);
   }
 
-  async getAllBy(key: string, value: any): Promise<Array<T>> {
+  async getAllBy(key: DBDataKeys, value: T[DBDataKeys]): Promise<Array<T>> {
     return this.repo.getAllBy(key, value);
   }
 
@@ -54,24 +54,24 @@ export default abstract class Service<
   async getAll(
     from: number = 0,
     pageSize: number = 10,
-    fields: ParametersLimit = new ParametersLimit(),
-    filters?: Array<DBFilter>,
+    fields = new ParametersLimit<T>(),
+    filters?: Array<DBFilter<T>>,
   ): Promise<Array<T>> {
     return this.repo.getAll(from, pageSize, fields, filters);
   }
 
   async getSearchAll(
     searchRequestData: SearchRequestData,
-    fields: ParametersLimit = new ParametersLimit(),
-    filters?: Array<DBFilter>,
+    fields = new ParametersLimit<T>(),
+    filters?: Array<DBFilter<T>>,
   ): Promise<SearchData<T>> {
     return this.repo.getSearchAll(searchRequestData, fields, filters);
   }
 
   async getSearchSingle(
-    filters?: Array<DBFilter>,
+    filters?: Array<DBFilter<T>>,
     searchRequestData?: SearchRequestData,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this.repo.getSearchSingle(filters, searchRequestData, fields);
   }
@@ -79,13 +79,18 @@ export default abstract class Service<
   async getFastSearchAll(
     searchRequestData: SearchRequestData,
     searchText: string,
-    fields: ParametersLimit = new ParametersLimit(),
-    filters: Array<DBFilter> = [],
+    fields = new ParametersLimit<T>(),
+    filters: Array<DBFilter<T>> = [],
   ): Promise<SearchData<T>> {
-    return this.repo.getFastSearchAll(searchRequestData, searchText, fields, filters);
+    return this.repo.getFastSearchAll(
+      searchRequestData,
+      searchText,
+      fields,
+      filters,
+    );
   }
 
-  async getAllCount(filters?: Array<DBFilter>): Promise<number> {
+  async getAllCount(filters?: Array<DBFilter<T>>): Promise<number> {
     return this.repo.getAllCount(filters);
   }
 
@@ -103,14 +108,14 @@ export default abstract class Service<
 
   async getByMap(
     filters: Map<String, any>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this.repo.getByMap(filters, fields);
   }
 
   async _create(
     model: T,
-    fields = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
     updateLinks = true,
   ): Promise<T> {
     let newModel = await this.repo.create(model, fields);
@@ -122,7 +127,7 @@ export default abstract class Service<
 
   async create(
     model: T,
-    fields = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
     updateLinks = true,
   ): Promise<T> {
     return this._create(model, fields, updateLinks);
@@ -130,7 +135,7 @@ export default abstract class Service<
 
   async _update(
     model: T,
-    fields = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
     updateLinks = true,
   ): Promise<T> {
     const oldModel = await this.repo.get(model.id);
@@ -146,7 +151,7 @@ export default abstract class Service<
 
   async update(
     model: T,
-    fields = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
     updateLinks = true,
   ): Promise<T> {
     if (!model.id) {
@@ -167,26 +172,47 @@ export default abstract class Service<
     return this._delete(id);
   }
 
-  async createUpdate(data: T, getBy?: string): Promise<{ model: T }> {
-    const fields = new ParametersLimit();
-    let dbData = getBy
-      ? // @ts-ignore don't want to [key]:any on model
-        await this.repo.getBy(getBy, data[getBy], fields)
-      : await this.repo.get(data.id, fields);
+  async createUpdate(
+    data: T,
+    getBy: Array<DBDataKeys> = [],
+    fields = new ParametersLimit<T>(),
+  ): Promise<T> {
+    if (!getBy.length) {
+      getBy.push("id" as any);
+    }
+    const filters: Array<DBFilter<T>> = [];
+    getBy.forEach((v) => filters.push(new DBFilter(v, data.getValue(v), "=", "AND")))
+
+    let dbData = await this.repo.getSearchSingle(filters, new SearchRequestData(), fields);
     if (!dbData) {
       dbData = await this.repo.create(data, fields);
     }
     // if (dbData && !dbData.equal(data, fields)) {
-    else if (dbData) {
+    else {
       data.id = dbData.id;
       dbData = await this.repo.update(data, fields);
     }
-    return { model: dbData };
+    return dbData;
+  }
+
+  async createUpdateAll(
+    models: Array<T>,
+    getBy: Array<DBDataKeys> = [],
+    fields = new ParametersLimit<T>(),
+  ): Promise<Array<T>> {
+    if (!models || !models.length) {
+      return [];
+    }
+    const resultModels = [];
+    for (let i = 0; i < models.length; i++) {
+      resultModels.push(await this.createUpdate(models[i], getBy, fields));
+    }
+    return resultModels;
   }
 
   async createAll(
     models: Array<T>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
     if (!models || !models.length) {
       return [];
@@ -197,7 +223,7 @@ export default abstract class Service<
 
   async updateAll(
     models: Array<T>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
     const createdModels = await this.repo.updateAll(models, fields);
     return createdModels;
@@ -210,7 +236,7 @@ export default abstract class Service<
 
   async getAllByMap(
     filters: Map<String, any>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ) {
     return this.repo.getAllByMap(filters, fields);
   }

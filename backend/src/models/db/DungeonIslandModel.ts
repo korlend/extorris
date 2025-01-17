@@ -1,14 +1,11 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class DungeonIslandModel
-  extends DBModel<DungeonIslandModel>
-  implements IParsable<DungeonIslandModel>
-{
+export default class DungeonIslandModel extends DBModel<DungeonIslandModel> {
   _tableName: string = "dungeon_islands";
   _entityType: EntityType = EntityType.DUNGEON_ISLAND;
 
@@ -24,7 +21,9 @@ export default class DungeonIslandModel
   })
   main_map_hub_id: string = "";
 
-  parseObject(object: any): DungeonIslandModel {
+  parseObject(
+    object: DBModelOnlyDBData<DungeonIslandModel>,
+  ): DungeonIslandModel {
     const instance = new DungeonIslandModel();
     instance.id = object.id;
     instance.user_id = object.user_id;

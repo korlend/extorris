@@ -1,14 +1,11 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class MainMapHubModel
-  extends DBModel<MainMapHubModel>
-  implements IParsable<MainMapHubModel>
-{
+export default class MainMapHubModel extends DBModel<MainMapHubModel> {
   _tableName: string = "main_map_hubs";
   _entityType: EntityType = EntityType.MAIN_MAP_HUB;
 
@@ -36,7 +33,7 @@ export default class MainMapHubModel
   @FieldType(FieldTypes.INT)
   hub_number: number = 0;
 
-  parseObject(object: any): MainMapHubModel {
+  parseObject(object: DBModelOnlyDBData<MainMapHubModel>): MainMapHubModel {
     const instance = new MainMapHubModel();
     instance.id = object.id;
     instance.main_map_id = object.main_map_id;

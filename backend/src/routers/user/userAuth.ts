@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import ExpressResponseGenerator from "@src/core/router/ExpressResponseGenerator.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
-import { ShipModel, UserModel, UserShipPartModel } from "@src/models/db/index.js";
+import { ShipModel, ShipPartTypeModel, UserModel, UserShipPartModel } from "@src/models/db/index.js";
 import UserService from "@src/services/user/UserService.js";
 import PropagatedError from "@src/models/PropagatedError.js";
 import ShipService from "@src/services/ship/ShipService.js";
@@ -101,7 +101,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
 
 
   /* START creating default ship parts */
-  const defaultShipPartFilters: Array<DBFilter> = [];
+  const defaultShipPartFilters: Array<DBFilter<ShipPartTypeModel>> = [];
   for (let i = 0; i < defaultUserShipPartsRequirement.length; i++) {
     const code = defaultUserShipPartsRequirement[i];
     defaultShipPartFilters.push(

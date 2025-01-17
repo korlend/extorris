@@ -6,12 +6,13 @@ import ModelPropertyMetadata from "@src/models/ModelPropertyMetadata.js";
 import ModelPropertyMetadataTypes from "@src/enums/ModelPropertyMetadataTypes.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
 import EntityType from "@src/enums/EntityType.js";
+import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
 
 export default class MetadataHelper {
-  static setPropertyMetadata<T extends IParsable<T>, T1 extends DBModel<T>>(
-    key: string,
+  static setPropertyMetadata<T extends DBModel<T>, K extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>>(
+    key: K,
     value: any,
-    target: T1,
+    target: T,
     metadataType: ModelPropertyMetadataTypes,
     options?: { fieldEntityType?: EntityType; stringList?: Array<string> },
   ) {
@@ -48,9 +49,9 @@ export default class MetadataHelper {
     }
   }
 
-  static getPropertyMetadata<T extends IParsable<T>, T1 extends DBModel<T>>(
-    key: string,
-    target: T1,
+  static getPropertyMetadata<T extends DBModel<T>, K extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>>(
+    key: K,
+    target: T,
   ): ModelPropertyMetadata {
     const modelPropertyMetadata: ModelPropertyMetadata = Reflect.getMetadata(
       key,

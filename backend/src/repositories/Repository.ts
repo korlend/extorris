@@ -12,8 +12,12 @@ import DBCreateUpdateBuilder from "@src/core/utils/db/DBCreateUpdateBuilder.js";
 import ModelPropertyMetadata from "@src/models/ModelPropertyMetadata.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
 import DBOperand from "@src/types/DBOperands.js";
+import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
 
-export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
+export default abstract class Repository<
+  T extends DBModel<T>,
+  DBDataKeys extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>,
+> {
   model: T;
   tableName: string;
   connector: MySQLConnector;
@@ -43,7 +47,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   protected _get(
     id: number,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     if (!id) {
       throw new DBError();
@@ -52,7 +56,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
     return this.connector
       .query(
         `
-      select ${this.model.parametersKeysSnake(fields).join(", ")} from ${this.target}
+      select ${this.model.parametersKeys(fields).join(", ")} from ${this.target}
       where id = ?
       ${this.defaultFilters()}
       `,
@@ -61,7 +65,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
       .then((resp) => this.modelFromDataPacket(resp));
   }
 
-  get(id: number, fields: ParametersLimit = new ParametersLimit()): Promise<T> {
+  get(id: number, fields = new ParametersLimit<T>()): Promise<T> {
     return this._get(id, fields);
   }
 
@@ -69,12 +73,12 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
     const fields = this.processFields();
     const sort_by = "id";
     const sort_direction = "desc";
-    const parameters = this.model.parametersKeysSnake(fields);
+    const parameters = this.model.parametersKeys(fields);
 
-    const filters: Array<DBFilter> = [];
+    const filters: Array<DBFilter<T>> = [];
 
     if (model.id) {
-      filters.push(new DBFilter("id", model.id));
+      filters.push(new DBFilter("id" as any, model.id));
     } else {
       for (let i = 0; i < parameters.length; i++) {
         const parameter = parameters[i];
@@ -103,11 +107,11 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
       .then((resp) => this.modelFromDataPacket(resp));
   }
 
-  processFields(fields: ParametersLimit = new ParametersLimit()) {
+  processFields(fields = new ParametersLimit<T>()) {
     if (!fields) {
-      fields = new ParametersLimit();
+      fields = new ParametersLimit<T>();
     }
-    fields.exclude = [...fields.exclude, ...this.model._crudExclude];
+    fields.exclude = [...fields.exclude, ...this.model._crudExclude as Array<DBDataKeys>];
     return fields;
   }
 
@@ -175,13 +179,13 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   protected _getBy(
     key: string,
     value: any,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     fields = this.processFields(fields);
     return this.connector
       .query(
         `
-      select ${this.model.parametersKeysSnake(fields).join(", ")} from ${this.target}
+      select ${this.model.parametersKeys(fields).join(", ")} from ${this.target}
       where ${key} = ?
       ${this.defaultFilters()}
     `,
@@ -193,7 +197,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   getBy(
     key: string,
     value: any,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this._getBy(key, value, fields);
   }
@@ -201,13 +205,13 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   protected _getAllBy(
     key: string,
     value: any,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
     fields = this.processFields(fields);
     return this.connector
       .query(
         `
-      select ${this.model.parametersKeysSnake(fields).join(", ")} from ${this.target}
+      select ${this.model.parametersKeys(fields).join(", ")} from ${this.target}
       where ${key} = ?
       ${this.defaultFilters()}
     `,
@@ -219,14 +223,14 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   getAllBy(
     key: string,
     value: any,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
     return this._getAllBy(key, value, fields);
   }
 
   protected _getByMap(
     map: Map<String, any>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     fields = this.processFields(fields);
     return this.connector
@@ -246,14 +250,14 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   getByMap(
     filters: Map<String, any>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this._getByMap(filters, fields);
   }
 
   protected _getAllByMap(
     map: Map<String, any>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
     fields = this.processFields(fields);
     return this.connector
@@ -273,7 +277,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   getAllByMap(
     filters: Map<String, any>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
     return this._getAllByMap(filters, fields);
   }
@@ -309,8 +313,8 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   protected _getAll(
     from: number = 0,
     pageSize: number = 20,
-    fields: ParametersLimit = new ParametersLimit(),
-    filters?: Array<DBFilter>,
+    fields = new ParametersLimit<T>(),
+    filters?: Array<DBFilter<T>>,
   ): Promise<Array<T>> {
     fields = this.processFields(fields);
     from = from ? parseInt(from.toString()) : 0;
@@ -321,7 +325,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
     return this.connector
       .query(
         `
-      select ${this.model.parametersKeysSnake(fields).join(",")} from ${this.target}
+      select ${this.model.parametersKeys(fields).join(",")} from ${this.target}
       where id is not null
       ${this.defaultFilters()}
       ${filterBuilder.query}
@@ -336,8 +340,8 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   getAll(
     from: number = 0,
     pageSize: number = 20,
-    fields: ParametersLimit = new ParametersLimit(),
-    filters?: Array<DBFilter>,
+    fields = new ParametersLimit<T>(),
+    filters?: Array<DBFilter<T>>,
   ): Promise<Array<T>> {
     return this._getAll(from, pageSize, fields, filters);
   }
@@ -354,8 +358,8 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   getSearchAll(
     searchRequestData: SearchRequestData,
-    fields: ParametersLimit = new ParametersLimit(),
-    filters?: Array<DBFilter>,
+    fields = new ParametersLimit<T>(),
+    filters?: Array<DBFilter<T>>,
   ): Promise<SearchData<T>> {
     fields = this.processFields(fields);
     const { from, size, sort_by, sort_direction } = searchRequestData;
@@ -365,7 +369,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
     return this.connector
       .query(
         `
-      select ${this.model.parametersKeysSnake(fields).join(",")} from ${this.target}
+      select ${this.model.parametersKeys(fields).join(",")} from ${this.target}
       where id is not null
       ${this.defaultFilters()}
       ${filterBuilder.query}
@@ -383,9 +387,9 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   }
 
   getSearchSingle(
-    filters?: Array<DBFilter>,
+    filters?: Array<DBFilter<T>>,
     searchRequestData?: SearchRequestData,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     fields = this.processFields(fields);
     const sort_by = searchRequestData?.sort_by || "id";
@@ -396,7 +400,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
     return this.connector
       .query(
         `
-      select ${this.model.parametersKeysSnake(fields).join(",")} from ${this.target}
+      select ${this.model.parametersKeys(fields).join(",")} from ${this.target}
       where id is not null
       ${this.defaultFilters()}
       ${filterBuilder.query}
@@ -410,8 +414,8 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
   getFastSearchAll(
     searchRequestData: SearchRequestData,
     searchText: string,
-    fields: ParametersLimit = new ParametersLimit(),
-    filters: Array<DBFilter> = [],
+    fields = new ParametersLimit<T>(),
+    filters: Array<DBFilter<T>> = [],
   ): Promise<SearchData<T>> {
     fields = this.processFields(fields);
     const { from, size, sort_by, sort_direction } = searchRequestData;
@@ -452,7 +456,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
         if (ignore) {
           continue;
         }
-        filters.push(new DBFilter(key, value, operand, "OR"));
+        filters.push(new DBFilter(key, value as any, operand, "OR"));
       }
     }
 
@@ -461,7 +465,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
     return this.connector
       .query(
         `
-      select ${this.model.parametersKeysSnake(fields).join(",")} from ${this.target}
+      select ${this.model.parametersKeys(fields).join(",")} from ${this.target}
       where id is not null
       ${this.defaultFilters()}
       ${filterBuilder.query}
@@ -478,7 +482,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
       });
   }
 
-  getAllCount(filters?: Array<DBFilter>): Promise<number> {
+  getAllCount(filters?: Array<DBFilter<T>>): Promise<number> {
     const filterBuilder = new DBFilterBuilder(filters);
 
     return this.connector
@@ -606,7 +610,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   protected _create(
     model: T,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     if (!model) {
       throw new DBError();
@@ -630,14 +634,14 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   create(
     model: T,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this._create(model, fields);
   }
 
   _update(
     model: T,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     if (!model) {
       throw new DBError();
@@ -661,14 +665,14 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   update(
     model: T,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this._update(model, fields);
   }
 
   async updateAll(
     models: Array<T>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
     if (!models || !models.length) {
       return [];
@@ -697,13 +701,13 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   async createAll(
     models: Array<T>,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
     if (!models || !models.length) {
       return [];
     }
     fields = this.processFields(fields);
-    fields.exclude = [...fields.exclude, "id"];
+    fields.exclude = [...fields.exclude, "id"] as Array<DBDataKeys>;
 
     const createData = DBCreateUpdateBuilder.buildArrayCreateData<T>(
       models,
@@ -763,7 +767,7 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
 
   markOnDeletion(model: T) {
     model.deleted = true;
-    return this._update(model, new ParametersLimit([], ["id", "deleted"]));
+    return this._update(model, new ParametersLimit<T>([], ["id", "deleted"] as Array<DBDataKeys>));
   }
 
   markOnDeletionAll(models: Array<T>) {
@@ -771,6 +775,6 @@ export default abstract class Repository<T extends DBModel<T> & IParsable<T>> {
       model.deleted = true;
       return model;
     });
-    return this.updateAll(models, new ParametersLimit([], ["id", "deleted"]));
+    return this.updateAll(models, new ParametersLimit<T>([], ["id", "deleted"] as Array<DBDataKeys>));
   }
 }

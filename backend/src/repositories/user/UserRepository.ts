@@ -133,12 +133,12 @@ export default class UserRepository extends Repository<UserModel> {
     from: number = 0,
     pageSize: number = 10,
     mallId: number,
-    parametersLimit: ParametersLimit = new ParametersLimit(),
+    parametersLimit: ParametersLimit<UserModel> = new ParametersLimit(),
   ): Promise<UserModel> {
     return this.connector
       .query(
         `
-      select ${this.userModel.parametersKeysSnake(parametersLimit).join(",")} from ${this.target}
+      select ${this.userModel.parametersKeys(parametersLimit).join(",")} from ${this.target}
       where id is not null
       ${this.defaultFilters()}
       ${mallId ? `and mall_id = ${mallId}` : ""}
@@ -154,12 +154,12 @@ export default class UserRepository extends Repository<UserModel> {
   }
 
   getAllNotApprovedUsersAndAdmin(
-    fieldsExclude: ParametersLimit = new ParametersLimit(),
+    fieldsExclude: ParametersLimit<UserModel> = new ParametersLimit(),
   ): Promise<UserModel> {
     return this.connector
       .query(
         `
-      select ${this.userModel.parametersKeysSnake(fieldsExclude).join(",")} from ${this.target}
+      select ${this.userModel.parametersKeys(fieldsExclude).join(",")} from ${this.target}
       where id is not null
       ${this.defaultFilters()}
       and approved = 0

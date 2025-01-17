@@ -1,4 +1,4 @@
-import type CanvasCursors from "~/core/enums/canvas/CanvasCursors";
+import type CanvasCursors from "~/core/enums/CanvasCursors";
 import type Vector2D from "../Vector2D";
 import type CanvasElement from "./CanvasElement";
 

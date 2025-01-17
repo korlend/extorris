@@ -1,15 +1,16 @@
+import DBModel from "@src/models/db/DBModel.js";
 import DBFilter from "@src/models/DBFilter.js";
 
-export default class DBFilterBuilder {
+export default class DBFilterBuilder<T extends DBModel<T>> {
   public query: string;
   public values: Array<any>;
 
-  constructor(filters?: Array<DBFilter>) {
+  constructor(filters?: Array<DBFilter<T>>) {
     this.query = this.buildQuery(filters);
     this.values = this.buildValues(filters);
   }
 
-  private buildQuery(filters?: Array<DBFilter>): string {
+  private buildQuery(filters?: Array<DBFilter<T>>): string {
     if (!filters || !filters.length) {
       return "";
     }
@@ -25,7 +26,7 @@ export default class DBFilterBuilder {
     return finalString;
   }
 
-  private buildValues(filters?: Array<DBFilter>): Array<any> {
+  private buildValues(filters?: Array<DBFilter<T>>): Array<any> {
     if (!filters || !filters.length) {
       return [];
     }

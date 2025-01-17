@@ -3,13 +3,10 @@ import Immutable from "@src/decorators/Immutable.js";
 import AdminRoleTypes from "@src/enums/AdminRoleTypes.js";
 import EntityType from "@src/enums/EntityType.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class AdminRoleModel
-  extends DBModel<AdminRoleModel>
-  implements IParsable<AdminRoleModel>
-{
+export default class AdminRoleModel extends DBModel<AdminRoleModel> {
   _tableName: string = "admin_roles";
   _entityType: EntityType = EntityType.ADMIN_ROLE;
 
@@ -24,7 +21,7 @@ export default class AdminRoleModel
 
   description: string = "";
 
-  parseObject(object: any): AdminRoleModel {
+  parseObject(object: DBModelOnlyDBData<AdminRoleModel>): AdminRoleModel {
     const instance = new AdminRoleModel();
     instance.id = object.id;
     instance.name = object.name;

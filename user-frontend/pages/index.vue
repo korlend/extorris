@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import CanvasCursors from "~/core/enums/canvas/CanvasCursors";
+import CanvasCursors from "~/core/enums/CanvasCursors";
 import type CanvasBlock from "~/core/interfaces/canvas/CanvasBlock";
 import type DrawOptions from "~/core/interfaces/canvas/DrawOptions";
 import type Vector2D from "~/core/interfaces/Vector2D";

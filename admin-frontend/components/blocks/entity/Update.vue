@@ -50,6 +50,24 @@
             "></inputs-number>
         </v-col>
         <v-col
+          v-if="data.metadata.fieldType === FieldTypes.PASSWORD"
+          xxl="2"
+          xl="2"
+          lg="2"
+          md="4"
+          sm="6"
+          xs="6"
+          cols="12">
+          <inputs-string
+            class="create-entity-string"
+            v-model="localData[data.key]"
+            :label="data.key"
+            :disabled="isFieldDisabled(data)"
+            @update:model-value="
+              (v) => dataUpdated(data.key, v)
+            "></inputs-string>
+        </v-col>
+        <v-col
           v-if="data.metadata.fieldType === FieldTypes.STRING"
           xxl="2"
           xl="2"

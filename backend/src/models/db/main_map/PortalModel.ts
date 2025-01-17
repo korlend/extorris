@@ -1,14 +1,11 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class PortalModel
-  extends DBModel<PortalModel>
-  implements IParsable<PortalModel>
-{
+export default class PortalModel extends DBModel<PortalModel> {
   _tableName: string = "portals";
   _entityType: EntityType = EntityType.PORTAL;
 
@@ -16,10 +13,14 @@ export default class PortalModel
   @FieldType(FieldTypes.PRIMARY_KEY)
   id: number = 0;
 
-  @FieldType(FieldTypes.ENTITY_SELECT, { fieldEntityType: EntityType.MAIN_MAP_HUB })
+  @FieldType(FieldTypes.ENTITY_SELECT, {
+    fieldEntityType: EntityType.MAIN_MAP_HUB,
+  })
   from_hub_id?: number;
 
-  @FieldType(FieldTypes.ENTITY_SELECT, { fieldEntityType: EntityType.MAIN_MAP_HUB })
+  @FieldType(FieldTypes.ENTITY_SELECT, {
+    fieldEntityType: EntityType.MAIN_MAP_HUB,
+  })
   to_hub_id?: number;
 
   @FieldType(FieldTypes.INT)
@@ -34,7 +35,7 @@ export default class PortalModel
   @FieldType(FieldTypes.INT)
   to_hub_position_y: number = 0;
 
-  parseObject(object: any): PortalModel {
+  parseObject(object: DBModelOnlyDBData<PortalModel>): PortalModel {
     const instance = new PortalModel();
     instance.id = object.id;
     instance.from_hub_id = object.from_hub_id;

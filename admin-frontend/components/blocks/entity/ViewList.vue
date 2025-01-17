@@ -29,9 +29,13 @@
           :key="item.id"
           class="pointer"
           @click="() => updateAction(item)">
-          <td v-for="entityKey in loadedEntityKeys" class="view__list-table-body-row-cell">
-            <template v-if="
-                loadedEntityKeysMetadata[entityKey].fieldType === FieldTypes.IMAGE_PATH
+          <td
+            v-for="entityKey in loadedEntityKeys"
+            class="view__list-table-body-row-cell">
+            <template
+              v-if="
+                loadedEntityKeysMetadata[entityKey].fieldType ===
+                FieldTypes.IMAGE_PATH
               ">
               <span>
                 {{ item[entityKey] }}
@@ -43,12 +47,29 @@
             </template>
             <span
               v-else-if="
-                loadedEntityKeysMetadata[entityKey].fieldEntityType === 'image'
+                loadedEntityKeysMetadata[entityKey].fieldEntityType ===
+                  'image' &&
+                loadedEntityKeysMetadata[entityKey].fieldType ===
+                  FieldTypes.ENTITY_SELECT &&
+                loadedLinkedEntities[item.id]
               ">
+              {{
+                getItemLabel(
+                  loadedLinkedEntities[item.id][
+                    loadedEntityKeysMetadata[entityKey].fieldEntityType
+                  ]
+                )
+              }}
               <img
                 v-if="item[entityKey]"
                 class="view__list-table-body-row-cell-image"
-                :src="getImageSrc(item, entityKey)" />
+                :src="
+                  getImageSrc(
+                    loadedLinkedEntities[item.id][
+                      loadedEntityKeysMetadata[entityKey].fieldEntityType
+                    ]
+                  )
+                " />
             </span>
             <span
               v-else-if="
@@ -178,16 +199,17 @@ const preparedData = computed(() => {
   return preparedData;
 });
 
-const getImageSrc = (item: Record<string, any>, key: string) => {
+const getImageSrc = (
+  item: Record<string, any>,
+  key: string = "relative_path"
+) => {
   const url = getImagesUrl();
   return `${url}/${item[key]}`;
 };
 
 const reload = async (filters: { [key: string]: any } = {}) => {
   isLoading.value = true;
-  console.log(filters)
   const dbFilters = createDBFilters(filters, loadedEntityKeysMetadata.value);
-  console.log(dbFilters)
   const response = await entitiesStore.filterEntity(
     entityName.value,
     (currentPage.value - 1) * pageSize.value,

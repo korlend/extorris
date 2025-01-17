@@ -133,12 +133,12 @@ export default class AdminRepository extends Repository<AdminModel> {
     from: number = 0,
     pageSize: number = 10,
     mallId: number,
-    parametersLimit: ParametersLimit = new ParametersLimit(),
+    parametersLimit: ParametersLimit<AdminModel> = new ParametersLimit(),
   ): Promise<AdminModel> {
     return this.connector
       .query(
         `
-      select ${this.adminModel.parametersKeysSnake(parametersLimit).join(",")} from ${this.target}
+      select ${this.adminModel.parametersKeys(parametersLimit).join(",")} from ${this.target}
       where id is not null
       ${this.defaultFilters()}
       ${mallId ? `and mall_id = ${mallId}` : ""}
@@ -154,12 +154,12 @@ export default class AdminRepository extends Repository<AdminModel> {
   }
 
   getAllNotApprovedAdminsAndAdmin(
-    fieldsExclude: ParametersLimit = new ParametersLimit(),
+    fieldsExclude: ParametersLimit<AdminModel> = new ParametersLimit(),
   ): Promise<AdminModel> {
     return this.connector
       .query(
         `
-      select ${this.adminModel.parametersKeysSnake(fieldsExclude).join(",")} from ${this.target}
+      select ${this.adminModel.parametersKeys(fieldsExclude).join(",")} from ${this.target}
       where id is not null
       ${this.defaultFilters()}
       and approved = 0

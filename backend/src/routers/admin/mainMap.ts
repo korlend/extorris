@@ -69,7 +69,7 @@ router.get(
     );
 
     response.iteration = iteration;
-    const portalFilters: Array<DBFilter> = [];
+    const portalFilters: Array<DBFilter<PortalModel>> = [];
 
     for (let i = 0; i < mainMaps.length; i++) {
       const map = mainMaps[i];

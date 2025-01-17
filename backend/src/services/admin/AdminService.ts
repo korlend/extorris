@@ -68,7 +68,7 @@ export default class AdminService extends Service<AdminModel, AdminRepository> {
         existsMsg = "email already exists";
       }
     } else {
-      const fields = new ParametersLimit();
+      const fields = new ParametersLimit<AdminModel>();
       const adminMap = admin.getParamsAndValues();
       adminMap.forEach((value, key) => {
         if (!value) {
@@ -97,7 +97,7 @@ export default class AdminService extends Service<AdminModel, AdminRepository> {
 
   async createAdmin(
     admin: AdminModel,
-    fields: ParametersLimit,
+    fields = new ParametersLimit<AdminModel>(),
   ): Promise<AdminModel> {
     return await this.adminRepo.create(admin, fields);
   }

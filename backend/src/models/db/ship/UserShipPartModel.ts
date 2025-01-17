@@ -1,15 +1,11 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
-import ShipPartSubtypes from "@src/enums/ShipPartSubtypes.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class UserShipPartModel
-  extends DBModel<UserShipPartModel>
-  implements IParsable<UserShipPartModel>
-{
+export default class UserShipPartModel extends DBModel<UserShipPartModel> {
   _tableName: string = "user_ship_parts";
   _entityType: EntityType = EntityType.USER_SHIP_PART;
 
@@ -51,7 +47,7 @@ export default class UserShipPartModel
   @FieldType(FieldTypes.INT)
   energy_consumption_change: number = 0;
 
-  parseObject(object: any): UserShipPartModel {
+  parseObject(object: DBModelOnlyDBData<UserShipPartModel>): UserShipPartModel {
     const instance = new UserShipPartModel();
     instance.id = object.id;
     instance.user_id = object.user_id;

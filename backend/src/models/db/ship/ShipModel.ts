@@ -1,14 +1,11 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class ShipModel
-  extends DBModel<ShipModel>
-  implements IParsable<ShipModel>
-{
+export default class ShipModel extends DBModel<ShipModel> {
   _tableName: string = "ships";
   _entityType: EntityType = EntityType.SHIP;
 
@@ -30,7 +27,7 @@ export default class ShipModel
   @FieldType(FieldTypes.BOOLEAN)
   is_parked: boolean = false;
 
-  parseObject(object: any): ShipModel {
+  parseObject(object: DBModelOnlyDBData<ShipModel>): ShipModel {
     const instance = new ShipModel();
     instance.id = object.id;
     instance.user_id = object.user_id;

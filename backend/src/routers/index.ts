@@ -11,6 +11,7 @@ import imagesRouter from "./admin/images.js";
 import userAuthRouter from "./user/userAuth.js";
 import userMainMapRouter from "./user/mainMap.js";
 import userShipManagementRouter from "./user/shipManagement.js";
+import homeIsland from "./user/homeIsland.js";
 
 import ExpressNext from "@src/models/ExpressNext.js";
 import ExpressAPIType from "@src/enums/ExpressAPIType.js";
@@ -54,6 +55,7 @@ userRouter.use(userAuthMiddleware);
 userRouter.use("/auth", userAuthRouter);
 userRouter.use("/main_map", userMainMapRouter);
 userRouter.use("/ship", userShipManagementRouter);
+userRouter.use("/home_island", homeIsland);
 
 // next propagation
 // userRouter.use((prev: ExpressNext, req: Request, res: Response, next: NextFunction) => {

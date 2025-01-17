@@ -2,13 +2,10 @@ import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import EntityType from "@src/enums/EntityType.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class GuildModel
-  extends DBModel<GuildModel>
-  implements IParsable<GuildModel>
-{
+export default class ImageModel extends DBModel<ImageModel> {
   _tableName: string = "images";
   _entityType: EntityType = EntityType.IMAGE;
 
@@ -34,8 +31,8 @@ export default class GuildModel
   @FieldType(FieldTypes.INT)
   size?: number;
 
-  parseObject(object: any): GuildModel {
-    const instance = new GuildModel();
+  parseObject(object: DBModelOnlyDBData<ImageModel>): ImageModel {
+    const instance = new ImageModel();
     instance.id = object.id;
     instance.relative_path = object.relative_path;
     instance.name = object.name;

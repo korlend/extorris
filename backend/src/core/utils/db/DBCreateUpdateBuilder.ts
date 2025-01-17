@@ -1,5 +1,6 @@
 import DBModel from "@src/models/db/DBModel.js";
 import ParametersLimit from "@src/models/ParametersLimit.js";
+import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
 
 type BuiltCreateData = {
   values: Array<any>;
@@ -15,7 +16,7 @@ type BuiltUpdateData = {
 export default class DBCreateUpdateBuilder {
   public static buildArrayCreateData<T extends DBModel<T>>(
     data: Array<T>,
-    fields: ParametersLimit,
+    fields: ParametersLimit<T>,
   ): BuiltCreateData {
     // multiple data models
     // INSERT INTO {target} ({queryParameters})
@@ -31,9 +32,9 @@ export default class DBCreateUpdateBuilder {
 
     const firstDataMap = firstModel.getParamsAndValues(fields);
 
-    const names: Array<string> = [];
+    const names: Array<DBModelDBDataKeys<T>> = [];
 
-    firstDataMap.forEach((value: any, key: string) => {
+    firstDataMap.forEach((value, key) => {
       if (firstModel.isImmutable(key)) {
         return;
       }
@@ -49,7 +50,7 @@ export default class DBCreateUpdateBuilder {
       const model = data[i];
       const dataMap = model.getParamsAndValues(fields);
 
-      const values: Array<any> = [];
+      const values: Array<T[DBModelDBDataKeys<T>] | undefined> = [];
 
       for (let j = 0; j < names.length; j++) {
         const name = names[i];
@@ -71,7 +72,7 @@ export default class DBCreateUpdateBuilder {
 
   public static buildCreateData<T extends DBModel<T>>(
     data: T,
-    fields: ParametersLimit,
+    fields: ParametersLimit<T>,
   ): BuiltCreateData {
     //single data model
     if (!data) {
@@ -84,10 +85,10 @@ export default class DBCreateUpdateBuilder {
 
     const dataMap = data.getParamsAndValues(fields);
 
-    const names: Array<string> = [];
-    const values: Array<any> = [];
+    const names: Array<DBModelDBDataKeys<T>> = [];
+    const values: Array<T[DBModelDBDataKeys<T>]> = [];
 
-    dataMap.forEach((value: any, key: string) => {
+    dataMap.forEach((value, key) => {
       if (value === undefined || data.isImmutable(key)) {
         return;
       }
@@ -108,7 +109,7 @@ export default class DBCreateUpdateBuilder {
 
   public static buildUpdateData<T extends DBModel<T>>(
     data: T,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields: ParametersLimit<T> = new ParametersLimit(),
   ): BuiltUpdateData {
     //single data model
     //UPDATE table_name
@@ -116,10 +117,10 @@ export default class DBCreateUpdateBuilder {
     // WHERE condition;
     const dataMap = data.getParamsAndValues(fields);
 
-    const names: Array<string> = [];
-    const values: Array<any> = [];
+    const names: Array<DBModelDBDataKeys<T> | string> = [];
+    const values: Array<T[DBModelDBDataKeys<T>]> = [];
 
-    dataMap.forEach((value: any, key: string) => {
+    dataMap.forEach((value, key) => {
       if (value === undefined || data.isImmutable(key)) {
         return;
       }
@@ -139,7 +140,7 @@ export default class DBCreateUpdateBuilder {
   public static buildUpdateMultipleData<T extends DBModel<T>>(
     data: Array<T>,
     tableAlias: String,
-    fields: ParametersLimit = new ParametersLimit(),
+    fields: ParametersLimit<T> = new ParametersLimit(),
   ): BuiltUpdateData {
     // UPDATE savage_grove.admins adm
     // join (
@@ -152,12 +153,12 @@ export default class DBCreateUpdateBuilder {
 
     const firstDataMap = firstModel.getParamsAndValues(fields);
 
-    const names: Array<string> = [];
+    const names: Array<DBModelDBDataKeys<T>> = [];
 
     const firstRowQueries: Array<string> = [];
     const endSetRowQueries: Array<string> = [];
 
-    firstDataMap.forEach((value: any, key: string) => {
+    firstDataMap.forEach((value, key) => {
       if (firstModel.isImmutable(key)) {
         return;
       }
@@ -168,7 +169,7 @@ export default class DBCreateUpdateBuilder {
     });
 
     const queryArray: Array<string> = [
-      `SELECT ${firstDataMap.get("id")} as id, ${firstRowQueries.join(",")}`,
+      `SELECT ${firstDataMap.get("id" as DBModelDBDataKeys<T>)} as id, ${firstRowQueries.join(",")}`,
     ];
 
     const values: Array<any> = [];
@@ -178,7 +179,7 @@ export default class DBCreateUpdateBuilder {
       const dataMap = model.getParamsAndValues(fields);
 
       // we ignore immutables (which always has id), so put it manually
-      values.push(dataMap.get("id"));
+      values.push(dataMap.get("id" as DBModelDBDataKeys<T>));
 
       for (let j = 0; j < names.length; j++) {
         const name = names[i];
@@ -214,7 +215,7 @@ export default class DBCreateUpdateBuilder {
 
 // .query(
 //   `
-// INSERT INTO ${this.target} (${model.parametersKeysSnake(fields).join(",")})
+// INSERT INTO ${this.target} (${model.parametersKeys(fields).join(",")})
 // VALUES (${model
 //   .parametersKeys(fields)
 //   .filter((v) => !fields.only.length || fields.only.includes(v))

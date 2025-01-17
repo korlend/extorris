@@ -1,14 +1,11 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class UserShipModuleModel
-  extends DBModel<UserShipModuleModel>
-  implements IParsable<UserShipModuleModel>
-{
+export default class UserShipModuleModel extends DBModel<UserShipModuleModel> {
   _tableName: string = "user_ship_modules";
   _entityType: EntityType = EntityType.USER_SHIP_MODULE;
 
@@ -27,7 +24,9 @@ export default class UserShipModuleModel
   })
   module_type_id?: number;
 
-  parseObject(object: any): UserShipModuleModel {
+  parseObject(
+    object: DBModelOnlyDBData<UserShipModuleModel>,
+  ): UserShipModuleModel {
     const instance = new UserShipModuleModel();
     instance.id = object.id;
     instance.user_id = object.user_id;

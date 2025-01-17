@@ -1,14 +1,11 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class UserModel
-  extends DBModel<UserModel>
-  implements IParsable<UserModel>
-{
+export default class UserModel extends DBModel<UserModel> {
   _tableName: string = "users";
   _entityType: EntityType = EntityType.USER;
 
@@ -51,7 +48,7 @@ export default class UserModel
   @FieldType(FieldTypes.DATE)
   updated: Date | null = new Date();
 
-  parseObject(object: any): UserModel {
+  parseObject(object: DBModelOnlyDBData<UserModel>): UserModel {
     const instance = new UserModel();
     instance.id = object.id;
     instance.guild_id = object.guild_id;

@@ -1,14 +1,11 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "./DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class UserIslandModel
-  extends DBModel<UserIslandModel>
-  implements IParsable<UserIslandModel>
-{
+export default class UserIslandModel extends DBModel<UserIslandModel> {
   _tableName: string = "user_islands";
   _entityType: EntityType = EntityType.USER_ISLAND;
 
@@ -22,9 +19,9 @@ export default class UserIslandModel
   @FieldType(FieldTypes.ENTITY_SELECT, {
     fieldEntityType: EntityType.MAIN_MAP_HUB,
   })
-  main_map_hub_id?: string;
+  main_map_hub_id?: number;
 
-  parseObject(object: any): UserIslandModel {
+  parseObject(object: DBModelOnlyDBData<UserIslandModel>): UserIslandModel {
     const instance = new UserIslandModel();
     instance.id = object.id;
     instance.user_id = object.user_id;

@@ -38,7 +38,7 @@ router.get(
       portals: [],
     };
     const iterationRequestData = new SearchRequestData(0, 1, "updated", "DESC");
-    const iterationFilters: Array<DBFilter> = [];
+    const iterationFilters: Array<DBFilter<IterationModel>> = [];
     iterationFilters.push(new DBFilter("active", true, "=", "AND"));
     iterationFilters.push(new DBFilter("start_date", new Date(), "<", "AND"));
     iterationFilters.push(new DBFilter("end_date", new Date(), ">", "AND"));
@@ -54,7 +54,7 @@ router.get(
     );
 
     response.iteration = iteration;
-    const portalFilters: Array<DBFilter> = [];
+    const portalFilters: Array<DBFilter<PortalModel>> = [];
 
     for (let i = 0; i < mainMaps.length; i++) {
       const map = mainMaps[i];

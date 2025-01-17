@@ -1,14 +1,17 @@
-export default class ParametersLimit {
-  exclude: Array<string>;
-  only: Array<string>;
-  excludeReturn: Array<string>;
-  ignoreValues: Array<any>;
+import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
+import DBModel from "./db/DBModel.js";
+
+export default class ParametersLimit<T extends DBModel<T>, K extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>> {
+  exclude: Array<K>;
+  only: Array<K>;
+  excludeReturn: Array<K>;
+  ignoreValues: Array<K>;
 
   constructor(
-    exclude: Array<string> = [],
-    only: Array<string> = [],
-    excludeReturn: Array<string> = [],
-    ignoreValues: Array<string> = [],
+    exclude: Array<K> = [],
+    only: Array<K> = [],
+    excludeReturn: Array<K> = [],
+    ignoreValues: Array<K> = [],
   ) {
     this.exclude = exclude;
     this.only = only;

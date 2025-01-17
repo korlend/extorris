@@ -2,13 +2,10 @@ import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
 import EntityType from "@src/enums/EntityType.js";
 import FieldTypes from "@src/enums/FieldTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
+import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
-export default class TranslationLanguageModel
-  extends DBModel<TranslationLanguageModel>
-  implements IParsable<TranslationLanguageModel>
-{
+export default class TranslationLanguageModel extends DBModel<TranslationLanguageModel> {
   _tableName: string = "translations_languages";
   _entityType: EntityType = EntityType.TRANSLATION_LANGUAGE;
 
@@ -19,13 +16,17 @@ export default class TranslationLanguageModel
   @FieldType(FieldTypes.ENTITY_SELECT, { fieldEntityType: EntityType.LANGUAGE })
   language_id?: number;
 
-  @FieldType(FieldTypes.ENTITY_SELECT, { fieldEntityType: EntityType.TRANSLATION })
+  @FieldType(FieldTypes.ENTITY_SELECT, {
+    fieldEntityType: EntityType.TRANSLATION,
+  })
   translation_id?: number;
 
   @FieldType(FieldTypes.STRING)
   text: string = "";
 
-  parseObject(object: any): TranslationLanguageModel {
+  parseObject(
+    object: DBModelOnlyDBData<TranslationLanguageModel>,
+  ): TranslationLanguageModel {
     const instance = new TranslationLanguageModel();
     instance.id = object.id;
     instance.language_id = object.language_id;

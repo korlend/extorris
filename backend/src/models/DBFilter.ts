@@ -1,16 +1,20 @@
-import IParsable from "@src/interfaces/IParsable.js";
 import DBLogicals from "@src/types/DBLogicals.js";
 import DBOperands from "@src/types/DBOperands.js";
+import DBModel from "./db/DBModel.js";
+import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
 
-export default class DBFilter {
-  name: string;
-  value: any;
+export default class DBFilter<
+  T extends DBModel<T>,
+  K extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>,
+> {
+  name: K;
+  value: T[K];
   operand: DBOperands;
   logical: DBLogicals;
 
   constructor(
-    name: string,
-    value: any,
+    name: K,
+    value: T[K],
     operand: DBOperands = "=",
     logical: DBLogicals = "AND",
   ) {
@@ -20,7 +24,7 @@ export default class DBFilter {
     this.logical = logical;
   }
 
-  static parseObject(object: any): DBFilter {
+  static parseObject(object: any): DBFilter<any> {
     return new DBFilter(
       object.name,
       object.value,
@@ -29,7 +33,7 @@ export default class DBFilter {
     );
   }
 
-  static parseObjects(array: Array<any>): Array<DBFilter> {
+  static parseObjects(array: Array<any>): Array<DBFilter<any>> {
     const arr = [];
     for (let i = 0; i < array.length; i++) {
       const object = array[i];

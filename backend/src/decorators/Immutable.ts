@@ -1,11 +1,11 @@
 import MetadataHelper from "@src/core/decorators/MetadataHelper.js";
 import ModelPropertyMetadataTypes from "@src/enums/ModelPropertyMetadataTypes.js";
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
+import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
 
-export default function Immutable<T extends IParsable<T>>(
-  target: DBModel<T>,
-  parameterName: string,
+export default function Immutable<T extends DBModel<T>>(
+  target: T,
+  parameterName: DBModelDBDataKeys<T>,
 ) {
   MetadataHelper.setPropertyMetadata(
     parameterName,

@@ -2,7 +2,6 @@ import AdminModel from "./admin/AdminModel.js";
 import AdminRoleModel from "./admin/AdminRoleModel.js";
 import AdminSessionModel from "./admin/AdminSessionModel.js";
 import CountryModel from "./CountryModel.js";
-import DummyModel from "./DummyModel.js";
 import DungeonIslandModel from "./DungeonIslandModel.js";
 import ExternalCreatureModel from "./main_map/ExternalCreatureModel.js";
 import GuildModel from "./GuildModel.js";
@@ -29,13 +28,17 @@ import UserSessionModel from "./user/UserSessionModel.js";
 import UserShipModuleModel from "./ship/UserShipModuleModel.js";
 import UserShipPartModel from "./ship/UserShipPartModel.js";
 import UserBeenToHubsModel from "./main_map/UserBeenToHubsModel.js";
+import ShipArmorModel from "./ship/ShipArmorModel.js";
+import ShipCannonModel from "./ship/ShipCannonModel.js";
+import ShipEngineModel from "./ship/ShipEngineModel.js";
+import ShipHullModel from "./ship/ShipHullModel.js";
+import ShipEnergyCoreModel from "./ship/ShipEnergyCoreModel.js";
 
 export {
   AdminModel,
   AdminRoleModel,
   AdminSessionModel,
   CountryModel,
-  DummyModel,
   DungeonIslandModel,
   ExternalCreatureModel,
   GuildModel,
@@ -62,4 +65,9 @@ export {
   UserShipModuleModel,
   UserShipPartModel,
   UserBeenToHubsModel,
+  ShipArmorModel,
+  ShipCannonModel,
+  ShipEngineModel,
+  ShipHullModel,
+  ShipEnergyCoreModel,
 };
