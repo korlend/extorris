@@ -1,20 +1,24 @@
 <template>
   <div class="home__page">
-    <BlocksCanvasBlock
+    <CanvasComponent
       class="home__page-canvas"
       :class="getClasses"
       :draw-function="draw"
       :draw-modal-function="drawModal"
       :canvas-blocks="canvasBlocks"
-      @action:click="clickEvent"></BlocksCanvasBlock>
+      @action:click="clickEvent"></CanvasComponent>
   </div>
 </template>
 
 <script setup lang="ts">
-import CanvasCursors from "~/core/enums/CanvasCursors";
-import type CanvasBlock from "~/core/interfaces/canvas/CanvasBlock";
-import type CanvasClickEvent from "~/core/interfaces/canvas/CanvasClickEvent";
-import type DrawOptions from "~/core/interfaces/canvas/DrawOptions";
+import {
+  CanvasComponent,
+  CanvasCursors,
+  type CanvasBlock,
+  type CanvasClickEvent,
+  type CanvasDrawOptions,
+} from "extorris";
+
 import {
   useModalWindowStore,
   type ModalWindowData,
@@ -24,7 +28,7 @@ import ShipyardMenu from "~/components/game/ShipyardMenu.vue";
 import { useHomeIslandStore } from "~/store/home_island";
 
 const modalWindowStore = useModalWindowStore();
-const homeIslandStore = useHomeIslandStore()
+const homeIslandStore = useHomeIslandStore();
 
 const mouseOnClickable: Ref<boolean> = ref(false);
 
@@ -151,7 +155,10 @@ const getBuilding = (): {
   };
 };
 
-const drawModal = (context: CanvasRenderingContext2D, options: DrawOptions) => {
+const drawModal = (
+  context: CanvasRenderingContext2D,
+  options: CanvasDrawOptions
+) => {
   context.save();
   if (isMenuOpen) {
     const menu = new Path2D();
@@ -169,7 +176,10 @@ const drawModal = (context: CanvasRenderingContext2D, options: DrawOptions) => {
   context.restore();
 };
 
-const draw = (context: CanvasRenderingContext2D, options: DrawOptions) => {};
+const draw = (
+  context: CanvasRenderingContext2D,
+  options: CanvasDrawOptions
+) => {};
 
 const clickEvent = (canvasEvent: CanvasClickEvent) => {};
 </script>

@@ -3702,6 +3702,7 @@ __metadata:
   dependencies:
     "@mdi/font": "npm:^7.4.47"
     "@pinia/nuxt": "npm:^0.5.5"
+    extorris: "portal:../extorris-common"
     mitt: "npm:^3.0.1"
     nuxt: "npm:^3.13.0"
     pinia: "npm:^2.2.4"
@@ -3714,6 +3715,15 @@ __metadata:
     vuetify: "npm:^3.7.2"
     vuetify-nuxt-module: "npm:^0.18.3"
   languageName: unknown
+  linkType: soft
+
+"extorris@portal:../extorris-common::locator=extorris-user-frontend%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "extorris@portal:../extorris-common::locator=extorris-user-frontend%40workspace%3A."
+  dependencies:
+    vue: "npm:latest"
+    vue-router: "npm:latest"
+  languageName: node
   linkType: soft
 
 "fast-fifo@npm:^1.2.0, fast-fifo@npm:^1.3.2":

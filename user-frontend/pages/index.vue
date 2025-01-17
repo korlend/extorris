@@ -1,16 +1,19 @@
 <template>
   <div class="hub__page">
-    <BlocksCanvasBlock
+    <CanvasComponent
       :draw-function="draw"
-      :canvas-blocks="canvasBlocks"></BlocksCanvasBlock>
+      :canvas-blocks="canvasBlocks"></CanvasComponent>
   </div>
 </template>
 
 <script setup lang="ts">
-import CanvasCursors from "~/core/enums/CanvasCursors";
-import type CanvasBlock from "~/core/interfaces/canvas/CanvasBlock";
-import type DrawOptions from "~/core/interfaces/canvas/DrawOptions";
-import type Vector2D from "~/core/interfaces/Vector2D";
+import {
+  CanvasComponent,
+  type CanvasBlock,
+  CanvasCursors,
+  type Vector2D,
+  type CanvasDrawOptions,
+} from "extorris";
 
 const maxDepth = 30;
 
@@ -70,7 +73,10 @@ const getHexagon = (
   return hexagon;
 };
 
-const draw = (context: CanvasRenderingContext2D, options: DrawOptions) => {};
+const draw = (
+  context: CanvasRenderingContext2D,
+  options: CanvasDrawOptions
+) => {};
 
 const calcPos = (
   itemNumber: number,

@@ -1,5 +1,5 @@
-import type CanvasCursors from "~/core/enums/canvas/CanvasCursors";
-import type Vector2D from "../Vector2D";
+import type CanvasCursors from "./CanvasCursors";
+import type Vector2D from "src/types/Vector2D";
 import type CanvasElement from "./CanvasElement";
 
 type HoverChange = {

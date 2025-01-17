@@ -1,0 +1,31 @@
+{
+  "name": "extorris-common",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@4.5.0",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "vue-tsc & vite build"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/vue3-extorris-common.es.d.ts",
+      "import": "./dist/vue3-extorris-common.es.js",
+      "require": "./dist/vue3-extorris-common.umd.js"
+    }
+  },
+  "dependencies": {
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "sass-embedded": "^1.83.4",
+    "typescript": "^5.4.5",
+    "typescript-transform-paths": "^3.5.1",
+    "vite": "^6.0.7",
+    "vite-plugin-css-injected-by-js": "^3.5.2",
+    "vite-plugin-dts": "^4.5.0",
+    "vue-tsc": "^2.2.0"
+  }
+}

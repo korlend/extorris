@@ -13,6 +13,7 @@
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@pinia/nuxt": "^0.5.5",
+    "extorris": "portal:../extorris-common",
     "mitt": "^3.0.1",
     "nuxt": "^3.13.0",
     "pinia": "^2.2.4",

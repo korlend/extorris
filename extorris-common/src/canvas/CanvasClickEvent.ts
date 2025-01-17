@@ -1,9 +1,9 @@
 import type CanvasBlock from "./CanvasBlock";
-import type DrawOptions from "./DrawOptions";
+import type CanvasDrawOptions from "./CanvasDrawOptions";
 
 export default interface CanvasClickEvent {
   event: MouseEvent;
   context: CanvasRenderingContext2D;
-  options: DrawOptions;
+  options: CanvasDrawOptions;
   clickedCanvasBlock?: CanvasBlock;
 }

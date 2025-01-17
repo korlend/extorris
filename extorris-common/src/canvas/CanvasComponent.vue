@@ -29,16 +29,26 @@
 </template>
 
 <script setup lang="ts">
-import CanvasCursors from "~/core/enums/CanvasCursors";
-import type CanvasBlock from "~/core/interfaces/canvas/CanvasBlock";
-import type CanvasClickEvent from "~/core/interfaces/canvas/CanvasClickEvent";
-import type CanvasElement from "~/core/interfaces/canvas/CanvasElement";
-import type DrawOptions from "~/core/interfaces/canvas/DrawOptions";
-import type Vector2D from "~/core/interfaces/Vector2D";
+import type Vector2D from "../types/Vector2D";
+import {
+  type PropType,
+  useTemplateRef,
+  ref,
+  type Ref,
+  onBeforeMount,
+  onMounted,
+  onBeforeUnmount,
+  computed,
+} from "vue";
+import type CanvasBlock from "./CanvasBlock";
+import type CanvasClickEvent from "./CanvasClickEvent";
+import CanvasCursors from "./CanvasCursors";
+import type CanvasElement from "./CanvasElement";
+import type CanvasDrawOptions from "./CanvasDrawOptions";
 
 type DrawFunction = (
   context: CanvasRenderingContext2D,
-  options: DrawOptions
+  options: CanvasDrawOptions
 ) => void;
 
 type CanvasBlocks = Array<CanvasBlock>;
@@ -263,7 +273,7 @@ const checkHover = (
   context: CanvasRenderingContext2D,
   hoverWhen: Array<Path2D> = []
 ): boolean => {
-  const mousePos = getDrawOptions().canvasMousePos;
+  const mousePos = getCanvasDrawOptions().canvasMousePos;
   for (let i = 0; i < hoverWhen.length; i++) {
     if (context.isPointInPath(hoverWhen[i], mousePos.x, mousePos.y)) {
       return true;
@@ -278,7 +288,7 @@ const redraw = async (context?: CanvasRenderingContext2D | null) => {
   }
   const time = new Date();
 
-  const options = getDrawOptions();
+  const options = getCanvasDrawOptions();
 
   let currentCursor = CanvasCursors.DEFAULT;
 
@@ -357,7 +367,7 @@ const redraw = async (context?: CanvasRenderingContext2D | null) => {
   }
 };
 
-const getDrawOptions = (): DrawOptions => {
+const getCanvasDrawOptions = (): CanvasDrawOptions => {
   return {
     currentScaling: currentScaling,
     currentShift: currentShift.value,
@@ -402,14 +412,14 @@ const clickEvent = async (event: MouseEvent) => {
     await clickedCanvasBlock.clickCallback({
       event,
       context,
-      options: getDrawOptions(),
+      options: getCanvasDrawOptions(),
       clickedCanvasBlock,
     });
   }
   emit("action:click", {
     event,
     context,
-    options: getDrawOptions(),
+    options: getCanvasDrawOptions(),
     clickedCanvasBlock,
   });
   context.restore();
