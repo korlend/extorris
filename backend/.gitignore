@@ -5,4 +5,4 @@ npm-debug.log
 pnpm-lock.yaml
 .vscode
 .yarn
-.public/images
+public/images
