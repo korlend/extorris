@@ -58,8 +58,7 @@ export default abstract class DBModel<T extends DBModel<T>> {
   //   return this.cutHash(fields) === model.cutHash(fields)
   // }
 
-  getValue(name: DBModelDBDataKeys<T>) {
-    // @ts-expect-error: otherwise [key: string]: any
+  getValue<K extends keyof this>(name: K): this[K] {
     return this[name];
   }
 

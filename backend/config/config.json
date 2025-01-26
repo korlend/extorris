@@ -33,6 +33,7 @@
         "/auth/login"
       ],
       "adminAuthFreeEndpoints": [
+        "/auth/posts",
         "/auth/login_username",
         "/auth/login_email"
       ],

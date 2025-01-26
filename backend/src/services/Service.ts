@@ -21,10 +21,7 @@ export default abstract class Service<
     this.repo = repo;
   }
 
-  async get(
-    id: number,
-    fields = new ParametersLimit<T>(),
-  ): Promise<T> {
+  async get(id: number, fields = new ParametersLimit<T>()): Promise<T> {
     return this.repo.get(id, fields);
   }
 
@@ -32,12 +29,20 @@ export default abstract class Service<
     return this.repo.getByModel(model);
   }
 
-  async getBy(key: DBDataKeys, value: T[DBDataKeys]): Promise<T> {
-    return this.repo.getBy(key, value);
+  async getBy(
+    key: DBDataKeys,
+    value: T[DBDataKeys],
+    fields = new ParametersLimit<T>(),
+  ): Promise<T> {
+    return this.repo.getBy(key, value, fields);
   }
 
-  async getAllBy(key: DBDataKeys, value: T[DBDataKeys]): Promise<Array<T>> {
-    return this.repo.getAllBy(key, value);
+  async getAllBy(
+    key: DBDataKeys,
+    value: T[DBDataKeys],
+    fields = new ParametersLimit<T>(),
+  ): Promise<Array<T>> {
+    return this.repo.getAllBy(key, value, fields);
   }
 
   async getRange(id: number | string): Promise<T | Array<T>> {
@@ -133,7 +138,7 @@ export default abstract class Service<
     return this._create(model, fields, updateLinks);
   }
 
-  async _update(
+  protected async _update(
     model: T,
     fields = new ParametersLimit<T>(),
     updateLinks = true,
@@ -163,13 +168,18 @@ export default abstract class Service<
     return this._update(model, fields, updateLinks);
   }
 
-  async _delete(id: number): Promise<void> {
+  protected async _delete(id: number): Promise<void> {
     let model = await this.repo.get(id);
     await this.repo.delete(model);
   }
 
-  async delete(id: number): Promise<void> {
-    return this._delete(id);
+  async delete(model: T): Promise<void>;
+  async delete(id: number): Promise<void>;
+  async delete(data: number | T): Promise<void> {
+    if (data instanceof DBModel) {
+      data = data.id;
+    }
+    return this._delete(data);
   }
 
   async createUpdate(
@@ -181,9 +191,15 @@ export default abstract class Service<
       getBy.push("id" as any);
     }
     const filters: Array<DBFilter<T>> = [];
-    getBy.forEach((v) => filters.push(new DBFilter(v, data.getValue(v), "=", "AND")))
+    getBy.forEach((v) =>
+      filters.push(new DBFilter(v, data.getValue(v), "=", "AND")),
+    );
 
-    let dbData = await this.repo.getSearchSingle(filters, new SearchRequestData(), fields);
+    let dbData = await this.repo.getSearchSingle(
+      filters,
+      new SearchRequestData(),
+      fields,
+    );
     if (!dbData) {
       dbData = await this.repo.create(data, fields);
     }
@@ -229,8 +245,16 @@ export default abstract class Service<
     return createdModels;
   }
 
-  async deleteAll(ids: Array<number>): Promise<void> {
-    const oldModels = await this.getAllByIds(ids);
+  async deleteAll(models: Array<DBModel<T>>): Promise<void>;
+  async deleteAll(ids: Array<number>): Promise<void>;
+  async deleteAll(data: Array<number> | Array<DBModel<T>>): Promise<void> {
+    if (!data || !data.length) {
+      return;
+    }
+    if (data.length && data[0] instanceof DBModel) {
+      data = (data as T[]).map((v) => v.id);
+    }
+    const oldModels = await this.getAllByIds(data as Array<number>);
     await this.repo.deleteAll(oldModels);
   }
 

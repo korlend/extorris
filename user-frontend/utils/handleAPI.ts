@@ -1,4 +1,4 @@
-import type ResponseAPI from "~/core/interfaces/ResponseAPI";
+import type { ResponseAPI } from "extorris";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 
 export function handleAPIError(errorData: ResponseAPI) {

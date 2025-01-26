@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import ShipItemType from "~/core/enums/ShipItemType";
+import { ShipItemType } from "extorris";
 import { useShipStore } from "~/store/ship";
 
 const shipStore = useShipStore();

@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
-import ShipItemType from "~/core/enums/ShipItemType";
+import { ShipItemType } from "extorris";
 
-import type ResponseAPI from "~/core/interfaces/ResponseAPI";
+import type { ResponseAPI } from "extorris";
 
 interface ShipState {
   userShip?: any;

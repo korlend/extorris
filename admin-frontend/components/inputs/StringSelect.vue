@@ -21,9 +21,6 @@
 </template>
 
 <script setup lang="ts">
-import { useEntitiesStore } from "@/store/entities";
-
-const entitiesStore = useEntitiesStore();
 
 const model = defineModel({ type: String });
 // const emit = defineEmits(["update:model-value"]);

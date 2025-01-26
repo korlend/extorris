@@ -121,7 +121,13 @@ import { useSlidebarStore } from "@/store/slidebar";
 import SlidebarTab from "~/core/models/slidebar_tabs/SlidebarTab";
 import MittEvents from "~/core/enums/MittEvents";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
-import FieldTypes from "~/core/enums/FieldTypes";
+import { FieldTypes } from "extorris";
+import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import {
+  ModalWindowSize,
+  useModalWindowStore,
+  type ModalWindowData,
+} from "@/store/modal_window";
 
 // const eEntityFieldTypes = EntityFieldTypes;
 
@@ -131,6 +137,7 @@ const route = useRoute();
 
 const slidebarStore = useSlidebarStore();
 const entitiesStore = useEntitiesStore();
+const modalWindowStore = useModalWindowStore();
 
 const props = defineProps({
   entity: {
@@ -251,6 +258,19 @@ const updateAction = (item: any) => {
 };
 
 const deleteAction = async (item: any) => {
+  if (
+    !(await modalWindowStore.openModal<boolean>({
+      component: ConfirmDialog,
+      props: {
+        title: "Are you sure you want to delete entity?",
+        text: `name: ${props.entity}, id: ${item.id}`,
+      },
+      size: ModalWindowSize.SMALL,
+    }))
+  ) {
+    return;
+  }
+
   await entitiesStore.deleteEntity(props.entity, item.id);
   createAlert(
     `Entity: ${props.entity}, id: ${item.id}`,

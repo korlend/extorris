@@ -44,26 +44,26 @@ export const useModalWindowStore = defineStore("modal_window", {
     },
   },
   actions: {
-    openModal<T = any>(data?: ModalWindowData, closeOnResult: boolean = true): Promise<any> {
+    openModal<T = any>(data?: ModalWindowData, closeOnResult: boolean = true): Promise<T> {
       if (data) {
-        const { component, props, title } = data;
+        const { component, props, title, size } = data;
         this.data = {
           component,
           props,
           title,
+          size,
         };
       }
       this.active = true;
-      const _this = this;
       const promise = new Promise<T>((resolve, reject) => {
-        _this.resolve = resolve;
-        _this.reject = reject;
-      }).then(() => {
+        this.resolve = resolve
+        this.reject = reject
+      }).finally(() => {
         if (closeOnResult) {
-          _this.closeModal();
+          this.closeModal();
         }
-      });
-      return promise;
+      })
+      return promise as Promise<T>;
     },
     closeModal() {
       this.active = false;

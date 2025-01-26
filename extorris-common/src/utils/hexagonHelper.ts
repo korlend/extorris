@@ -1,4 +1,81 @@
-import type HexCoordinates from "~/core/interfaces/HexCoordinates";
+import type HexCoordinates from "src/interfaces/HexCoordinates";
+
+// type HexDirection =
+//   | "topLeft"
+//   | "topRight"
+//   | "right"
+//   | "bottomRight"
+//   | "bottomLeft"
+//   | "left";
+
+export enum HexDirection {
+  TOP_LEFT = "topLeft",
+  TOP_RIGHT = "topRight",
+  RIGHT = "right",
+  BOTTOM_RIGHT = "bottomRight",
+  BOTTOM_LEFT = "bottomLeft",
+  LEFT = "left",
+}
+
+export function getDepthItemMaxNumber(depth: number) {
+  return depth * 6 || 1;
+}
+
+export function getHexNearbyCoords(
+  itemDepth: number,
+  itemNumber: number
+): Record<HexDirection, HexCoordinates> {
+  return {
+    topLeft: getHexCoordinatesTopLeft(itemDepth, itemNumber),
+    topRight: getHexCoordinatesTopRight(itemDepth, itemNumber),
+    right: getHexCoordinatesRight(itemDepth, itemNumber),
+    bottomRight: getHexCoordinatesBottomRight(itemDepth, itemNumber),
+    bottomLeft: getHexCoordinatesBottomLeft(itemDepth, itemNumber),
+    left: getHexCoordinatesLeft(itemDepth, itemNumber),
+  };
+}
+
+
+export function getHexesDirection(
+  fromDepth: number,
+  fromNumber: number,
+  toDepth: number,
+  toNumber: number,
+): HexDirection | null {
+  const coords = getHexNearbyCoords(fromDepth, fromNumber);
+
+  const keys = Object.values(HexDirection) as Array<HexDirection>;
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (
+      toDepth === coords[key].itemDepth &&
+      toNumber === coords[key].itemNumber
+    ) {
+      return key;
+    }
+  }
+
+  return null;
+}
+
+export function getReverseDirection(direction: HexDirection): HexDirection {
+  if (direction === HexDirection.TOP_LEFT) {
+    return HexDirection.BOTTOM_RIGHT;
+  }
+  if (direction === HexDirection.TOP_RIGHT) {
+    return HexDirection.BOTTOM_LEFT;
+  }
+  if (direction === HexDirection.RIGHT) {
+    return HexDirection.LEFT;
+  }
+  if (direction === HexDirection.BOTTOM_RIGHT) {
+    return HexDirection.TOP_LEFT;
+  }
+  if (direction === HexDirection.BOTTOM_LEFT) {
+    return HexDirection.TOP_RIGHT;
+  }
+  return HexDirection.RIGHT;
+}
 
 export function getHexData(itemDepth: number, itemNumber: number) {
   const isTopRow = itemNumber >= 0 && itemNumber <= itemDepth;
@@ -7,8 +84,12 @@ export function getHexData(itemDepth: number, itemNumber: number) {
     itemNumber >= itemDepth * 3 && itemNumber <= itemDepth * 4;
   const isLeftRow = itemNumber > itemDepth * 4;
 
-  const isIncreasing = itemNumber < itemDepth * 2;
-  const isDecreasing = itemNumber > itemDepth * 2;
+  const isRightRowIncreasing = itemNumber < itemDepth * 2;
+  const isRightRowDecreasing = itemNumber > itemDepth * 2;
+  const isLeftRowIncreasing = itemNumber < itemDepth * 5;
+  const isLeftRowDecreasing = itemNumber > itemDepth * 5;
+  const isRightRowMiddle = itemNumber === itemDepth * 2;
+  const isLeftRowMiddle = itemNumber === itemDepth * 5;
 
   const itemCoordinates: HexCoordinates = {
     itemDepth: 0,
@@ -25,8 +106,12 @@ export function getHexData(itemDepth: number, itemNumber: number) {
     isRightRow,
     isBottomRow,
     isLeftRow,
-    isIncreasing,
-    isDecreasing,
+    isRightRowMiddle,
+    isLeftRowMiddle,
+    isRightRowIncreasing,
+    isRightRowDecreasing,
+    isLeftRowIncreasing,
+    isLeftRowDecreasing,
   };
 }
 
@@ -41,18 +126,18 @@ export function getHexCoordinatesTopLeft(
     };
   }
 
-  const isTopRow = itemNumber >= 0 && itemNumber <= itemDepth;
-  const isRightRow = itemNumber > itemDepth && itemNumber < itemDepth * 3;
-  const isBottomRow =
-    itemNumber >= itemDepth * 3 && itemNumber <= itemDepth * 4;
-  const isLeftRow = itemNumber > itemDepth * 4;
-
-  const isRightRowIncreasing = itemNumber < itemDepth * 2;
-  const isRightRowDecreasing = itemNumber > itemDepth * 2;
-  const isLeftRowIncreasing = itemNumber < itemDepth * 5;
-  const isLeftRowDecreasing = itemNumber > itemDepth * 5;
-  const isRightRowMiddle = itemNumber === itemDepth * 2;
-  const isLeftRowMiddle = itemNumber === itemDepth * 5;
+  const {
+    isTopRow,
+    isRightRow,
+    isBottomRow,
+    isLeftRow,
+    isRightRowMiddle,
+    isLeftRowMiddle,
+    isRightRowIncreasing,
+    isRightRowDecreasing,
+    isLeftRowIncreasing,
+    isLeftRowDecreasing,
+  } = getHexData(itemDepth, itemNumber);
 
   const itemCoordinates: HexCoordinates = {
     itemDepth: 1,
@@ -102,18 +187,18 @@ export function getHexCoordinatesTopRight(
     };
   }
 
-  const isTopRow = itemNumber >= 0 && itemNumber <= itemDepth;
-  const isRightRow = itemNumber > itemDepth && itemNumber < itemDepth * 3;
-  const isBottomRow =
-    itemNumber >= itemDepth * 3 && itemNumber <= itemDepth * 4;
-  const isLeftRow = itemNumber > itemDepth * 4;
-
-  const isRightRowIncreasing = itemNumber < itemDepth * 2;
-  const isRightRowDecreasing = itemNumber > itemDepth * 2;
-  const isLeftRowIncreasing = itemNumber < itemDepth * 5;
-  const isLeftRowDecreasing = itemNumber > itemDepth * 5;
-  const isRightRowMiddle = itemNumber === itemDepth * 2;
-  const isLeftRowMiddle = itemNumber === itemDepth * 5;
+  const {
+    isTopRow,
+    isRightRow,
+    isBottomRow,
+    isLeftRow,
+    isRightRowMiddle,
+    isLeftRowMiddle,
+    isRightRowIncreasing,
+    isRightRowDecreasing,
+    isLeftRowIncreasing,
+    isLeftRowDecreasing,
+  } = getHexData(itemDepth, itemNumber);
 
   const itemCoordinates: HexCoordinates = {
     itemDepth: 0,
@@ -166,18 +251,18 @@ export function getHexCoordinatesRight(
     };
   }
 
-  const isTopRow = itemNumber >= 0 && itemNumber <= itemDepth;
-  const isRightRow = itemNumber > itemDepth && itemNumber < itemDepth * 3;
-  const isBottomRow =
-    itemNumber >= itemDepth * 3 && itemNumber <= itemDepth * 4;
-  const isLeftRow = itemNumber > itemDepth * 4;
-
-  const isRightRowIncreasing = itemNumber < itemDepth * 2;
-  const isRightRowDecreasing = itemNumber > itemDepth * 2;
-  const isLeftRowIncreasing = itemNumber < itemDepth * 5;
-  const isLeftRowDecreasing = itemNumber > itemDepth * 5;
-  const isRightRowMiddle = itemNumber === itemDepth * 2;
-  const isLeftRowMiddle = itemNumber === itemDepth * 5;
+  const {
+    isTopRow,
+    isRightRow,
+    isBottomRow,
+    isLeftRow,
+    isRightRowMiddle,
+    isLeftRowMiddle,
+    isRightRowIncreasing,
+    isRightRowDecreasing,
+    isLeftRowIncreasing,
+    isLeftRowDecreasing,
+  } = getHexData(itemDepth, itemNumber);
 
   const itemCoordinates: HexCoordinates = {
     itemDepth: 0,
@@ -227,18 +312,18 @@ export function getHexCoordinatesBottomRight(
     };
   }
 
-  const isTopRow = itemNumber >= 0 && itemNumber <= itemDepth;
-  const isRightRow = itemNumber > itemDepth && itemNumber < itemDepth * 3;
-  const isBottomRow =
-    itemNumber >= itemDepth * 3 && itemNumber <= itemDepth * 4;
-  const isLeftRow = itemNumber > itemDepth * 4;
-
-  const isRightRowIncreasing = itemNumber < itemDepth * 2;
-  const isRightRowDecreasing = itemNumber > itemDepth * 2;
-  const isLeftRowIncreasing = itemNumber < itemDepth * 5;
-  const isLeftRowDecreasing = itemNumber > itemDepth * 5;
-  const isRightRowMiddle = itemNumber === itemDepth * 2;
-  const isLeftRowMiddle = itemNumber === itemDepth * 5;
+  const {
+    isTopRow,
+    isRightRow,
+    isBottomRow,
+    isLeftRow,
+    isRightRowMiddle,
+    isLeftRowMiddle,
+    isRightRowIncreasing,
+    isRightRowDecreasing,
+    isLeftRowIncreasing,
+    isLeftRowDecreasing,
+  } = getHexData(itemDepth, itemNumber);
 
   const itemCoordinates: HexCoordinates = {
     itemDepth: 0,
@@ -288,18 +373,18 @@ export function getHexCoordinatesBottomLeft(
     };
   }
 
-  const isTopRow = itemNumber >= 0 && itemNumber <= itemDepth;
-  const isRightRow = itemNumber > itemDepth && itemNumber < itemDepth * 3;
-  const isBottomRow =
-    itemNumber >= itemDepth * 3 && itemNumber <= itemDepth * 4;
-  const isLeftRow = itemNumber > itemDepth * 4;
-
-  const isRightRowIncreasing = itemNumber < itemDepth * 2;
-  const isRightRowDecreasing = itemNumber > itemDepth * 2;
-  const isLeftRowIncreasing = itemNumber < itemDepth * 5;
-  const isLeftRowDecreasing = itemNumber > itemDepth * 5;
-  const isRightRowMiddle = itemNumber === itemDepth * 2;
-  const isLeftRowMiddle = itemNumber === itemDepth * 5;
+  const {
+    isTopRow,
+    isRightRow,
+    isBottomRow,
+    isLeftRow,
+    isRightRowMiddle,
+    isLeftRowMiddle,
+    isRightRowIncreasing,
+    isRightRowDecreasing,
+    isLeftRowIncreasing,
+    isLeftRowDecreasing,
+  } = getHexData(itemDepth, itemNumber);
 
   const itemCoordinates: HexCoordinates = {
     itemDepth: 0,
@@ -349,18 +434,18 @@ export function getHexCoordinatesLeft(
     };
   }
 
-  const isTopRow = itemNumber >= 0 && itemNumber <= itemDepth;
-  const isRightRow = itemNumber > itemDepth && itemNumber < itemDepth * 3;
-  const isBottomRow =
-    itemNumber >= itemDepth * 3 && itemNumber <= itemDepth * 4;
-  const isLeftRow = itemNumber > itemDepth * 4;
-
-  const isRightRowIncreasing = itemNumber < itemDepth * 2;
-  const isRightRowDecreasing = itemNumber > itemDepth * 2;
-  const isLeftRowIncreasing = itemNumber < itemDepth * 5;
-  const isLeftRowDecreasing = itemNumber > itemDepth * 5;
-  const isRightRowMiddle = itemNumber === itemDepth * 2;
-  const isLeftRowMiddle = itemNumber === itemDepth * 5;
+  const {
+    isTopRow,
+    isRightRow,
+    isBottomRow,
+    isLeftRow,
+    isRightRowMiddle,
+    isLeftRowMiddle,
+    isRightRowIncreasing,
+    isRightRowDecreasing,
+    isLeftRowIncreasing,
+    isLeftRowDecreasing,
+  } = getHexData(itemDepth, itemNumber);
 
   const itemCoordinates: HexCoordinates = {
     itemDepth: 0,

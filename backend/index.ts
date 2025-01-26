@@ -54,7 +54,7 @@ async function init() {
   const app = express();
 
   app.use(cors());
-  app.use(express.static('public'));
+  app.use(express.static("public"));
 
   const port = normalizePort(config.get("port"));
   const host = normalizePort(config.get("host"));

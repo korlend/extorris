@@ -1,8 +1,7 @@
 import { defineStore } from "pinia";
 
 import MittEvents from "~/core/enums/MittEvents";
-import type ResponseAPI from "~/core/interfaces/ResponseAPI";
-import type ResponseCreateUpdateAPI from "~/core/interfaces/ResponseCreateUpdateAPI";
+import type { ResponseAPI } from "extorris";
 
 interface MainMapPing {
   active: boolean;
@@ -56,9 +55,7 @@ export const useMainMapStore = defineStore("main_map", {
 
       this.pings[itemDepth][itemNumber].active = false;
     },
-    async loadHub(
-      hubId: number,
-    ): Promise<ResponseAPI> {
+    async loadHub(hubId: number): Promise<ResponseAPI> {
       const { $api } = useNuxtApp();
       const response: ResponseAPI = await $api(
         `/admin-api/main_map/load_hub/${hubId}`,
@@ -68,12 +65,26 @@ export const useMainMapStore = defineStore("main_map", {
       );
       return response.result;
     },
-    async loadIteration(
-      iterationId: number,
-    ): Promise<ResponseAPI> {
+    async loadIteration(iterationId: number): Promise<ResponseAPI | null> {
+      if (!iterationId) {
+        return null
+      }
       const { $api } = useNuxtApp();
       const response: ResponseAPI = await $api(
         `/admin-api/main_map/load_iteration/${iterationId}`,
+        {
+          method: "GET",
+        }
+      );
+      return response.result;
+    },
+    async loadMainMap(mainMapId: number): Promise<ResponseAPI | null> {
+      if (!mainMapId) {
+        return null
+      }
+      const { $api } = useNuxtApp();
+      const response: ResponseAPI = await $api(
+        `/admin-api/main_map/load_main_map/${mainMapId}`,
         {
           method: "GET",
         }
@@ -85,7 +96,7 @@ export const useMainMapStore = defineStore("main_map", {
       mapDepth: number,
       treesDepthStart: number,
       startDate: Date | undefined,
-      endDate: Date | undefined,
+      endDate: Date | undefined
     ): Promise<ResponseAPI> {
       const { $api } = useNuxtApp();
       const response: ResponseAPI = await $api(
@@ -98,7 +109,7 @@ export const useMainMapStore = defineStore("main_map", {
             treesDepthStart,
             startDate,
             endDate,
-          }
+          },
         }
       );
       return response.result;

@@ -1,4 +1,4 @@
-enum EntityInfoFieldTypes {
+enum EntityFieldTypes {
   STRING = "string",
   INT = "int",
   FLOAT = "float",
@@ -7,4 +7,4 @@ enum EntityInfoFieldTypes {
   ENTITY_SELECT = "entity_select",
 }
 
-export default EntityInfoFieldTypes;
+export default EntityFieldTypes;

@@ -1,5 +1,5 @@
 export function getRandomInt(max: number) {
-  return Math.floor(Math.random() * max);
+  return Math.round(Math.random() * max);
 };
 
 export function getColor() {

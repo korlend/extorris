@@ -34,7 +34,7 @@ router.post(
 
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
-        iteration,
+        iteration: iteration.prepareREST(),
       }),
     );
   },
@@ -96,6 +96,61 @@ router.get(
       ExpressResponseGenerator.getResponse(
         ExpressResponseTypes.SUCCESS,
         response,
+      ),
+    );
+  },
+);
+
+router.get(
+  "/load_main_map/:main_map_id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const mainMapService = new MainMapService();
+    const mainMapHubService = new MainMapHubService();
+    const portalService = new PortalService();
+
+    const mainMapId = parseInt(req.params.main_map_id);
+
+    const response: {
+      mainMap?: MainMapModel;
+      mainMapHubs: Array<MainMapHubModel>;
+      portals: Array<PortalModel>;
+    } = {
+      mainMapHubs: [],
+      portals: [],
+    };
+
+    const mainMap = await mainMapService.get(mainMapId);
+    const mainMapHubs = await mainMapHubService.getAllBy(
+      "main_map_id",
+      mainMap.id,
+    );
+
+    response.mainMap = mainMap;
+    response.mainMapHubs = mainMapHubs;
+
+    const portalFilters: Array<DBFilter<PortalModel>> = [];
+
+    for (let j = 0; j < mainMapHubs.length; j++) {
+      const hub = mainMapHubs[j];
+      portalFilters.push(new DBFilter("from_hub_id", hub.id, "=", "OR"));
+      portalFilters.push(new DBFilter("to_hub_id", hub.id, "=", "OR"));
+    }
+
+    response.portals = await portalService.getAll(
+      0,
+      10000,
+      new ParametersLimit(),
+      portalFilters,
+    );
+
+    next(
+      ExpressResponseGenerator.getResponse(
+        ExpressResponseTypes.SUCCESS,
+        {
+          mainMap: response.mainMap.prepareREST(),
+          mainMapHubs: response.mainMapHubs.map(v => v.prepareREST()),
+          portals: response.portals.map(v => v.prepareREST()),
+        },
       ),
     );
   },

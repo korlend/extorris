@@ -61,7 +61,7 @@ const getReject = computed(() => {
 });
 
 const getSize = computed(() => {
-  return modalWindowData.value?.size ?? ModalWindowSize.LARGE;
+  return modalWindowData.value?.size || ModalWindowSize.LARGE;
 });
 
 const closeModal = () => {
@@ -72,56 +72,42 @@ const closeModal = () => {
 <style lang="scss" scoped>
 .modal__window {
   position: fixed;
-  // top: -100dvh;
-  // left: -100dvw;
   transform: translate(0, -100dvh);
   height: 100dvh;
   width: 100dvw;
   transition: all 0.1s ease;
-  // backdrop-filter: blur(5px);
   z-index: 300;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
   &.active {
-    // top: 0px;
-    // left: 0px;
     transform: translate(0, 0);
   }
 
   &-inner {
     position: absolute;
-    // backdrop-filter: blur(20px);
-    // border-radius: 50px;
+    border-radius: 50px;
     // background-image: linear-gradient(to right, rgba(0, 105, 52, 0.9), rgba(63, 143, 255, 0.9));
-    // background-color: #444;
-    // z-index: 400;
-    // background: rgb(150,150,150);
     backdrop-filter: blur(20px);
 
     &.large {
-      top: 50px;
-      left: 100px;
-      height: calc(100dvh - 100px);
-      width: calc(100dvw - 200px);
+      height: 800px;
+      width: 1700px;
     }
 
     &.medium {
-      top: 200px;
-      left: 300px;
-      height: calc(100dvh - 400px);
-      width: calc(100dvw - 600px);
+      height: 600px;
+      width: 1000px;
     }
 
-    // &::before {
-    //   position: absolute;
-    //   content: '';
-    //   backdrop-filter: blur(20px);
-    //   border-radius: 50px;
-    //   width: 100%;
-    //   height: 100%;
-    // }
+    &.small {
+      height: 300px;
+      width: 500px;
+    }
 
     &-component {
-      // padding: 20px;
+      padding: 20px;
       width: 100%;
       height: 100%;
     }

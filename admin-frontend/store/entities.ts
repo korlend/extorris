@@ -1,13 +1,15 @@
 // import { getItem } from "~/utils/localStorage";
+import {
+  FieldTypes,
+  type ResponseEntitiesListAPI,
+  type ResponseAPI,
+  type ResponseEntityInfoAPI,
+  type ResponseEntityDataAPI,
+  type ResponseFilterAPI,
+  type ResponseCreateUpdateAPI,
+} from "extorris";
 import { defineStore } from "pinia";
-import FieldTypes from "~/core/enums/FieldTypes";
 import type KeyAndMetadata from "~/core/interfaces/KeyAndMetadata";
-import type ResponseAPI from "~/core/interfaces/ResponseAPI";
-import type ResponseCreateUpdateAPI from "~/core/interfaces/ResponseCreateUpdateAPI";
-import type { ResponseEntitiesListAPI } from "~/core/interfaces/ResponseEntitiesListAPI";
-import type { ResponseEntityDataAPI } from "~/core/interfaces/ResponseEntityDataAPI";
-import type ResponseEntityInfoAPI from "~/core/interfaces/ResponseEntityInfoAPI";
-import type ResponseFilterAPI from "~/core/interfaces/ResponseFilterAPI";
 import DBFilter from "~/core/models/db/DBFilter";
 
 export interface EntitiesState {

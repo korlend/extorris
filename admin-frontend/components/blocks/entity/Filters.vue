@@ -142,7 +142,7 @@
 
 <script setup lang="ts">
 import { useEntitiesStore } from "@/store/entities";
-import FieldTypes from "~/core/enums/FieldTypes";
+import { FieldTypes } from "extorris";
 import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
 
 type ExtraKey = "from" | "to";

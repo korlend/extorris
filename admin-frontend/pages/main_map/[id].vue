@@ -9,11 +9,13 @@
           label="Select iteration"
           entity="iteration"></InputsEntity>
         <InputsEntity
+          v-model="currentMainMapId"
           class="main__map-generation-input"
           :filters="mainMapFilters"
           @update:model-value="selectMainMap"
           label="Select main map"
-          entity="main_map"></InputsEntity>
+          entity="main_map"
+          autoselect-first></InputsEntity>
       </div>
       <div class="main__map-selectors-row"></div>
     </span>
@@ -48,9 +50,9 @@
       </div>
     </span>
     <client-only>
-      <BlocksCanvasBlock
+      <CanvasComponent
         :draw-function="draw"
-        :canvas-blocks="canvasBlocks"></BlocksCanvasBlock>
+        :canvas-blocks="canvasBlocks"></CanvasComponent>
     </client-only>
   </div>
 </template>
@@ -59,10 +61,16 @@
 import { useMainMapStore } from "@/store/main_map";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 import MittEvents from "~/core/enums/MittEvents";
-import type CanvasBlock from "~/core/interfaces/canvas/CanvasBlock";
-import CanvasCursors from "~/core/enums/CanvasCursors";
-import type DrawOptions from "~/core/interfaces/canvas/DrawOptions";
-import type Vector2D from "~/core/interfaces/Vector2D";
+
+import {
+  CanvasComponent,
+  CanvasCursors,
+  type CanvasBlock,
+  type CanvasClickEvent,
+  type CanvasDrawOptions,
+  type CanvasElement,
+  type Vector2D,
+} from "extorris";
 
 const { $mittEmit } = useNuxtApp();
 
@@ -70,15 +78,18 @@ const router = useRouter();
 const route = useRoute();
 const mainMapStore = useMainMapStore();
 
-const layerAmount: Ref<number> = ref(0);
-const mapDepth: Ref<number> = ref(0);
+const layerAmount: Ref<number> = ref(1);
+const mapDepth: Ref<number> = ref(5);
 const treesDepthStart: Ref<number> = ref(0);
 const startDate: Ref<Date | undefined> = ref();
 const endDate: Ref<Date | undefined> = ref();
 
 const currentIterationId: Ref<number> = ref(0);
+const currentMainMapId: Ref<number> = ref(0);
 
 const canvasBlocks: Ref<Array<CanvasBlock>> = ref([]);
+
+const loadedMainMap: Ref<Record<string, any> | null> = ref(null);
 
 watch(
   () => route,
@@ -88,43 +99,15 @@ watch(
   }
 );
 
+watch(currentMainMapId, async (newMainMapId) => {
+  loadedMainMap.value = await loadMainMap(newMainMapId);
+  resetCanvasBlock();
+});
+
 onMounted(async () => {
   currentIterationId.value = parseInt(route.params.id as string);
   await loadIteration();
-
-  const maxDepth = 30;
-
-  const hexSize = 100;
-  const hexYOffset = 25;
-  const hexGap = 2;
-
-  for (let depth = 0; depth < maxDepth; depth++) {
-    const maxHubNumber = depth * 6 || 1;
-    for (let hubNumber = 0; hubNumber < maxHubNumber; hubNumber++) {
-      const pos = calcPos(hubNumber, depth, hexSize);
-      const hex = getHexagon(hexSize, hexYOffset, hexGap);
-      canvasBlocks.value.push({
-        zindex: 0,
-        position: pos,
-        fill: [
-          {
-            path: hex,
-            color: `rgb(150,150,150)`,
-          },
-        ],
-        hoverWhen: [hex],
-        hoverChange: {
-          cursor: CanvasCursors.POINTER,
-          fill: [
-            {
-              path: hex,
-              color: `rgb(255,255,255)`,
-            },
-          ],
-        },
-      });
-    }
-  }
+  resetCanvasBlock();
 });
 
 const mainMapFilters = computed(() => {
@@ -134,6 +117,141 @@ const mainMapFilters = computed(() => {
   }
   return filters;
 });
+
+const mappedPortalsByHubId = computed(() => {
+  const mainMap = loadedMainMap.value;
+  const mappedPortals: { [key: number]: Array<Record<string, any>> } = {};
+  if (!mainMap) {
+    return mappedPortals;
+  }
+
+  for (let i = 0; i < mainMap.portals.length; i++) {
+    const portal = mainMap.portals[i];
+    if (!mappedPortals[portal.from_hub_id]) {
+      mappedPortals[portal.from_hub_id] = [];
+    }
+    mappedPortals[portal.from_hub_id].push(portal);
+  }
+
+  return mappedPortals;
+});
+
+const mappedHubsByHubId = computed(() => {
+  const mainMap = loadedMainMap.value;
+  const mappedHubs: { [key: number]: Record<string, any> } = {};
+  if (!mainMap) {
+    return mappedHubs;
+  }
+
+  for (let i = 0; i < mainMap.mainMapHubs.length; i++) {
+    const hub = mainMap.mainMapHubs[i];
+    mappedHubs[hub.id] = hub;
+  }
+
+  return mappedHubs;
+});
+
+const resetCanvasBlock = (iteration?: any) => {
+  const hexSize = 100;
+  const hexYOffset = 25;
+  const hexGap = 2;
+
+  canvasBlocks.value = [];
+  if (!loadedMainMap.value) {
+    return;
+  }
+
+  console.log("123", loadedMainMap.value.mainMapHubs);
+  const hex = getHexagon(hexSize, hexYOffset, hexGap);
+
+  const newCanvasBlocks: Array<CanvasBlock> = [];
+
+  for (let i = 0; i < loadedMainMap.value.mainMapHubs.length; i++) {
+    const hub = loadedMainMap.value.mainMapHubs[i];
+    const pos = calcPos(hub.hub_number, hub.on_depth, hexSize);
+    const portals = mappedPortalsByHubId.value[hub.id];
+
+    const portalLines: Array<CanvasElement> = [];
+    if (portals?.length) {
+      for (let j = 0; j < portals.length; j++) {
+        const portal = portals[j];
+        const linkedHub = mappedHubsByHubId.value[portal.to_hub_id];
+        const linkedHubPos = calcPos(
+          linkedHub.hub_number,
+          linkedHub.on_depth,
+          hexSize
+        );
+        // console.log(`hub[${hub.on_depth}-${hub.hub_number}]`, pos.x, pos.y, `linkedHub[${linkedHub.on_depth}-${linkedHub.hub_number}]`, linkedHubPos.x, linkedHubPos.y)
+        // portalLines.push({
+        //   path: getLine(pos, linkedHubPos),
+        //   color: `rgb(50,250,250)`,
+        // });
+        newCanvasBlocks.push({
+          zindex: 1,
+          position: pos,
+          stroke: [
+            {
+              path: getLine(pos, linkedHubPos),
+              color: `rgb(250,0,0)`,
+            },
+          ],
+        });
+      }
+    }
+
+    newCanvasBlocks.push({
+      zindex: 0,
+      position: pos,
+      fill: [
+        {
+          path: hex,
+          color: `rgb(150,150,150)`,
+        },
+      ],
+      hoverWhen: [hex],
+      hoverChange: {
+        cursor: CanvasCursors.POINTER,
+        fill: [
+          {
+            path: hex,
+            color: `rgb(255,255,255)`,
+          },
+        ],
+        // stroke: [...portalLines],
+      },
+    });
+  }
+
+  canvasBlocks.value = newCanvasBlocks;
+
+  // for (let depth = 0; depth < 30; depth++) {
+  //   const maxHubNumber = depth * 6 || 1;
+  //   for (let hubNumber = 0; hubNumber < maxHubNumber; hubNumber++) {
+  //     const pos = calcPos(hubNumber, depth, hexSize);
+  //     const hex = getHexagon(hexSize, hexYOffset, hexGap);
+  //     canvasBlocks.value.push({
+  //       zindex: 0,
+  //       position: pos,
+  //       fill: [
+  //         {
+  //           path: hex,
+  //           color: `rgb(150,150,150)`,
+  //         },
+  //       ],
+  //       hoverWhen: [hex],
+  //       hoverChange: {
+  //         cursor: CanvasCursors.POINTER,
+  //         fill: [
+  //           {
+  //             path: hex,
+  //             color: `rgb(255,255,255)`,
+  //           },
+  //         ],
+  //       },
+  //     });
+  //   }
+  // }
+};
 
 const getHexagon = (
   iHexSize: number,
@@ -151,7 +269,24 @@ const getHexagon = (
   return hexagon;
 };
 
-const draw = (context: CanvasRenderingContext2D, options: DrawOptions) => {};
+const getHalfEllipse = (radius: number): Path2D => {
+  const halfEllipse = new Path2D();
+  // halfEllipse.arc(0, 0, radius, Math.PI, 0, true)
+  halfEllipse.ellipse(0, 0, radius, radius * 0.7, Math.PI / 2, 0, Math.PI);
+  return halfEllipse;
+};
+
+const getLine = (start: Vector2D, end: Vector2D): Path2D => {
+  const line = new Path2D();
+  line.moveTo(0, 0);
+  line.lineTo(end.x - start.x, end.y - start.y);
+  return line;
+};
+
+const draw = (
+  context: CanvasRenderingContext2D,
+  options: CanvasDrawOptions
+) => {};
 
 const calcPos = (
   itemNumber: number,
@@ -236,6 +371,16 @@ const loadIteration = async () => {
   }
   const iteration = await mainMapStore.loadIteration(currentIterationId.value);
   console.log("loaded iteration: ", iteration);
+  return iteration;
+};
+
+const loadMainMap = async (mainMapId: number) => {
+  if (!currentIterationId.value) {
+    return null;
+  }
+  const mainMap = await mainMapStore.loadMainMap(mainMapId);
+  console.log("loaded mainMap: ", mainMap);
+  return mainMap;
 };
 
 const checkGenerationParams = () => {
@@ -270,11 +415,11 @@ const generateIteration = async () => {
   console.log("generated iteration: ", generateResponse);
 };
 
-const selectIteration = (iterationId?: number) => {
+const selectIteration = (iterationId?: number | null) => {
   router.push(`/main_map/${iterationId}`);
 };
 
-const selectMainMap = (mainMapId?: number) => {
+const selectMainMap = (mainMapId?: number | null) => {
   console.log(mainMapId);
 };
 

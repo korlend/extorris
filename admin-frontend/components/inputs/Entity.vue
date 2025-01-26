@@ -31,13 +31,13 @@ import { useEntitiesStore } from "@/store/entities";
 import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
 import MittEvents from "~/core/enums/MittEvents";
 import type DBFilter from "~/core/models/db/DBFilter";
-import FieldTypes from "~/core/enums/FieldTypes";
+import { FieldTypes } from "extorris";
 
 const { $mittOn } = useNuxtApp();
 
 const entitiesStore = useEntitiesStore();
 
-const model = defineModel({ type: Number });
+const model = defineModel<number | null>({ type: Number });
 // const emit = defineEmits(["update:model-value"]);
 
 const props = defineProps({
@@ -51,7 +51,7 @@ const props = defineProps({
   },
   filters: {
     type: Object as PropType<{ [key: string]: any }>,
-    default: null,
+    default: {},
   },
   maxSize: {
     type: Number,
@@ -68,6 +68,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  autoselectFirst: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const isLoading: Ref<boolean> = ref(true);
@@ -78,11 +82,14 @@ const localModel: Record<string, any> = ref({});
 
 const total: Ref<number> = ref(0);
 
+const autoselected: Ref<boolean> = ref(false);
+
 const loadedEntityKeys: Ref<Array<string>> = ref([]);
 const loadedEntityKeysMetadata: Ref<{ [key: string]: ModelPropertyMetadata }> =
   ref({});
 
-watch(model, (newValue) => {
+watch(model, async (newValue) => {
+  await reload();
   trySetLocalModel(newValue);
 });
 
@@ -102,7 +109,7 @@ onMounted(async () => {
     trySetLocalModel(model.value);
   }
   $mittOn(MittEvents.RELOAD_ENTITY_AUTOCOMPLETE, () => {
-    reload(model.value);
+    reload();
   });
 });
 
@@ -130,7 +137,7 @@ const search = async (value: string) => {
 
 const updateValue = (value: any) => {
   if (!value) {
-    model.value = undefined;
+    model.value = null;
     return;
   }
   if (value[props.modelEntityKey] === model.value) {
@@ -139,12 +146,14 @@ const updateValue = (value: any) => {
   model.value = value[props.modelEntityKey];
 };
 
-const trySetLocalModel = (id?: number) => {
+const trySetLocalModel = (id?: number | null) => {
   if (id !== null && id !== undefined) {
     const item = items.value.find((v) => v.id == id);
     localModel.value = item;
+    autoselected.value = false;
     return;
   }
+  autoselected.value = true;
   localModel.value = undefined;
 };
 
@@ -156,14 +165,23 @@ const filterFunction = () => {
 const reload = async (text?: string | number) => {
   isLoading.value = true;
   let dbFilters: Array<DBFilter> = [];
-  if (props.filters) {
-    dbFilters = createDBFilters(props.filters, loadedEntityKeysMetadata.value);
+
+  const filters = deepToRaw(props.filters);
+
+  if (model.value && !filters.id) {
+    filters.id = model.value;
   }
+
+  if (props.filters) {
+    dbFilters = createDBFilters(filters, loadedEntityKeysMetadata.value);
+  }
+
   let sortBy = "id";
   const sortDirection = "desc";
-  if (loadedEntityKeys.value.some((v) => v === "updated")) {
+  if (loadedEntityKeys.value.includes("updated")) {
     sortBy = "updated";
   }
+
   const response = await entitiesStore.fastFilterEntity(
     props.entity,
     text,
@@ -176,6 +194,12 @@ const reload = async (text?: string | number) => {
   items.value = response.items;
   total.value = response.total;
   trySetLocalModel(localModel.value?.id || model.value);
+
+  if (!autoselected.value && props.autoselectFirst && !localModel.value && items.value.length) {
+    updateValue(items.value[0])
+    autoselected.value = true;
+  }
+
   isLoading.value = false;
 };
 </script>

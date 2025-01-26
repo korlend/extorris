@@ -35,7 +35,7 @@ export default class DBCreateUpdateBuilder {
     const names: Array<DBModelDBDataKeys<T>> = [];
 
     firstDataMap.forEach((value, key) => {
-      if (firstModel.isImmutable(key)) {
+      if (value === undefined || firstModel.isImmutable(key)) {
         return;
       }
 
@@ -44,21 +44,16 @@ export default class DBCreateUpdateBuilder {
 
     const queryParameters = names.join(",");
     const queryValuesArray: Array<string> = [];
-    const values: Array<any> = [];
+    const values: Array<T[DBModelDBDataKeys<T>] | null> = [];
 
     for (let i = 0; i < data.length; i++) {
       const model = data[i];
       const dataMap = model.getParamsAndValues(fields);
 
-      const values: Array<T[DBModelDBDataKeys<T>] | undefined> = [];
-
       for (let j = 0; j < names.length; j++) {
-        const name = names[i];
-        if (model.isImmutable(name)) {
-          continue;
-        }
+        const name = names[j];
         const value = dataMap.get(name);
-        values.push(value);
+        values.push(value === undefined ? null : value);
       }
 
       queryValuesArray.push(`(${names.map(() => "?").join(",")})`);

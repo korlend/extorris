@@ -1,9 +1,44 @@
 import type { CanvasClickEvent } from "./canvas";
 import { CanvasComponent } from "./canvas";
-import type Vector2D from "./types/Vector2D";
 import type { CanvasBlock, CanvasElement, CanvasDrawOptions } from "./canvas";
-
 import { CanvasCursors } from "./canvas";
+
+import type ResponseAPI from "./REST/ResponseAPI";
+import type ResponseCreateUpdateAPI from "./REST/ResponseCreateUpdateAPI";
+import type ResponseEntityInfoAPI from "./REST/ResponseEntityInfoAPI";
+import type ResponseFilterAPI from "./REST/ResponseFilterAPI";
+import { type ResponseEntityDataAPI } from "./REST/ResponseEntityDataAPI";
+import { type ResponseEntitiesListAPI } from "./REST/ResponseEntitiesListAPI";
+
+import { type DBLogical } from "./types/DBLogical";
+import { type DBOperand } from "./types/DBOperand";
+
+import {
+  getHexCoordinatesBottomLeft,
+  getHexCoordinatesLeft,
+  getHexCoordinatesBottomRight,
+  getHexCoordinatesRight,
+  getHexCoordinatesTopLeft,
+  getHexCoordinatesTopRight,
+  getDepthItemMaxNumber,
+  getHexData,
+  getHexNearbyCoords,
+  getHexesDirection,
+  getReverseDirection,
+  HexDirection,
+} from "./utils/hexagonHelper";
+import { throttle } from "./utils/throttle";
+import { randomCheck, randomInt } from "./utils/randomizers";
+
+import ModelPropertyMetadata from "./models/ModelPropertyMetadata";
+
+import type Vector2D from "./interfaces/Vector2D";
+import type HexCoordinates from "./interfaces/HexCoordinates";
+import type EntityInfo from "./interfaces/EntityInfo";
+
+import EntityFieldTypes from "./enums/EntityFieldTypes";
+import FieldTypes from "./enums/FieldTypes";
+import ShipItemType from "./enums/ShipItemType";
 
 export const install = (app: any) => {
   app.component("canvas-component", CanvasComponent);
@@ -18,8 +53,41 @@ export {
   type CanvasDrawOptions,
 };
 
+export {
+  type ResponseAPI,
+  type ResponseCreateUpdateAPI,
+  type ResponseEntityInfoAPI,
+  type ResponseFilterAPI,
+  type ResponseEntityDataAPI,
+  type ResponseEntitiesListAPI,
+};
+
+export { type DBLogical, type DBOperand };
+
+export {
+  getHexCoordinatesBottomLeft,
+  getHexCoordinatesLeft,
+  getHexCoordinatesBottomRight,
+  getHexCoordinatesRight,
+  getHexCoordinatesTopLeft,
+  getHexCoordinatesTopRight,
+  getDepthItemMaxNumber,
+  getHexData,
+  getHexNearbyCoords,
+  getHexesDirection,
+  getReverseDirection,
+  HexDirection,
+  throttle,
+  randomCheck,
+  randomInt,
+};
+
+export { ModelPropertyMetadata };
+
+export { type Vector2D, type HexCoordinates, type EntityInfo };
+
+export { EntityFieldTypes, FieldTypes, ShipItemType };
+
 export default {
   install,
 };
-
-export { type Vector2D };

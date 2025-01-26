@@ -7,12 +7,11 @@
       <span>canvasMousePos: {{ canvasMousePos }}</span>
       <span>currentShift: {{ currentShift }}</span>
       <span>amount: {{ amount }}</span>
-      <span
-        >timeFromInit:
-        {{ (new Date().getTime() - timeFromInit.getTime()) / 1000 }}</span
-      >
-      <span>{{ canvasParentElementPos }}</span>
+      <span>timeFromInit: {{ (new Date().getTime() - timeFromInit.getTime()) / 1000 }}</span>
     </div>
+    <!-- <div class="debug">
+      <span>activeHover: {{ globalActiveHover }}</span>
+    </div> -->
     <canvas
       class="canvas__block-canvas"
       :class="canvasClasses"
@@ -29,7 +28,6 @@
 </template>
 
 <script setup lang="ts">
-import type Vector2D from "../types/Vector2D";
 import {
   type PropType,
   useTemplateRef,
@@ -40,6 +38,7 @@ import {
   onBeforeUnmount,
   computed,
 } from "vue";
+import type Vector2D from "src/interfaces/Vector2D";
 import type CanvasBlock from "./CanvasBlock";
 import type CanvasClickEvent from "./CanvasClickEvent";
 import CanvasCursors from "./CanvasCursors";
@@ -56,11 +55,11 @@ type CanvasBlocks = Array<CanvasBlock>;
 const props = defineProps({
   drawFunction: {
     type: Function as PropType<DrawFunction>,
-    required: true,
+    default: () => {},
   },
   canvasBlocks: {
     type: Array as PropType<CanvasBlocks>,
-    default: [],
+    default: () => [],
   },
   maxCoordinates: {
     type: Number,
@@ -87,8 +86,10 @@ const emit = defineEmits<{
 const canvasRef = useTemplateRef("canvasRef");
 const canvasParentElementRef = useTemplateRef("canvasParentElementRef");
 
-let amount = ref(0);
-let timeFromInit = new Date();
+const globalActiveHover: Ref<CanvasBlock | null> = ref(null);
+
+const amount = ref(0);
+const timeFromInit = new Date();
 
 const maxCoordinates = props.maxCoordinates;
 const canvasWidth: Ref<number> = ref(maxCoordinates);
@@ -107,7 +108,7 @@ const minScaling = 0.1;
 const scalingStep = 0.1;
 const floorScaling = 100;
 
-let fpsArray: Ref<Array<Date>> = ref([]);
+const fpsArray: Ref<Array<Date>> = ref([]);
 
 let draggingStartPosX: number = 0;
 let draggingEndPosX: number = 0;
@@ -179,6 +180,12 @@ const canvasClasses = computed(() => {
   return classes;
 });
 
+const globalActiveHoverStringify = computed(() => {
+  const activeHover = globalActiveHover.value;
+
+  return activeHover?.name;
+});
+
 const canvasBlocksByZIndex = computed(
   (): Record<number, Array<CanvasBlock>> => {
     console.log("canvasBlocksByZIndex");
@@ -200,7 +207,7 @@ const canvasBlocksByZIndex = computed(
 const sortedExistingZIndices = computed((): Array<number> => {
   console.log("sortedExistingZIndices");
   const canvasBlocks = props.canvasBlocks;
-  let zIndices: Array<number> = [];
+  const zIndices: Array<number> = [];
   for (let i = 0; i < canvasBlocks.length; i++) {
     const canvasBlock = canvasBlocks[i];
     const zindex = canvasBlock.zindex || 0;
@@ -234,10 +241,13 @@ const canvasFill = (
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i];
     amount.value++;
-    const { path, color, position } = element;
+    const { path, color, position, rotate } = element;
     context.save();
     if (position) {
       context.translate(position.x, position.y);
+    }
+    if (rotate) {
+      context.rotate((rotate * Math.PI) / 180);
     }
     if (color) {
       context.fillStyle = color;
@@ -256,10 +266,13 @@ const canvasStroke = (
   }
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i];
-    const { path, color, position } = element;
+    const { path, color, position, rotate } = element;
     context.save();
     if (position) {
       context.translate(position.x, position.y);
+    }
+    if (rotate) {
+      context.rotate((rotate * Math.PI) / 180);
     }
     if (color) {
       context.strokeStyle = color;
@@ -316,29 +329,34 @@ const redraw = async (context?: CanvasRenderingContext2D | null) => {
     for (let j = 0; j < iCanvasBlocks.length; j++) {
       const canvasBlock = iCanvasBlocks[j];
       const zindex = canvasBlock.zindex || 0;
-      context.save();
-      const { fill, stroke, hoverWhen, position } = canvasBlock;
-      if (position) {
-        context.translate(position.x, position.y);
-      }
-      canvasFill(context, fill);
-      canvasStroke(context, stroke);
+      activeHover = applyCanvasBlock(context, canvasBlock, activeHover, zindex);
+      globalActiveHover.value = activeHover;
+      // context.save()
+      // const { fill, stroke, hoverWhen, position } = canvasBlock
+      // if (position) {
+      //   context.translate(position.x, position.y)
+      // }
+      // canvasFill(context, fill)
+      // canvasStroke(context, stroke)
 
-      if (checkHover(context, hoverWhen)) {
-        const activeHoverZIndex = activeHover?.zindex || 0;
-        if (!activeHover || activeHoverZIndex <= zindex) {
-          activeHover = canvasBlock;
-        }
-      }
-      context.restore();
+      // if (checkHover(context, hoverWhen)) {
+      //   const activeHoverZIndex = activeHover?.zindex || 0
+      //   if (!activeHover || activeHoverZIndex <= zindex) {
+      //     activeHover = canvasBlock
+      //   }
+      // }
+      // context.restore()
     }
   }
 
   if (activeHover) {
     context.save();
-    const { hoverChange, position } = activeHover;
+    const { hoverChange, position, rotate } = activeHover;
     if (position) {
       context.translate(position.x, position.y);
+    }
+    if (rotate) {
+      context.rotate((rotate * Math.PI) / 180);
     }
     canvasFill(context, hoverChange?.fill);
     canvasStroke(context, hoverChange?.stroke);
@@ -365,6 +383,51 @@ const redraw = async (context?: CanvasRenderingContext2D | null) => {
   if (rendering) {
     requestAnimationFrame(() => redraw(context));
   }
+};
+
+const applyCanvasBlock = (
+  context: CanvasRenderingContext2D,
+  canvasBlock: CanvasBlock,
+  activeHover: CanvasBlock | null,
+  zindex: number,
+  currentDepth: number = 0
+): CanvasBlock | null => {
+  context.save();
+  const { fill, stroke, hoverWhen, position, rotate, children } = canvasBlock;
+  if (position) {
+    context.translate(position.x, position.y);
+  }
+  if (rotate) {
+    context.rotate((rotate * Math.PI) / 180);
+  }
+  canvasFill(context, fill);
+  canvasStroke(context, stroke);
+
+  if (checkHover(context, hoverWhen)) {
+    if (currentDepth) {
+      activeHover = canvasBlock;
+    } else {
+      const activeHoverZIndex = zindex;
+      if (!activeHover || activeHoverZIndex <= zindex) {
+        activeHover = canvasBlock;
+      }
+    }
+  }
+
+  if (children?.length) {
+    for (let i = 0; i < children?.length; i++) {
+      activeHover = applyCanvasBlock(
+        context,
+        children[i],
+        activeHover,
+        zindex,
+        currentDepth + 1
+      );
+    }
+  }
+
+  context.restore();
+  return activeHover;
 };
 
 const getCanvasDrawOptions = (): CanvasDrawOptions => {
@@ -409,12 +472,12 @@ const clickEvent = async (event: MouseEvent) => {
     }
   }
   if (typeof clickedCanvasBlock?.clickCallback === "function") {
-    await clickedCanvasBlock.clickCallback({
+    await clickedCanvasBlock.clickCallback(
       event,
       context,
-      options: getCanvasDrawOptions(),
-      clickedCanvasBlock,
-    });
+      getCanvasDrawOptions(),
+      clickedCanvasBlock
+    );
   }
   emit("action:click", {
     event,
@@ -425,7 +488,7 @@ const clickEvent = async (event: MouseEvent) => {
   context.restore();
 };
 
-const mouseMove = (event: any) => {
+const mouseMove = (event: MouseEvent) => {
   canvasMousePos.value = { x: event.layerX, y: event.layerY };
 };
 
@@ -554,6 +617,18 @@ const setWindowSizes = () => {
   & > * {
     margin: 0px 10px;
   }
+}
+
+.debug {
+  position: absolute;
+  right: 0;
+  top: 60px;
+  height: calc(100% - 60px);
+  width: 400px;
+}
+
+.pointer {
+  cursor: pointer;
 }
 
 .canvas__block {

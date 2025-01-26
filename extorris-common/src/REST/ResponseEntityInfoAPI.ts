@@ -1,4 +1,4 @@
-import type ModelPropertyMetadata from "./ModelPropertyMetadata";
+import ModelPropertyMetadata from "src/models/ModelPropertyMetadata";
 
 export default interface ResponseEntityInfoAPI {
   keys: Array<string>;

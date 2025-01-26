@@ -165,8 +165,8 @@
 </template>
 
 <script setup lang="ts">
+import { FieldTypes } from "extorris";
 import { useEntitiesStore } from "@/store/entities";
-import FieldTypes from "~/core/enums/FieldTypes";
 import MittEvents from "~/core/enums/MittEvents";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";

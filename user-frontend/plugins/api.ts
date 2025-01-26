@@ -1,5 +1,5 @@
 import type { $Fetch, NitroFetchRequest } from "nitropack";
-import type ResponseAPI from "~/core/interfaces/ResponseAPI";
+import type { ResponseAPI } from "extorris";
 
 import { useAuthStore } from "~/store/auth";
 

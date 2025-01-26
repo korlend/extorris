@@ -32,11 +32,11 @@
 </template>
 
 <script setup lang="ts">
-import MainMap from "~/components/blocks/game/MainMap.vue";
 
 import { useMainMapStore } from "@/store/main_map";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 import MittEvents from "~/core/enums/MittEvents";
+import { throttle } from "extorris";
 
 const { $mittEmit } = useNuxtApp();
 

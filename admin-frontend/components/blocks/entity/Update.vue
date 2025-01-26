@@ -165,7 +165,7 @@
 
 <script setup lang="ts">
 import { useEntitiesStore } from "@/store/entities";
-import FieldTypes from "~/core/enums/FieldTypes";
+import { FieldTypes } from "extorris";
 import MittEvents from "~/core/enums/MittEvents";
 import type KeyAndMetadata from "~/core/interfaces/KeyAndMetadata";
 import type Metadata from "~/core/interfaces/Metadata";
@@ -185,7 +185,7 @@ const props = defineProps({
     required: true,
   },
   id: {
-    type: String,
+    type: Number,
     required: true,
   },
   keys: {

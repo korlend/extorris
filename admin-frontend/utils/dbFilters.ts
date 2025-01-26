@@ -1,7 +1,7 @@
-import FieldTypes from "~/core/enums/FieldTypes";
+import { FieldTypes } from "extorris";
 import DBFilter from "~/core/models/db/DBFilter";
 import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
-import type { DBOperand } from "~/core/types/DBOperands";
+import type { DBOperand } from "extorris";
 
 export function createDBFilters(
   filters: { [key: string]: any },
@@ -9,7 +9,6 @@ export function createDBFilters(
 ): Array<DBFilter> {
   const filterKeys = Object.keys(filters);
   const dbFilters: Array<DBFilter> = [];
-  console.log(filters, entityKeysMetadata)
   for (let i = 0; i < filterKeys.length; i++) {
     const key = filterKeys[i];
     let value = filters[key];

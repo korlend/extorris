@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 
-import type ResponseAPI from "~/core/interfaces/ResponseAPI";
+import type { ResponseAPI } from "extorris";
 
 interface HomeIslandState {
   userHomeIsland?: any;
