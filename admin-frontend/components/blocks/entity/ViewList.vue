@@ -32,11 +32,8 @@
           <td
             v-for="entityKey in loadedEntityKeys"
             class="view__list-table-body-row-cell">
-            <template
-              v-if="
-                loadedEntityKeysMetadata[entityKey].fieldType ===
-                FieldTypes.IMAGE_PATH
-              ">
+            <!-- for images entity only, when string is a link to an image -->
+            <template v-if="getFieldType(entityKey) === FieldTypes.IMAGE_PATH">
               <span>
                 {{ item[entityKey] }}
               </span>
@@ -45,48 +42,30 @@
                 class="view__list-table-body-row-cell-image"
                 :src="getImageSrc(item, entityKey)" />
             </template>
+            <!-- for foreign key type of image, to show image from Image entity -->
             <span
               v-else-if="
-                loadedEntityKeysMetadata[entityKey].fieldEntityType ===
-                  'image' &&
-                loadedEntityKeysMetadata[entityKey].fieldType ===
-                  FieldTypes.ENTITY_SELECT &&
-                loadedLinkedEntities[item.id]
+                getFieldEntityType(entityKey) === 'image' &&
+                getFieldType(entityKey) === FieldTypes.ENTITY_SELECT &&
+                getLinkedEntity(item, entityKey)
               ">
-              {{
-                getItemLabel(
-                  loadedLinkedEntities[item.id][
-                    loadedEntityKeysMetadata[entityKey].fieldEntityType
-                  ]
-                )
-              }}
+              {{ getItemLabel(getLinkedEntity(item, entityKey)) }}
               <img
                 v-if="item[entityKey]"
                 class="view__list-table-body-row-cell-image"
-                :src="
-                  getImageSrc(
-                    loadedLinkedEntities[item.id][
-                      loadedEntityKeysMetadata[entityKey].fieldEntityType
-                    ]
-                  )
-                " />
+                :src="getImageSrc(getLinkedEntity(item, entityKey))" />
             </span>
+            <!-- for other foreign keys -->
             <span
               v-else-if="
-                loadedEntityKeysMetadata[entityKey].fieldEntityType &&
-                loadedEntityKeysMetadata[entityKey].fieldType ===
-                  FieldTypes.ENTITY_SELECT &&
-                loadedLinkedEntities[item.id]
+                getFieldEntityType(entityKey) &&
+                getFieldType(entityKey) === FieldTypes.ENTITY_SELECT &&
+                getLinkedEntity(item, entityKey)
               ">
-              {{
-                getItemLabel(
-                  loadedLinkedEntities[item.id][
-                    loadedEntityKeysMetadata[entityKey].fieldEntityType
-                  ]
-                )
-              }}
-              <!-- {{ loadedEntityKeysMetadata[entityKey].fieldEntityType }} -->
+              {{ getItemLabel(getLinkedEntity(item, entityKey)) }}
+              <!-- {{ getFieldEntityType(entityKey) }} -->
             </span>
+            <!-- default string | number -->
             <span v-else>
               {{ item[entityKey] }}
             </span>
@@ -161,7 +140,7 @@ const loadedEntityKeys: Ref<Array<string>> = ref([]);
 const loadedEntityKeysMetadata: Ref<{ [key: string]: ModelPropertyMetadata }> =
   ref({});
 const loadedEntities: Ref<Array<any>> = ref([]);
-const loadedLinkedEntities: Ref<Record<number, Record<string, any>>> = ref({});
+const loadedLinkedEntities: Ref<Record<string, Record<number, any>>> = ref({});
 
 const total: Ref<number> = ref(0);
 const totalPages: Ref<number> = ref(0);
@@ -212,6 +191,22 @@ const getImageSrc = (
 ) => {
   const url = getImagesUrl();
   return `${url}/${item[key]}`;
+};
+
+const getFieldEntityType = (key: string) => {
+  return loadedEntityKeysMetadata.value[key].fieldEntityType;
+};
+
+const getFieldType = (key: string) => {
+  return loadedEntityKeysMetadata.value[key].fieldType;
+};
+
+const getLinkedEntity = (item: Record<string, any>, key: string) => {
+  const fieldEntityType = getFieldEntityType(key);
+  if (!fieldEntityType) {
+    return null;
+  }
+  return loadedLinkedEntities.value[fieldEntityType][item[key]];
 };
 
 const reload = async (filters: { [key: string]: any } = {}) => {

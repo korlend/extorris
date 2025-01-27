@@ -46,7 +46,6 @@
       </div>
       <div class="main__map-generation-buttons">
         <v-btn @click.stop="generateIteration" color="success">Generate</v-btn>
-        <v-btn @click.stop="openModal" color="success">open modal</v-btn>
       </div>
     </span>
     <client-only>
@@ -84,7 +83,9 @@ const treesDepthStart: Ref<number> = ref(0);
 const startDate: Ref<Date | undefined> = ref();
 const endDate: Ref<Date | undefined> = ref();
 
-const currentIterationId: Ref<number> = ref(0);
+const currentIterationId: Ref<number> = ref(
+  parseInt(route.params.id as string)
+);
 const currentMainMapId: Ref<number> = ref(0);
 
 const canvasBlocks: Ref<Array<CanvasBlock>> = ref([]);
@@ -94,7 +95,11 @@ const loadedMainMap: Ref<Record<string, any> | null> = ref(null);
 watch(
   () => route,
   (newRoute) => {
-    currentIterationId.value = parseInt(newRoute.params.id as string);
+    const newIterationId = parseInt(newRoute.params.id as string);
+    if (newIterationId === currentIterationId.value) {
+      return;
+    }
+    currentIterationId.value = newIterationId;
     loadIteration();
   }
 );
@@ -191,7 +196,10 @@ const resetCanvasBlock = (iteration?: any) => {
           position: pos,
           stroke: [
             {
-              path: getLine(pos, linkedHubPos),
+              path: getLine(
+                { x: 0, y: 0 },
+                { x: linkedHubPos.x - pos.x, y: linkedHubPos.y - pos.y }
+              ),
               color: `rgb(250,0,0)`,
             },
           ],
@@ -219,38 +227,18 @@ const resetCanvasBlock = (iteration?: any) => {
         ],
         // stroke: [...portalLines],
       },
+      clickCallback: () => {
+        router.push({
+          path: `/main_map/hub/${hub.id}`,
+          // params: {
+          //   id: hub.id,
+          // },
+        });
+      },
     });
   }
 
   canvasBlocks.value = newCanvasBlocks;
-
-  // for (let depth = 0; depth < 30; depth++) {
-  //   const maxHubNumber = depth * 6 || 1;
-  //   for (let hubNumber = 0; hubNumber < maxHubNumber; hubNumber++) {
-  //     const pos = calcPos(hubNumber, depth, hexSize);
-  //     const hex = getHexagon(hexSize, hexYOffset, hexGap);
-  //     canvasBlocks.value.push({
-  //       zindex: 0,
-  //       position: pos,
-  //       fill: [
-  //         {
-  //           path: hex,
-  //           color: `rgb(150,150,150)`,
-  //         },
-  //       ],
-  //       hoverWhen: [hex],
-  //       hoverChange: {
-  //         cursor: CanvasCursors.POINTER,
-  //         fill: [
-  //           {
-  //             path: hex,
-  //             color: `rgb(255,255,255)`,
-  //           },
-  //         ],
-  //       },
-  //     });
-  //   }
-  // }
 };
 
 const getHexagon = (
@@ -278,8 +266,8 @@ const getHalfEllipse = (radius: number): Path2D => {
 
 const getLine = (start: Vector2D, end: Vector2D): Path2D => {
   const line = new Path2D();
-  line.moveTo(0, 0);
-  line.lineTo(end.x - start.x, end.y - start.y);
+  line.moveTo(start.x, start.y);
+  line.lineTo(end.x, end.y);
   return line;
 };
 
@@ -314,31 +302,31 @@ const calcPos = (
   if (isTopRow) {
     const initialX = initialPositionX - depth * hexagonSize * 0.5;
     x = initialX + itemNumber * hexagonSize;
-    y = initialPositionY - depth * hexagonSize * 0.75;
+    y = initialPositionY + depth * hexagonSize * 0.75;
   } else if (isBottomRow) {
     const initialX = initialPositionX + 0.5 * depth * hexagonSize;
     const localItemNumber = itemNumber - depth * 3;
     x = initialX - localItemNumber * hexagonSize;
-    y = initialPositionY + depth * hexagonSize * 0.75;
+    y = initialPositionY - depth * hexagonSize * 0.75;
   } else if (isRightRow) {
     const isIncreasing = itemNumber < depth * 2;
     const isDecreasing = itemNumber > depth * 2;
     if (isIncreasing) {
       const initialX =
         initialPositionX + hexagonSize + (depth - 1) * hexagonSize * 0.5;
-      const initialY = initialPositionY - depth * hexagonSize * 0.75;
+      const initialY = initialPositionY + depth * hexagonSize * 0.75;
       const localItemNumber = itemNumber - depth;
       x = initialX + (localItemNumber - 1) * hexagonSize * 0.5;
-      y = initialY + localItemNumber * hexagonSize * 0.75;
+      y = initialY - localItemNumber * hexagonSize * 0.75;
     } else if (isDecreasing) {
       const initialX =
         initialPositionX + hexagonSize + (depth - 1) * hexagonSize;
       const localItemNumber = itemNumber - depth * 2;
       x = initialX - localItemNumber * hexagonSize * 0.5;
-      y = initialPositionY + localItemNumber * hexagonSize * 0.75;
+      y = initialPositionY - localItemNumber * hexagonSize * 0.75;
     } else {
       x = initialPositionX + depth * hexagonSize;
-      y = initialPositionY;
+      y = -initialPositionY;
     }
   } else if (isLeftRow) {
     const isIncreasing = itemNumber < depth * 5;
@@ -346,19 +334,19 @@ const calcPos = (
     if (isIncreasing) {
       const initialX =
         initialPositionX - hexagonSize * 0.5 - (depth - 1) * hexagonSize * 0.5;
-      const initialY = initialPositionY + depth * hexagonSize * 0.75;
+      const initialY = initialPositionY - depth * hexagonSize * 0.75;
       const localItemNumber = itemNumber - depth * 4;
       x = initialX - localItemNumber * hexagonSize * 0.5;
-      y = initialY - localItemNumber * hexagonSize * 0.75;
+      y = initialY + localItemNumber * hexagonSize * 0.75;
     } else if (isDecreasing) {
       const initialX =
         initialPositionX - hexagonSize - (depth - 1) * hexagonSize;
       const localItemNumber = itemNumber - depth * 5;
       x = initialX + localItemNumber * hexagonSize * 0.5;
-      y = initialPositionY - localItemNumber * hexagonSize * 0.75;
+      y = initialPositionY + localItemNumber * hexagonSize * 0.75;
     } else {
       x = initialPositionX - depth * hexagonSize;
-      y = initialPositionY;
+      y = -initialPositionY;
     }
   }
 

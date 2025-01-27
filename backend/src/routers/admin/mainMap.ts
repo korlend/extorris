@@ -144,14 +144,11 @@ router.get(
     );
 
     next(
-      ExpressResponseGenerator.getResponse(
-        ExpressResponseTypes.SUCCESS,
-        {
-          mainMap: response.mainMap.prepareREST(),
-          mainMapHubs: response.mainMapHubs.map(v => v.prepareREST()),
-          portals: response.portals.map(v => v.prepareREST()),
-        },
-      ),
+      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
+        mainMap: response.mainMap.prepareREST(),
+        mainMapHubs: response.mainMapHubs.map((v) => v.prepareREST()),
+        portals: response.portals.map((v) => v.prepareREST()),
+      }),
     );
   },
 );
@@ -159,8 +156,6 @@ router.get(
 router.get(
   "/load_hub/:hub_id",
   async (req: Request, res: Response, next: NextFunction) => {
-    const iterationService = new IterationService();
-    const mainMapService = new MainMapService();
     const mainMapHubService = new MainMapHubService();
     const portalService = new PortalService();
 
@@ -168,20 +163,17 @@ router.get(
 
     const hub = await mainMapHubService.get(hubId);
 
-    const portals = await portalService.getAllBy("from_hub_id", hubId);
+    const fromPortals = await portalService.getAllBy("from_hub_id", hubId);
+    const toPortals = await portalService.getAllBy("to_hub_id", hubId);
 
     next(
-      ExpressResponseGenerator.getResponse(
-        ExpressResponseTypes.SUCCESS,
-        {
-          hub,
-          portals,
-        },
-      ),
+      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
+        hub: hub.prepareREST(),
+        fromPortals: fromPortals.map(v => v.prepareREST()),
+        toPortals: toPortals.map(v => v.prepareREST()),
+      }),
     );
   },
 );
-
-
 
 export default router;

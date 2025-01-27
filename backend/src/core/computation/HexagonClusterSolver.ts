@@ -44,10 +44,10 @@ export default class HexagonClusterSolver {
   private portalPositions: Record<HexDirection, { x: number; y: number }> = {
     [HexDirection.TOP_LEFT]: { x: -4000, y: 4000 },
     [HexDirection.TOP_RIGHT]: { x: 4000, y: 4000 },
-    [HexDirection.RIGHT]: { x: 0, y: 6000 },
+    [HexDirection.RIGHT]: { x: 6000, y: 0 },
     [HexDirection.BOTTOM_RIGHT]: { x: 4000, y: -4000 },
     [HexDirection.BOTTOM_LEFT]: { x: -4000, y: -4000 },
-    [HexDirection.LEFT]: { x: 0, y: -6000 },
+    [HexDirection.LEFT]: { x: -6000, y: 0 },
   };
 
   private hubs: Array<MainMapHubModel> = [];
@@ -385,6 +385,11 @@ export default class HexagonClusterSolver {
     this.initialPortalCreation();
     this.connectingEmptyHubs();
     this.findAndConnectHubsClusters();
+
+    const clusters = this.formingClusters()
+    if (clusters.length) {
+      this.findAndConnectHubsClusters();
+    }
 
     return this.portals.map((v) => v.portal);
   }

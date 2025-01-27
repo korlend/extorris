@@ -4,6 +4,7 @@
       {{ fpsArray.length }}
     </div>
     <div class="controls">
+      <button class="controls-button" @click="snapToCenter">snap to center</button>
       <span>canvasMousePos: {{ canvasMousePos }}</span>
       <span>currentShift: {{ currentShift }}</span>
       <span>amount: {{ amount }}</span>
@@ -151,10 +152,7 @@ onMounted(() => {
   window.addEventListener("resize", windowResize);
 
   if (props.centerOnRender) {
-    currentShift.value.x = windowSizes.value.width / 2;
-    currentShift.value.y = windowSizes.value.height / 2;
-    prevShift.x = windowSizes.value.width / 2;
-    prevShift.y = windowSizes.value.height / 2;
+    snapToCenter();
   }
 
   canvasWidth.value = windowSizes.value.width - canvasParentElementPos.x;
@@ -188,7 +186,6 @@ const globalActiveHoverStringify = computed(() => {
 
 const canvasBlocksByZIndex = computed(
   (): Record<number, Array<CanvasBlock>> => {
-    console.log("canvasBlocksByZIndex");
     const canvasBlocks = props.canvasBlocks;
     const mappedCanvasBlocks: Record<number, Array<CanvasBlock>> = {};
     for (let i = 0; i < canvasBlocks.length; i++) {
@@ -205,7 +202,6 @@ const canvasBlocksByZIndex = computed(
 );
 
 const sortedExistingZIndices = computed((): Array<number> => {
-  console.log("sortedExistingZIndices");
   const canvasBlocks = props.canvasBlocks;
   const zIndices: Array<number> = [];
   for (let i = 0; i < canvasBlocks.length; i++) {
@@ -225,7 +221,7 @@ const canvasApplyTransform = (context: CanvasRenderingContext2D) => {
     currentScaling,
     0,
     0,
-    currentScaling,
+    -currentScaling, // minus(-) to switch for cartesian coordinate system
     currentShift.value.x,
     currentShift.value.y
   );
@@ -516,6 +512,13 @@ const scrollEvent = (event: WheelEvent) => {
   // event.stopPropagation();
 };
 
+const snapToCenter = () => {
+  currentShift.value.x = windowSizes.value.width / 2;
+  currentShift.value.y = windowSizes.value.height / 2;
+  prevShift.x = windowSizes.value.width / 2;
+  prevShift.y = windowSizes.value.height / 2;
+}
+
 const dragStart = (event: MouseEvent | TouchEvent) => {
   event.stopPropagation();
   event.preventDefault();
@@ -616,6 +619,11 @@ const setWindowSizes = () => {
 
   & > * {
     margin: 0px 10px;
+  }
+
+  &-button {
+    border: 1px solid grey;
+    color: grey;
   }
 }
 

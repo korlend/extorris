@@ -109,7 +109,7 @@
             "></inputs-entity>
         </v-col>
         <v-col
-          v-if="data.metadata.fieldType === FieldTypes.DATE"
+          v-if="data.metadata.fieldType === FieldTypes.DATE && localFilters[data.key]"
           class="filters-row-col"
           xxl="4"
           xl="4"

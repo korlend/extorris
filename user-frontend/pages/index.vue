@@ -104,31 +104,31 @@ const calcPos = (
   if (isTopRow) {
     const initialX = initialPositionX - depth * hexagonSize * 0.5;
     x = initialX + itemNumber * hexagonSize;
-    y = initialPositionY - depth * hexagonSize * 0.75;
+    y = initialPositionY + depth * hexagonSize * 0.75;
   } else if (isBottomRow) {
     const initialX = initialPositionX + 0.5 * depth * hexagonSize;
     const localItemNumber = itemNumber - depth * 3;
     x = initialX - localItemNumber * hexagonSize;
-    y = initialPositionY + depth * hexagonSize * 0.75;
+    y = initialPositionY - depth * hexagonSize * 0.75;
   } else if (isRightRow) {
     const isIncreasing = itemNumber < depth * 2;
     const isDecreasing = itemNumber > depth * 2;
     if (isIncreasing) {
       const initialX =
         initialPositionX + hexagonSize + (depth - 1) * hexagonSize * 0.5;
-      const initialY = initialPositionY - depth * hexagonSize * 0.75;
+      const initialY = initialPositionY + depth * hexagonSize * 0.75;
       const localItemNumber = itemNumber - depth;
       x = initialX + (localItemNumber - 1) * hexagonSize * 0.5;
-      y = initialY + localItemNumber * hexagonSize * 0.75;
+      y = initialY - localItemNumber * hexagonSize * 0.75;
     } else if (isDecreasing) {
       const initialX =
         initialPositionX + hexagonSize + (depth - 1) * hexagonSize;
       const localItemNumber = itemNumber - depth * 2;
       x = initialX - localItemNumber * hexagonSize * 0.5;
-      y = initialPositionY + localItemNumber * hexagonSize * 0.75;
+      y = initialPositionY - localItemNumber * hexagonSize * 0.75;
     } else {
       x = initialPositionX + depth * hexagonSize;
-      y = initialPositionY;
+      y = -initialPositionY;
     }
   } else if (isLeftRow) {
     const isIncreasing = itemNumber < depth * 5;
@@ -136,19 +136,19 @@ const calcPos = (
     if (isIncreasing) {
       const initialX =
         initialPositionX - hexagonSize * 0.5 - (depth - 1) * hexagonSize * 0.5;
-      const initialY = initialPositionY + depth * hexagonSize * 0.75;
+      const initialY = initialPositionY - depth * hexagonSize * 0.75;
       const localItemNumber = itemNumber - depth * 4;
       x = initialX - localItemNumber * hexagonSize * 0.5;
-      y = initialY - localItemNumber * hexagonSize * 0.75;
+      y = initialY + localItemNumber * hexagonSize * 0.75;
     } else if (isDecreasing) {
       const initialX =
         initialPositionX - hexagonSize - (depth - 1) * hexagonSize;
       const localItemNumber = itemNumber - depth * 5;
       x = initialX + localItemNumber * hexagonSize * 0.5;
-      y = initialPositionY - localItemNumber * hexagonSize * 0.75;
+      y = initialPositionY + localItemNumber * hexagonSize * 0.75;
     } else {
       x = initialPositionX - depth * hexagonSize;
-      y = initialPositionY;
+      y = -initialPositionY;
     }
   }
 

@@ -125,28 +125,28 @@ const getBuilding = (): {
   window: Path2D;
 } => {
   const roof = new Path2D();
-  roof.moveTo(-40, -40);
-  roof.lineTo(-40, -60);
-  roof.lineTo(0, -80);
-  roof.lineTo(40, -60);
-  roof.lineTo(40, -40);
-  roof.lineTo(0, -60);
-  roof.lineTo(-40, -40);
-  roof.moveTo(0, -60);
-  roof.lineTo(0, -80);
+  roof.moveTo(-40, 40);
+  roof.lineTo(-40, 60);
+  roof.lineTo(0, 80);
+  roof.lineTo(40, 60);
+  roof.lineTo(40, 40);
+  roof.lineTo(0, 60);
+  roof.lineTo(-40, 40);
+  roof.moveTo(0, 60);
+  roof.lineTo(0, 80);
 
   const wall = new Path2D();
-  wall.moveTo(-40, -60);
-  wall.lineTo(-40, 25);
-  wall.lineTo(40, 25);
-  wall.lineTo(40, -60);
+  wall.moveTo(-40, 60);
+  wall.lineTo(-40, -25);
+  wall.lineTo(40, -25);
+  wall.lineTo(40, 60);
 
   const window = new Path2D();
-  window.moveTo(-15, -30);
+  window.moveTo(-15, 30);
   window.lineTo(-15, 0);
   window.lineTo(15, 0);
-  window.lineTo(15, -30);
-  window.lineTo(-15, -30);
+  window.lineTo(15, 30);
+  window.lineTo(-15, 30);
 
   return {
     roof,
