@@ -11,8 +11,9 @@
 # DB
 
 1. Install mysql
-1. Create database "extorris" or other name
+1. Create database "extorris" or use any other name
 1. Create user with select, insert, update, delete permissions for that database
+1. At "backend/config/config.json" change database.mysql change user, password, database and port according to your mysql
 1. Run db.sql script for created database
 
 # Redis
