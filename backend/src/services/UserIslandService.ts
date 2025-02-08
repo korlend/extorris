@@ -6,8 +6,6 @@ export default class UserIslandService extends Service<
   UserIslandModel,
   UserIslandRepository
 > {
-  sessionRepo = new UserIslandRepository();
-
   constructor() {
     super(new UserIslandRepository());
   }

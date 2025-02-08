@@ -1,8 +1,7 @@
 import type LocalAlertTypes from "./LocalAlertTypes";
-import { v4 as uuidv4 } from "uuid";
 
 export default class LocalAlert {
-  uuid: string = uuidv4();
+  uuid: string = window.crypto.randomUUID();
   title?: string;
   text: string;
   // seconds

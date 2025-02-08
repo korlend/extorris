@@ -6,8 +6,6 @@ export default class TranslationLanguageService extends Service<
   TranslationLanguageModel,
   TranslationLanguageRepository
 > {
-  sessionRepo = new TranslationLanguageRepository();
-
   constructor() {
     super(new TranslationLanguageRepository());
   }

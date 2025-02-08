@@ -1,4 +1,4 @@
-import type { ResponseAPI } from "extorris";
+import type { ResponseAPI } from "extorris-common";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 
 export function handleAPIError(errorData: ResponseAPI) {
@@ -16,4 +16,7 @@ export function handleAPIError(errorData: ResponseAPI) {
     }
   }
   createAlert(message, LocalAlertTypes.ERROR, title);
+  if (errorData.status === 440) {
+    navigateTo("/auth");
+  }
 }

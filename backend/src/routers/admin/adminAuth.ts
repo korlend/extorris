@@ -43,19 +43,29 @@ router.post(
 router.put(
   "/logout",
   async (req: Request, res: Response, next: NextFunction) => {
-    const { session } = res.locals;
+    const { admin_session } = res.locals;
+    if (!admin_session) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
     const adminServices = new AdminService();
-    await adminServices.logout(session);
+    await adminServices.logout(admin_session);
     next(ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS));
   },
 );
 
 router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
-  const { admin, session } = res.locals;
+  const { admin, admin_session } = res.locals;
+  if (!admin_session || !admin) {
+    next(ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN));
+    return;
+  }
   next(
     ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
-      session: session.prepareREST(),
-      admin: admin.prepareREST(),
+      session: admin_session.prepareREST(),
+      admin: admin?.prepareREST(),
     }),
   );
 });

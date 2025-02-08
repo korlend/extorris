@@ -1,5 +1,9 @@
 <template>
-  <button>PLAY</button>
+  <div>
+    <div>
+      Hi
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">

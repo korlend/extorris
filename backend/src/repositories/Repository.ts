@@ -9,10 +9,8 @@ import DBFilter from "@src/models/DBFilter.js";
 import DBFilterBuilder from "@src/core/utils/db/DBFilterBuilder.js";
 import ConfigLoader from "@src/core/config/ConfigLoader.js";
 import DBCreateUpdateBuilder from "@src/core/utils/db/DBCreateUpdateBuilder.js";
-import ModelPropertyMetadata from "@src/models/ModelPropertyMetadata.js";
-import FieldTypes from "@src/enums/FieldTypes.js";
-import DBOperand from "@src/types/DBOperands.js";
 import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
+import { DBOperand, FieldTypes, ModelPropertyMetadata } from "extorris-common";
 
 export default abstract class Repository<
   T extends DBModel<T>,
@@ -27,7 +25,7 @@ export default abstract class Repository<
 
   constructor(model: T, keyAsId: string = "id") {
     this.config = ConfigLoader.getInstance();
-    const dbConnection = this.config?.get("database.connection");
+    const dbConnection = this.config?.get("database.mysql");
     this.model = model;
     this.tableName = model._tableName;
     this.connector = MySQLConnector.getInstance(dbConnection);
@@ -45,10 +43,7 @@ export default abstract class Repository<
     return `and (${prefix}deleted = 0 or ${prefix}deleted is null)`;
   }
 
-  protected _get(
-    id: number,
-    fields = new ParametersLimit<T>(),
-  ): Promise<T> {
+  protected _get(id: number, fields = new ParametersLimit<T>()): Promise<T> {
     if (!id) {
       throw new DBError();
     }
@@ -111,7 +106,10 @@ export default abstract class Repository<
     if (!fields) {
       fields = new ParametersLimit<T>();
     }
-    fields.exclude = [...fields.exclude, ...this.model._crudExclude as Array<DBDataKeys>];
+    fields.exclude = [
+      ...fields.exclude,
+      ...(this.model._crudExclude as Array<DBDataKeys>),
+    ];
     return fields;
   }
 
@@ -206,6 +204,7 @@ export default abstract class Repository<
     key: string,
     value: any,
     fields = new ParametersLimit<T>(),
+    limit?: number,
   ): Promise<Array<T>> {
     fields = this.processFields(fields);
     return this.connector
@@ -214,6 +213,7 @@ export default abstract class Repository<
       select ${this.model.parametersKeys(fields).join(", ")} from ${this.target}
       where ${key} = ?
       ${this.defaultFilters()}
+      ${limit ? `limit 0,${limit}` : ""}
     `,
         [value],
       )
@@ -224,8 +224,9 @@ export default abstract class Repository<
     key: string,
     value: any,
     fields = new ParametersLimit<T>(),
+    limit?: number,
   ): Promise<Array<T>> {
-    return this._getAllBy(key, value, fields);
+    return this._getAllBy(key, value, fields, limit);
   }
 
   protected _getByMap(
@@ -608,10 +609,7 @@ export default abstract class Repository<
     );
   }
 
-  protected _create(
-    model: T,
-    fields = new ParametersLimit<T>(),
-  ): Promise<T> {
+  protected _create(model: T, fields = new ParametersLimit<T>()): Promise<T> {
     if (!model) {
       throw new DBError();
     }
@@ -632,17 +630,11 @@ export default abstract class Repository<
       });
   }
 
-  create(
-    model: T,
-    fields = new ParametersLimit<T>(),
-  ): Promise<T> {
+  create(model: T, fields = new ParametersLimit<T>()): Promise<T> {
     return this._create(model, fields);
   }
 
-  _update(
-    model: T,
-    fields = new ParametersLimit<T>(),
-  ): Promise<T> {
+  _update(model: T, fields = new ParametersLimit<T>()): Promise<T> {
     if (!model) {
       throw new DBError();
     }
@@ -663,10 +655,7 @@ export default abstract class Repository<
       });
   }
 
-  update(
-    model: T,
-    fields = new ParametersLimit<T>(),
-  ): Promise<T> {
+  update(model: T, fields = new ParametersLimit<T>()): Promise<T> {
     return this._update(model, fields);
   }
 
@@ -767,7 +756,10 @@ export default abstract class Repository<
 
   markOnDeletion(model: T) {
     model.deleted = true;
-    return this._update(model, new ParametersLimit<T>([], ["id", "deleted"] as Array<DBDataKeys>));
+    return this._update(
+      model,
+      new ParametersLimit<T>([], ["id", "deleted"] as Array<DBDataKeys>),
+    );
   }
 
   markOnDeletionAll(models: Array<T>) {
@@ -775,6 +767,9 @@ export default abstract class Repository<
       model.deleted = true;
       return model;
     });
-    return this.updateAll(models, new ParametersLimit<T>([], ["id", "deleted"] as Array<DBDataKeys>));
+    return this.updateAll(
+      models,
+      new ParametersLimit<T>([], ["id", "deleted"] as Array<DBDataKeys>),
+    );
   }
 }

@@ -165,20 +165,15 @@
 </template>
 
 <script setup lang="ts">
-import { FieldTypes } from "extorris";
+import {
+  FieldTypes,
+  ModelPropertyMetadata,
+  type KeyAndMetadata,
+  type Metadata,
+} from "extorris-common";
 import { useEntitiesStore } from "@/store/entities";
 import MittEvents from "~/core/enums/MittEvents";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
-import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
-
-interface Metadata {
-  [key: string]: ModelPropertyMetadata;
-}
-
-interface KeyAndMetadata {
-  key: string;
-  metadata: ModelPropertyMetadata;
-}
 
 const { $mittEmit, $mittOn } = useNuxtApp();
 
@@ -236,7 +231,7 @@ const createEntity = async () => {
   const response = await entitiesStore.createEntity(
     props.entity,
     localData.value,
-    keysWithMetadata.value,
+    keysWithMetadata.value
   );
   if (response.id) {
     $mittEmit(MittEvents.RELOAD_CURRENT_ENTITY_LIST);

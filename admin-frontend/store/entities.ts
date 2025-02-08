@@ -7,9 +7,9 @@ import {
   type ResponseEntityDataAPI,
   type ResponseFilterAPI,
   type ResponseCreateUpdateAPI,
-} from "extorris";
+  type KeyAndMetadata,
+} from "extorris-common";
 import { defineStore } from "pinia";
-import type KeyAndMetadata from "~/core/interfaces/KeyAndMetadata";
 import DBFilter from "~/core/models/db/DBFilter";
 
 export interface EntitiesState {

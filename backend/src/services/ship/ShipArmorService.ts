@@ -10,8 +10,6 @@ export default class ShipArmorService extends Service<
   ShipArmorModel,
   ShipArmorRepository
 > {
-  sessionRepo = new ShipArmorRepository();
-
   constructor() {
     super(new ShipArmorRepository());
   }

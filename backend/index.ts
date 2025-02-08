@@ -16,37 +16,34 @@ import { adminRouter, userRouter } from "@src/routers/index.js";
 
 import PropagatedError from "@src/models/PropagatedError.js";
 import ExpressNext from "@src/models/ExpressNext.js";
-import { dbDataInit } from "@src/initialization/startup.js";
+import { dbDataInit, redisDataInit } from "@src/initialization/startup.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
 import ExpressResponseGenerator from "@src/core/router/ExpressResponseGenerator.js";
-import AdminRoleTypes from "@src/enums/AdminRoleTypes.js";
+import RedisConnector from "@src/core/RedisConnector.js";
+import RabbitMQConnector from "@src/core/RabbitMQConnector.js";
+import { CommsModels, RabbitMQModels } from "extorris-common";
+import UserService from "@src/services/user/UserService.js";
+import ChatService from "@src/services/chat/ChatService.js";
 
 // import { createRequire } from "module";
 // const require = createRequire(import.meta.url);
-// const createError = require("http-errors");
 
 let healthcheck = 0;
-
-// doesn't work
-// declare global {
-//   interface NextFunction {
-//     (result?: ExpressNext): void;
-//   }
-// }
 
 async function loadConfig() {
   await ConfigLoader.reload();
   return ConfigLoader.getInstance();
 }
 
-async function init() {
+async function init(): Promise<express.Express> {
   // loading config
   const config = await loadConfig();
   if (!config || !config.configExists) {
     throw new Error("Couldn't load config");
   }
 
-  dbDataInit(config);
+  await dbDataInit(config);
+  await redisDataInit();
 
   const userApiUrlPrefix = config.get("userApiUrlPrefix");
   const adminApiUrlPrefix = config.get("adminApiUrlPrefix");
@@ -66,9 +63,37 @@ async function init() {
   app.use(adminApiUrlPrefix, adminRouter);
   app.use(userApiUrlPrefix, userRouter);
 
-  app.all("/test", (req: Request, res: Response, next: NextFunction) => {
-    healthcheck = healthcheck + 1;
+  const rabbitmq = await RabbitMQConnector.getInstance("amqp://localhost:5672");
 
+  rabbitmq.setUserChatDequeueCallback((message) => {
+    const chatService = new ChatService();
+    console.log(
+      `user ${message.userId} sent msg ${message.message} to chat ${message.chatId}`,
+    );
+    chatService.userSentMessage(
+      message.message,
+      message.chatId,
+      message.userId,
+    );
+  });
+
+  app.get("/rabbit", (req: Request, res: Response, next: NextFunction) => {
+    rabbitmq.channel.checkQueue(
+      RabbitMQModels.RabbitMQKeys.CHAT_UPDATE_FOR_COMMS,
+      (err, ok) => {
+        console.log(ok.messageCount);
+      },
+    );
+    rabbitmq.channel.checkQueue(
+      RabbitMQModels.RabbitMQKeys.USER_SENT_CHAT_MESSAGES,
+      (err, ok) => {
+        console.log(ok.messageCount);
+      },
+    );
+  });
+
+  app.all("/test", async (req: Request, res: Response, next: NextFunction) => {
+    // console.log(data);
     // console.log(req.headers.authorization?.split(" ")[1]);
     // console.log(req.baseUrl);
     // console.log(req.url);
@@ -80,12 +105,26 @@ async function init() {
     // console.log(typeof new AdminModel().id);
     // const adminModel = new AdminModel();
     // console.log(adminModel.parameterAnnotations("id"));
-    console.log(Object.keys(AdminRoleTypes));
-    console.log(Object.values(AdminRoleTypes));
-
+    // console.log(Object.keys(AdminRoleTypes));
+    // console.log(Object.values(AdminRoleTypes));
     // @ts-ignore
-    console.log(Object.keys(AdminRoleTypes).map((v: any) => AdminRoleTypes[v]));
-    next(ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS));
+    // console.log(Object.keys(AdminRoleTypes).map((v: any) => AdminRoleTypes[v]));
+    // next(ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS));
+    // try {
+    //   const redisConnector = await RedisConnector.getInstance();
+    //   next(
+    //     ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
+    //       first: await redisConnector.getUserSession(
+    //         "c7c9fb8b-976c-44a9-a6c2-72fe797be68e",
+    //       ),
+    //       // all: await redisConnector.getAllUserSessions(),
+    //     }),
+    //   );
+    // } catch (error) {
+    //   next(
+    //     ExpressResponseGenerator.getResponse(ExpressResponseTypes.ERROR, error),
+    //   );
+    // }
   });
 
   app.all("/healthcheck", (req: Request, res: Response, next: NextFunction) => {
@@ -150,6 +189,7 @@ async function init() {
   server.listen(port, host);
   server.on("error", onError);
   server.on("listening", onListening);
+  return app;
 }
 
-init();
+export const viteNodeApp = await init();

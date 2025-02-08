@@ -10,6 +10,13 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
+
     const userService = new UserService();
     await userService.createDefaultUserIsland(user);
 

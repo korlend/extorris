@@ -1,13 +1,10 @@
 <template>
   <v-app class="default__layout">
     <client-only>
-      <!-- <slidebar-block /> -->
+      <SectionsChat />
       <ModalWindow />
-      <header-block />
+      <SectionsHeader />
       <div class="default__layout-page__container">
-        <!-- <sidebar-block /> -->
-        <!-- <footer-block /> -->
-        <!-- .... -->
         <div class="default__layout-page__container-slot custom-scroll">
           <slot />
         </div>
@@ -17,13 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import SidebarBlock from "@/components/blocks/SidebarBlock.vue";
-import SlidebarBlock from "@/components/blocks/SlidebarBlock.vue";
-// import FooterBlock from "@/components/blocks/FooterBlock.vue";
-import HeaderBlock from "@/components/blocks/HeaderBlock.vue";
 
 import { useRoute } from "vue-router";
-import ModalWindow from "~/components/ModalWindow.vue";
 
 const route = useRoute();
 </script>

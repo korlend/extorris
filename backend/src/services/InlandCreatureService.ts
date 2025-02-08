@@ -6,8 +6,6 @@ export default class InlandCreatureService extends Service<
   InlandCreatureModel,
   InlandCreatureRepository
 > {
-  sessionRepo = new InlandCreatureRepository();
-
   constructor() {
     super(new InlandCreatureRepository());
   }

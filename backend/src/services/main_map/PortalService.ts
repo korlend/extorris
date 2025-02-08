@@ -6,8 +6,6 @@ export default class PortalService extends Service<
   PortalModel,
   PortalRepository
 > {
-  sessionRepo = new PortalRepository();
-
   constructor() {
     super(new PortalRepository());
   }

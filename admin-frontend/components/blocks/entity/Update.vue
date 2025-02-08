@@ -165,10 +165,12 @@
 
 <script setup lang="ts">
 import { useEntitiesStore } from "@/store/entities";
-import { FieldTypes } from "extorris";
+import {
+  FieldTypes,
+  type KeyAndMetadata,
+  type Metadata,
+} from "extorris-common";
 import MittEvents from "~/core/enums/MittEvents";
-import type KeyAndMetadata from "~/core/interfaces/KeyAndMetadata";
-import type Metadata from "~/core/interfaces/Metadata";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 
 const imagesUrl = getImagesUrl();
@@ -233,7 +235,7 @@ const updateEntity = async () => {
   const response = await entitiesStore.updateEntity(
     props.entity,
     localData.value,
-    keysWithMetadata.value,
+    keysWithMetadata.value
   );
   if (response.id) {
     $mittEmit(MittEvents.RELOAD_CURRENT_ENTITY_LIST);

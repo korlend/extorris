@@ -18,7 +18,13 @@ export default class DBFilterBuilder<T extends DBModel<T>> {
     let finalString: string = "and ";
     for (let i = 0; i < filters.length; i++) {
       const filter = filters[i];
+      if (filter.section === "OPEN") {
+        finalString += "("
+      }
       finalString += `?? ${filter.operand} ?`;
+      if (filter.section === "CLOSE") {
+        finalString += ")"
+      }
       if (i !== filters.length - 1) {
         finalString += ` ${filter.logical} `;
       }

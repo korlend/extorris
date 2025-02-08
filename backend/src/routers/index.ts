@@ -8,6 +8,7 @@ import entitiesRouter from "./admin/entities.js";
 import mainMapRouter from "./admin/mainMap.js";
 import imagesRouter from "./admin/images.js";
 
+import userChatRouter from "./user/chat.js";
 import userAuthRouter from "./user/userAuth.js";
 import userMainMapRouter from "./user/mainMap.js";
 import userShipManagementRouter from "./user/shipManagement.js";
@@ -52,6 +53,7 @@ userRouter.get(
 
 userRouter.use(userAuthMiddleware);
 
+userRouter.use("/chat", userChatRouter);
 userRouter.use("/auth", userAuthRouter);
 userRouter.use("/main_map", userMainMapRouter);
 userRouter.use("/ship", userShipManagementRouter);

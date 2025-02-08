@@ -6,8 +6,6 @@ export default class TranslationService extends Service<
   TranslationModel,
   TranslationRepository
 > {
-  sessionRepo = new TranslationRepository();
-
   constructor() {
     super(new TranslationRepository());
   }

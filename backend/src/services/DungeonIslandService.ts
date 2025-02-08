@@ -6,8 +6,6 @@ export default class DungeonIslandService extends Service<
   DungeonIslandModel,
   DungeonIslandRepository
 > {
-  sessionRepo = new DungeonIslandRepository();
-
   constructor() {
     super(new DungeonIslandRepository());
   }

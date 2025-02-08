@@ -6,8 +6,6 @@ export default class AdminRoleService extends Service<
   AdminRoleModel,
   AdminRoleRepository
 > {
-  sessionRepo = new AdminRoleRepository();
-
   constructor() {
     super(new AdminRoleRepository());
   }

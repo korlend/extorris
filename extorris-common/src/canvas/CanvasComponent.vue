@@ -1,5 +1,5 @@
 <template>
-  <div class="canvas__block" ref="canvasParentElementRef">
+  <div class="canvas__block" ref="canvasParentElementRefName">
     <div class="fps" v-if="showFPS">
       {{ fpsArray.length }}
     </div>
@@ -16,7 +16,7 @@
     <canvas
       class="canvas__block-canvas"
       :class="canvasClasses"
-      ref="canvasRef"
+      ref="canvasRefName"
       :width="canvasWidth"
       :height="canvasHeight"
       @wheel="scrollEvent"
@@ -84,8 +84,8 @@ const emit = defineEmits<{
   (e: "action:click", canvasEvent: CanvasClickEvent): void;
 }>();
 
-const canvasRef = useTemplateRef("canvasRef");
-const canvasParentElementRef = useTemplateRef("canvasParentElementRef");
+const canvasRef = useTemplateRef("canvasRefName");
+const canvasParentElementRef = useTemplateRef("canvasParentElementRefName");
 
 const globalActiveHover: Ref<CanvasBlock | null> = ref(null);
 
@@ -597,8 +597,8 @@ const setWindowSizes = () => {
 <style lang="scss" scoped>
 .fps {
   position: absolute;
-  top: 60px;
   left: 10px;
+  bottom: 50px;
   color: white;
   backdrop-filter: blur(10px);
   height: 30px;

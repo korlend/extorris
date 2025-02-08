@@ -6,8 +6,6 @@ export default class LanguageService extends Service<
   LanguageModel,
   LanguageRepository
 > {
-  sessionRepo = new LanguageRepository();
-
   constructor() {
     super(new LanguageRepository());
   }

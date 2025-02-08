@@ -17,7 +17,7 @@ import {
   type CanvasBlock,
   type CanvasClickEvent,
   type CanvasDrawOptions,
-} from "extorris";
+} from "extorris-common";
 
 import {
   useModalWindowStore,
@@ -52,7 +52,7 @@ onMounted(() => {
       fill: [
         {
           path: getOval(400, 1000),
-          color: `rgb(70,150,70)`,
+          color: `rgb(70,70,70)`,
         },
       ],
     },

@@ -1,6 +1,9 @@
 import AdminModel from "./admin/AdminModel.js";
 import AdminRoleModel from "./admin/AdminRoleModel.js";
 import AdminSessionModel from "./admin/AdminSessionModel.js";
+import ChatModel from "./chat/ChatModel.js";
+import ChatMessageModel from "./chat/ChatMessageModel.js";
+import ChatUserModel from "./chat/ChatUserModel.js";
 import CountryModel from "./CountryModel.js";
 import DungeonIslandModel from "./DungeonIslandModel.js";
 import ExternalCreatureModel from "./main_map/ExternalCreatureModel.js";
@@ -38,6 +41,9 @@ export {
   AdminModel,
   AdminRoleModel,
   AdminSessionModel,
+  ChatModel,
+  ChatMessageModel,
+  ChatUserModel,
   CountryModel,
   DungeonIslandModel,
   ExternalCreatureModel,

@@ -1,6 +1,5 @@
 import { AdminSessionModel } from "@src/models/db/index.js";
 import AdminSessionRepository from "@src/repositories/admin/AdminSessionRepository.js";
-import { v4 as uuidv4 } from "uuid";
 import Service from "../Service.js";
 
 export default class AdminSessionService extends Service<
@@ -24,7 +23,7 @@ export default class AdminSessionService extends Service<
       new Date().getTime() +
         this.sessionRepo.config?.get("auth.session.adminExpireTime") * 1000,
     );
-    session.token = uuidv4();
+    session.token = crypto.randomUUID();
     return this.sessionRepo.create(session);
   }
 

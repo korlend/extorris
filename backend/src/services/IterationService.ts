@@ -7,14 +7,12 @@ import DateUtils from "@src/core/utils/DateUtils.js";
 import ParametersLimit from "@src/models/ParametersLimit.js";
 import MainMapHubService from "./main_map/MainMapHubService.js";
 import PortalService from "./main_map/PortalService.js";
-import { getDepthItemMaxNumber } from "extorris";
+import { getDepthItemMaxNumber } from "extorris-common";
 
 export default class IterationService extends Service<
   IterationModel,
   IterationRepository
 > {
-  sessionRepo = new IterationRepository();
-
   constructor() {
     super(new IterationRepository());
   }

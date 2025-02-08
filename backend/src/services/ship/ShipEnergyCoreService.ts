@@ -10,8 +10,6 @@ export default class ShipEnergyCoreService extends Service<
   ShipEnergyCoreModel,
   ShipEnergyCoreRepository
 > {
-  sessionRepo = new ShipEnergyCoreRepository();
-
   constructor() {
     super(new ShipEnergyCoreRepository());
   }

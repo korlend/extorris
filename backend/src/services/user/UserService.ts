@@ -168,7 +168,7 @@ export default class UserService extends Service<UserModel, UserRepository> {
   }
 
   async logout(session: UserSessionModel) {
-    return this.userSessionService.reduceSession(session);
+    return this.userSessionService.delete(session);
   }
 
   async getUserByEmail(email: string) {

@@ -4,7 +4,6 @@ import ConfigLoader from "@src/core/config/ConfigLoader.js";
 
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const createError = require("http-errors");
 
 import PropagatedError from "@src/models/PropagatedError.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
@@ -55,7 +54,7 @@ router.all(
       throw new PropagatedError(ExpressResponseTypes.FORBIDDEN);
     }
 
-    res.locals.session = session;
+    res.locals.user_session = session;
     res.locals.user = user;
     next();
   },

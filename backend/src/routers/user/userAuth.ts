@@ -1,7 +1,12 @@
 import express, { Request, Response, NextFunction } from "express";
 import ExpressResponseGenerator from "@src/core/router/ExpressResponseGenerator.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
-import { ShipModel, ShipPartTypeModel, UserModel, UserShipPartModel } from "@src/models/db/index.js";
+import {
+  ShipModel,
+  ShipPartTypeModel,
+  UserModel,
+  UserShipPartModel,
+} from "@src/models/db/index.js";
 import UserService from "@src/services/user/UserService.js";
 import PropagatedError from "@src/models/PropagatedError.js";
 import ShipService from "@src/services/ship/ShipService.js";
@@ -55,15 +60,25 @@ router.post(
 router.put(
   "/logout",
   async (req: Request, res: Response, next: NextFunction) => {
-    const { session } = res.locals;
+    const { user_session } = res.locals;
+    if (!user_session) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
     const userServices = new UserService();
-    await userServices.logout(session);
+    await userServices.logout(user_session);
     next(ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS));
   },
 );
 
 router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
-  const { user, session } = res.locals;
+  const { user, user_session } = res.locals;
+  if (!user_session || !user) {
+    next(ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN));
+    return;
+  }
   const shipService = new ShipService();
   const userShipPartsService = new UserShipPartService();
   const shipPartTypesService = new ShipPartTypeService();
@@ -98,7 +113,6 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
   // crossbowFilters.push(new DBFilter("code_name", "default_crossbow_cannon"));
   // crossbowFilters.push(new DBFilter("user_id", user.id));
   // const crossbowTotal = await userShipPartsService.getAllCount(crossbowFilters);
-
 
   /* START creating default ship parts */
   const defaultShipPartFilters: Array<DBFilter<ShipPartTypeModel>> = [];
@@ -150,7 +164,7 @@ router.get("/me", async (req: Request, res: Response, next: NextFunction) => {
   /* END creating default ship for user */
   next(
     ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
-      session: session.prepareREST(),
+      session: user_session.prepareREST(),
       user: user.prepareREST(),
       userShips: userShips.map((v) => v.prepareREST()),
     }),

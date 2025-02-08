@@ -1,9 +1,9 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
-import FieldTypes from "@src/enums/FieldTypes.js";
 import DBModel from "./DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
 import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
+import { FieldTypes } from "extorris-common";
 
 export default class UserIslandModel extends DBModel<UserIslandModel> {
   _tableName: string = "user_islands";

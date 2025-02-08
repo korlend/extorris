@@ -2,20 +2,22 @@
   <div class="main__map">
     <span class="main__map-selectors">
       <div class="main__map-selectors-row">
-        <InputsEntity
+        <InputsEntityList
           v-model="currentIterationId"
           class="main__map-generation-input"
           @update:model-value="selectIteration"
-          label="Select iteration"
-          entity="iteration"></InputsEntity>
-        <InputsEntity
-          v-model="currentMainMapId"
+          label="Iteration"
+          entity="iteration">
+          <template #extra_data="dataProps">
+            {{ `active: ${dataProps.item.active}` }}
+          </template>
+        </InputsEntityList>
+        <InputsEntityList
           class="main__map-generation-input"
           :filters="mainMapFilters"
           @update:model-value="selectMainMap"
-          label="Select main map"
-          entity="main_map"
-          autoselect-first></InputsEntity>
+          label="Main map"
+          entity="main_map"></InputsEntityList>
       </div>
       <div class="main__map-selectors-row"></div>
     </span>
@@ -69,12 +71,11 @@ import {
   type CanvasDrawOptions,
   type CanvasElement,
   type Vector2D,
-} from "extorris";
+} from "extorris-common";
 
 const { $mittEmit } = useNuxtApp();
 
 const router = useRouter();
-const route = useRoute();
 const mainMapStore = useMainMapStore();
 
 const layerAmount: Ref<number> = ref(1);
@@ -83,35 +84,13 @@ const treesDepthStart: Ref<number> = ref(0);
 const startDate: Ref<Date | undefined> = ref();
 const endDate: Ref<Date | undefined> = ref();
 
-const currentIterationId: Ref<number> = ref(
-  parseInt(route.params.id as string)
-);
-const currentMainMapId: Ref<number> = ref(0);
+const currentIterationId: Ref<number | string | null> = ref(0);
 
 const canvasBlocks: Ref<Array<CanvasBlock>> = ref([]);
 
 const loadedMainMap: Ref<Record<string, any> | null> = ref(null);
 
-watch(
-  () => route,
-  (newRoute) => {
-    const newIterationId = parseInt(newRoute.params.id as string);
-    if (newIterationId === currentIterationId.value) {
-      return;
-    }
-    currentIterationId.value = newIterationId;
-    loadIteration();
-  }
-);
-
-watch(currentMainMapId, async (newMainMapId) => {
-  loadedMainMap.value = await loadMainMap(newMainMapId);
-  resetCanvasBlock();
-});
-
 onMounted(async () => {
-  currentIterationId.value = parseInt(route.params.id as string);
-  await loadIteration();
   resetCanvasBlock();
 });
 
@@ -166,7 +145,6 @@ const resetCanvasBlock = (iteration?: any) => {
     return;
   }
 
-  console.log("123", loadedMainMap.value.mainMapHubs);
   const hex = getHexagon(hexSize, hexYOffset, hexGap);
 
   const newCanvasBlocks: Array<CanvasBlock> = [];
@@ -353,21 +331,11 @@ const calcPos = (
   return { x: Math.floor(x), y: Math.floor(y) };
 };
 
-const loadIteration = async () => {
-  if (!currentIterationId.value) {
-    return;
-  }
-  const iteration = await mainMapStore.loadIteration(currentIterationId.value);
-  console.log("loaded iteration: ", iteration);
-  return iteration;
-};
-
-const loadMainMap = async (mainMapId: number) => {
-  if (!currentIterationId.value) {
+const loadMainMap = async (mainMapId: number | string) => {
+  if (!mainMapId) {
     return null;
   }
   const mainMap = await mainMapStore.loadMainMap(mainMapId);
-  console.log("loaded mainMap: ", mainMap);
   return mainMap;
 };
 
@@ -400,15 +368,18 @@ const generateIteration = async () => {
     `created new iteration, ${generateResponse.result?.id}`,
     LocalAlertTypes.SUCCESS
   );
-  console.log("generated iteration: ", generateResponse);
 };
 
-const selectIteration = (iterationId?: number | null) => {
-  router.push(`/main_map/${iterationId}`);
+const selectIteration = (iterationId: number | string | null) => {
+  currentIterationId.value = iterationId;
 };
 
-const selectMainMap = (mainMapId?: number | null) => {
-  console.log(mainMapId);
+const selectMainMap = async (mainMapId: number | string | null) => {
+  if (!mainMapId) {
+    return;
+  }
+  loadedMainMap.value = await loadMainMap(mainMapId);
+  resetCanvasBlock();
 };
 
 const openModal = () => {

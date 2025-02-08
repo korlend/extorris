@@ -3,14 +3,14 @@
     <div class="auth-block">
       <v-text-field
         v-model="username"
-        class="auth-block__username"
+        class="auth-block-username"
         @keydown.enter="auth" />
       <v-text-field
         v-model="password"
-        class="auth-block__password"
+        class="auth-block-password"
         type="password"
         @keydown.enter="auth" />
-      <v-btn class="auth-block__btn" @click="auth">Login</v-btn>
+      <v-btn class="auth-block-btn" @click="auth">Login</v-btn>
     </div>
   </div>
 </template>
@@ -67,17 +67,17 @@ const auth = async () => {
     max-width: 80dvw;
     // color: white;
 
-    &__username {
+    &-username {
       // width: 200px;
       // max-width: 80dvw;
     }
 
-    &__password {
+    &-password {
       // width: 200px;
       // max-width: 80dvw;
     }
 
-    &__btn {
+    &-btn {
       width: 100%;
       // max-width: 80dvw;
     }

@@ -19,7 +19,7 @@ import {
   type CanvasDrawOptions,
   type CanvasElement,
   type Vector2D,
-} from "extorris";
+} from "extorris-common";
 
 const { $mittEmit } = useNuxtApp();
 
@@ -92,8 +92,8 @@ const resetCanvasBlock = (iteration?: any) => {
     newCanvasBlocks.push({
       zindex: 1,
       position: {
-        x: portal.from_hub_position_x,
-        y: portal.from_hub_position_y,
+        x: portal.to_hub_position_x,
+        y: portal.to_hub_position_y,
       },
       fill: [
         {

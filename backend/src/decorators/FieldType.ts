@@ -1,9 +1,8 @@
 import MetadataHelper from "@src/core/decorators/MetadataHelper.js";
 import EntityType from "@src/enums/EntityType.js";
-import FieldTypes from "@src/enums/FieldTypes.js";
-import ModelPropertyMetadataTypes from "@src/enums/ModelPropertyMetadataTypes.js";
 import DBModel from "@src/models/db/DBModel.js";
 import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
+import { FieldTypes, ModelPropertyMetadataTypes } from "extorris-common";
 
 export default function FieldType<T extends DBModel<T>, K extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>>(
   type: FieldTypes,

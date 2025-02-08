@@ -8,14 +8,36 @@ import SearchData from "@src/models/SearchData.js";
 import PropagatedError from "@src/models/PropagatedError.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
 import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
+import ServiceOperations from "@src/enums/ServiceOperations.js";
+
+type OperationsCallbacks<T extends DBModel<T>> = {
+  [ServiceOperations.CREATE]:
+    | ((data: Array<T> | T, fields: ParametersLimit<T>) => void)
+    | null;
+};
 
 export default abstract class Service<
-  T extends DBModel<T> & IParsable<T>,
+  T extends DBModel<T>,
   TRepo extends Repository<T>,
   DBDataKeys extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>,
 > {
   repo: TRepo;
-  // operationLogService: OperationLogService
+
+  preOperationCallbacks: {
+    [ServiceOperations.CREATE]:
+      | ((data: T | Array<T>, fields: ParametersLimit<T>) => Promise<void>)
+      | null;
+    [ServiceOperations.UPDATE]:
+      | ((data: T | Array<T>, fields: ParametersLimit<T>) => Promise<void>)
+      | null;
+    [ServiceOperations.DELETE]:
+      | ((data: number | Array<number>) => Promise<void>)
+      | null;
+  } = {
+    [ServiceOperations.CREATE]: null,
+    [ServiceOperations.UPDATE]: null,
+    [ServiceOperations.DELETE]: null,
+  };
 
   constructor(repo: TRepo) {
     this.repo = repo;
@@ -41,8 +63,9 @@ export default abstract class Service<
     key: DBDataKeys,
     value: T[DBDataKeys],
     fields = new ParametersLimit<T>(),
+    limit?: number,
   ): Promise<Array<T>> {
-    return this.repo.getAllBy(key, value, fields);
+    return this.repo.getAllBy(key, value, fields, limit);
   }
 
   async getRange(id: number | string): Promise<T | Array<T>> {
@@ -107,10 +130,6 @@ export default abstract class Service<
     return this.repo.getByIdsFromTo(from, to);
   }
 
-  async updateLinks(oldModel: T, newModel: T) {
-    return newModel;
-  }
-
   async getByMap(
     filters: Map<String, any>,
     fields = new ParametersLimit<T>(),
@@ -118,58 +137,54 @@ export default abstract class Service<
     return this.repo.getByMap(filters, fields);
   }
 
-  async _create(
-    model: T,
-    fields = new ParametersLimit<T>(),
-    updateLinks = true,
-  ): Promise<T> {
+  async _create(model: T, fields = new ParametersLimit<T>()): Promise<T> {
     let newModel = await this.repo.create(model, fields);
-    if (updateLinks) {
-      newModel = await this.updateLinks(model, newModel);
+    if (
+      typeof this.preOperationCallbacks[ServiceOperations.CREATE] === "function"
+    ) {
+      await this.preOperationCallbacks[ServiceOperations.CREATE](model, fields);
     }
     return newModel;
   }
 
-  async create(
-    model: T,
-    fields = new ParametersLimit<T>(),
-    updateLinks = true,
-  ): Promise<T> {
-    return this._create(model, fields, updateLinks);
+  async create(model: T, fields = new ParametersLimit<T>()): Promise<T> {
+    return this._create(model, fields);
   }
 
   protected async _update(
     model: T,
     fields = new ParametersLimit<T>(),
-    updateLinks = true,
   ): Promise<T> {
     const oldModel = await this.repo.get(model.id);
     if (!oldModel) {
       throw new Error(`Record doesn't exist`);
     }
-    let newModel = await this.repo.update(model, fields);
-    if (updateLinks) {
-      await this.updateLinks(model, newModel);
+    if (
+      typeof this.preOperationCallbacks[ServiceOperations.UPDATE] === "function"
+    ) {
+      await this.preOperationCallbacks[ServiceOperations.UPDATE](model, fields);
     }
+    let newModel = await this.repo.update(model, fields);
     return newModel;
   }
 
-  async update(
-    model: T,
-    fields = new ParametersLimit<T>(),
-    updateLinks = true,
-  ): Promise<T> {
+  async update(model: T, fields = new ParametersLimit<T>()): Promise<T> {
     if (!model.id) {
       throw new PropagatedError(
         ExpressResponseTypes.ERROR,
         "ID is not specified to update entity",
       );
     }
-    return this._update(model, fields, updateLinks);
+    return this._update(model, fields);
   }
 
   protected async _delete(id: number): Promise<void> {
     let model = await this.repo.get(id);
+    if (
+      typeof this.preOperationCallbacks[ServiceOperations.DELETE] === "function"
+    ) {
+      await this.preOperationCallbacks[ServiceOperations.DELETE](id);
+    }
     await this.repo.delete(model);
   }
 
@@ -201,12 +216,11 @@ export default abstract class Service<
       fields,
     );
     if (!dbData) {
-      dbData = await this.repo.create(data, fields);
+      dbData = await this._create(data, fields);
     }
-    // if (dbData && !dbData.equal(data, fields)) {
     else {
       data.id = dbData.id;
-      dbData = await this.repo.update(data, fields);
+      dbData = await this._update(data, fields);
     }
     return dbData;
   }
@@ -233,6 +247,14 @@ export default abstract class Service<
     if (!models || !models.length) {
       return [];
     }
+    if (
+      typeof this.preOperationCallbacks[ServiceOperations.CREATE] === "function"
+    ) {
+      await this.preOperationCallbacks[ServiceOperations.CREATE](
+        models,
+        fields,
+      );
+    }
     const createdModels = await this.repo.createAll(models, fields);
     return createdModels;
   }
@@ -241,6 +263,14 @@ export default abstract class Service<
     models: Array<T>,
     fields = new ParametersLimit<T>(),
   ): Promise<Array<T>> {
+    if (
+      typeof this.preOperationCallbacks[ServiceOperations.UPDATE] === "function"
+    ) {
+      await this.preOperationCallbacks[ServiceOperations.UPDATE](
+        models,
+        fields,
+      );
+    }
     const createdModels = await this.repo.updateAll(models, fields);
     return createdModels;
   }
@@ -253,6 +283,13 @@ export default abstract class Service<
     }
     if (data.length && data[0] instanceof DBModel) {
       data = (data as T[]).map((v) => v.id);
+    }
+    if (
+      typeof this.preOperationCallbacks[ServiceOperations.DELETE] === "function"
+    ) {
+      await this.preOperationCallbacks[ServiceOperations.DELETE](
+        data as Array<number>,
+      );
     }
     const oldModels = await this.getAllByIds(data as Array<number>);
     await this.repo.deleteAll(oldModels);

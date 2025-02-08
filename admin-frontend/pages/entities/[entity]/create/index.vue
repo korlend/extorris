@@ -80,8 +80,7 @@
 
 <script setup lang="ts">
 import { useEntitiesStore } from "@/store/entities";
-import { FieldTypes } from "extorris";
-import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
+import { FieldTypes, ModelPropertyMetadata } from "extorris-common";
 
 interface Metadata {
   [key: string]: ModelPropertyMetadata;

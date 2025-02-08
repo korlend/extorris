@@ -1,14 +1,12 @@
 import "reflect-metadata";
 
-import * as changeCase from "change-case";
-
 import ParametersLimit from "@src/models/ParametersLimit.js";
 import MetadataHelper from "@src/core/decorators/MetadataHelper.js";
-import ModelPropertyMetadata from "../ModelPropertyMetadata.js";
 import EntityType from "@src/enums/EntityType.js";
 import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
 import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 import DBModelRESTExclude from "@src/enums/DBModelRESTExclude.js";
+import { ModelPropertyMetadata } from "extorris-common";
 
 export default abstract class DBModel<T extends DBModel<T>> {
   // [key: string]: any

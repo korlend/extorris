@@ -8,8 +8,6 @@ export default class MainMapHubService extends Service<
   MainMapHubModel,
   MainMapHubRepository
 > {
-  sessionRepo = new MainMapHubRepository();
-
   constructor() {
     super(new MainMapHubRepository());
   }

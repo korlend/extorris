@@ -9,15 +9,17 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/vue3-extorris-common.es.d.ts",
-      "import": "./dist/vue3-extorris-common.es.js",
-      "require": "./dist/vue3-extorris-common.umd.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/extorris-common.es.js",
+      "require": "./dist/extorris-common.umd.js"
     }
   },
   "dependencies": {
-    "vue": "latest"
+    "vue": "latest",
+    "websocket": "^1.0.35"
   },
   "devDependencies": {
+    "@types/websocket": "^1.0.10",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
     "sass-embedded": "^1.83.4",

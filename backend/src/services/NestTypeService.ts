@@ -6,8 +6,6 @@ export default class NestTypeService extends Service<
   NestTypeModel,
   NestTypeRepository
 > {
-  sessionRepo = new NestTypeRepository();
-
   constructor() {
     super(new NestTypeRepository());
   }

@@ -33,11 +33,17 @@ import ShipCannonService from "@src/services/ship/ShipCannonService.js";
 import ShipEngineService from "@src/services/ship/ShipEngineService.js";
 import ShipHullService from "@src/services/ship/ShipHullService.js";
 import ShipEnergyCoreService from "@src/services/ship/ShipEnergyCoreService.js";
+import ChatService from "@src/services/chat/ChatService.js";
+import ChatMessageService from "@src/services/chat/ChatMessageService.js";
+import ChatUserService from "@src/services/chat/ChatUserService.js";
 
 const entityServices: Record<EntityType, any> = {
   [EntityType.ADMIN]: AdminService,
   [EntityType.ADMIN_ROLE]: AdminRoleService,
   [EntityType.ADMIN_SESSION]: AdminSessionService,
+  [EntityType.CHAT]: ChatService,
+  [EntityType.CHAT_MESSAGE]: ChatMessageService,
+  [EntityType.CHAT_USERS]: ChatUserService,
   [EntityType.COUNTRY]: CountryService,
   [EntityType.DUNGEON_ISLAND]: DungeonIslandService,
   [EntityType.EXTERNAL_CREATURE]: ExternalCreatureService,

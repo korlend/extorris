@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ShipItemType } from "extorris";
+import { ShipItemType } from "extorris-common";
 import { useShipStore } from "~/store/ship";
 
 const shipStore = useShipStore();

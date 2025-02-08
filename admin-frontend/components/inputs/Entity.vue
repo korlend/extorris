@@ -4,7 +4,7 @@
       v-model="localModel"
       :label="label"
       :clearable="clearable"
-      :items="items"
+      :items="builtItems"
       :custom-filter="filterFunction"
       :loading="isLoading"
       :disabled="disabled"
@@ -28,16 +28,17 @@
 
 <script setup lang="ts">
 import { useEntitiesStore } from "@/store/entities";
-import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
 import MittEvents from "~/core/enums/MittEvents";
-import type DBFilter from "~/core/models/db/DBFilter";
-import { FieldTypes } from "extorris";
+import DBFilter from "~/core/models/db/DBFilter";
+import { FieldTypes, ModelPropertyMetadata } from "extorris-common";
+
+type ModelType = number | string | null;
 
 const { $mittOn } = useNuxtApp();
 
 const entitiesStore = useEntitiesStore();
 
-const model = defineModel<number | null>({ type: Number });
+const model = defineModel<ModelType>({ type: [Number, String] });
 // const emit = defineEmits(["update:model-value"]);
 
 const props = defineProps({
@@ -53,7 +54,7 @@ const props = defineProps({
     type: Object as PropType<{ [key: string]: any }>,
     default: {},
   },
-  maxSize: {
+  paginationSize: {
     type: Number,
     default: 10,
   },
@@ -68,49 +69,67 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  autoselectFirst: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 const isLoading: Ref<boolean> = ref(true);
 
 const items: Ref<Array<any>> = ref([]);
+const tempSearchItems: Ref<Array<any>> = ref([]);
 
-const localModel: Record<string, any> = ref({});
+const localModel: Ref<Record<string, any> | undefined> = ref();
+const loadedSelectedItem: Ref<Record<string, any> | null> = ref(null);
 
 const total: Ref<number> = ref(0);
-
-const autoselected: Ref<boolean> = ref(false);
 
 const loadedEntityKeys: Ref<Array<string>> = ref([]);
 const loadedEntityKeysMetadata: Ref<{ [key: string]: ModelPropertyMetadata }> =
   ref({});
 
 watch(model, async (newValue) => {
-  await reload();
-  trySetLocalModel(newValue);
+  await reloadItems(null);
+  await trySetLocalModel(newValue);
 });
 
 watch(
   () => props.filters,
-  () => {
-    reload();
+  async () => {
+    await reloadItems(null);
   }
 );
 
 onMounted(async () => {
-  const response = await entitiesStore.loadEntityKeys(props.entity);
-  loadedEntityKeys.value = response.keys;
-  loadedEntityKeysMetadata.value = response.keysMetadata;
-  await reload();
+  await reloadEntityKeysMedadata();
+  await reloadItems(null);
   if (model.value) {
-    trySetLocalModel(model.value);
+    await trySetLocalModel(model.value);
   }
   $mittOn(MittEvents.RELOAD_ENTITY_AUTOCOMPLETE, () => {
-    reload();
+    reloadItems(null);
   });
+});
+
+const builtItems = computed((): Array<Record<string, any>> => {
+  if (tempSearchItems.value?.length) {
+    return tempSearchItems.value;
+  }
+  const internalItems = [];
+  if (
+    model.value &&
+    loadedSelectedItem.value &&
+    !selectedItemExistsInItems.value &&
+    isLoadedSelectedItemOfCurrentModel.value
+  ) {
+    internalItems.push(loadedSelectedItem.value);
+  }
+  return [...internalItems, ...items.value];
+});
+
+const isLoadedSelectedItemOfCurrentModel = computed(() => {
+  return loadedSelectedItem.value?.[props.modelEntityKey] == model.value;
+});
+
+const selectedItemExistsInItems = computed(() => {
+  return items.value.some((item) => item[props.modelEntityKey] == model.value);
 });
 
 const getImageSrc = (item: Record<string, any>) => {
@@ -132,10 +151,16 @@ const getImageSrc = (item: Record<string, any>) => {
 }
 
 const search = async (value: string) => {
-  await reload(value);
+  if (!value) {
+    tempSearchItems.value = [];
+    await reloadItems(null);
+    return;
+  }
+  const response = await loadItems(value);
+  tempSearchItems.value = response.items;
 };
 
-const updateValue = (value: any) => {
+const updateValue = async (value: any) => {
   if (!value) {
     model.value = null;
     return;
@@ -144,16 +169,19 @@ const updateValue = (value: any) => {
     return;
   }
   model.value = value[props.modelEntityKey];
+  tempSearchItems.value = [];
 };
 
-const trySetLocalModel = (id?: number | null) => {
-  if (id !== null && id !== undefined) {
-    const item = items.value.find((v) => v.id == id);
+const trySetLocalModel = async (value?: ModelType) => {
+  await reloadItems(null)
+  if (value !== null && value !== undefined) {
+    let item = builtItems.value.find((v) => v[props.modelEntityKey] == value);
+    if (!item && loadedSelectedItem.value && isLoadedSelectedItemOfCurrentModel.value) {
+      item = loadedSelectedItem.value
+    }
     localModel.value = item;
-    autoselected.value = false;
     return;
   }
-  autoselected.value = true;
   localModel.value = undefined;
 };
 
@@ -162,15 +190,37 @@ const filterFunction = () => {
   return true;
 };
 
-const reload = async (text?: string | number) => {
+const reloadEntityKeysMedadata = async () => {
+  const response = await entitiesStore.loadEntityKeys(props.entity);
+  loadedEntityKeys.value = response.keys;
+  loadedEntityKeysMetadata.value = response.keysMetadata;
+};
+
+const reloadItems = async (text: ModelType) => {
   isLoading.value = true;
-  let dbFilters: Array<DBFilter> = [];
-
-  const filters = deepToRaw(props.filters);
-
-  if (model.value && !filters.id) {
-    filters.id = model.value;
+  const response = await loadItems(text, props.filters);
+  items.value = response.items;
+  total.value = response.total;
+  if (
+    model.value &&
+    !selectedItemExistsInItems.value &&
+    !isLoadedSelectedItemOfCurrentModel.value
+  ) {
+    const response = await loadItems(null, {
+      [props.modelEntityKey]: model.value,
+    });
+    if (response.items.length) {
+      loadedSelectedItem.value = response.items[0];
+    }
   }
+  isLoading.value = false;
+};
+
+const loadItems = async (
+  text: ModelType,
+  filters: { [key: string]: any } = {}
+) => {
+  let dbFilters: Array<DBFilter> = [];
 
   if (props.filters) {
     dbFilters = createDBFilters(filters, loadedEntityKeysMetadata.value);
@@ -184,23 +234,15 @@ const reload = async (text?: string | number) => {
 
   const response = await entitiesStore.fastFilterEntity(
     props.entity,
-    text,
+    text === null ? undefined : text,
     0,
-    props.maxSize,
+    props.paginationSize,
     dbFilters,
     sortBy,
     sortDirection
   );
-  items.value = response.items;
-  total.value = response.total;
-  trySetLocalModel(localModel.value?.id || model.value);
 
-  if (!autoselected.value && props.autoselectFirst && !localModel.value && items.value.length) {
-    updateValue(items.value[0])
-    autoselected.value = true;
-  }
-
-  isLoading.value = false;
+  return response;
 };
 </script>
 

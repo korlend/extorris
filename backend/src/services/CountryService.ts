@@ -6,7 +6,6 @@ export default class CountryService extends Service<
   CountryModel,
   CountryRepository
 > {
-  sessionRepo = new CountryRepository();
 
   constructor() {
     super(new CountryRepository());

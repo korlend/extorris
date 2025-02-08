@@ -6,6 +6,7 @@
       :label="label"
       :clearable="clearable"
       :disabled="disabled"
+      hide-details="auto"
       @click:clear="clearClick"
       @update:model-value="updateValue"></v-text-field>
   </span>

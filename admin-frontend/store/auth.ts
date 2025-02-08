@@ -1,6 +1,6 @@
 // import { getItem } from "~/utils/localStorage";
 import { defineStore } from "pinia";
-import type { ResponseAPI } from "extorris";
+import type { ResponseAPI } from "extorris-common";
 import type Session from "~/core/interfaces/Session";
 
 export interface AuthState {

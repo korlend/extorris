@@ -8,13 +8,14 @@ export default defineConfig({
   plugins: [
     vue(),
     cssInjectedByJsPlugin({ useStrictCSP: true, relativeCSSInjection: false }),
-    dts({ rollupTypes: true }),
+    // dts({ rollupTypes: true }),
+    dts({ insertTypesEntry: true }),
   ],
   build: {
     lib: {
-      name: "vue3-extorris",
+      name: "extorris-common",
       entry: resolve(__dirname, "src/index.ts"),
-      fileName: (format) => `vue3-extorris-common.${format}.js`,
+      fileName: (format) => `extorris-common.${format}.js`,
     },
     emptyOutDir: true,
     rollupOptions: {

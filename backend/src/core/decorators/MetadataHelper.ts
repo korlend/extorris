@@ -1,12 +1,9 @@
 import "reflect-metadata";
 
-import IParsable from "@src/interfaces/IParsable.js";
 import DBModel from "@src/models/db/DBModel.js";
-import ModelPropertyMetadata from "@src/models/ModelPropertyMetadata.js";
-import ModelPropertyMetadataTypes from "@src/enums/ModelPropertyMetadataTypes.js";
-import FieldTypes from "@src/enums/FieldTypes.js";
 import EntityType from "@src/enums/EntityType.js";
 import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
+import { FieldTypes, ModelPropertyMetadata, ModelPropertyMetadataTypes } from "extorris-common";
 
 export default class MetadataHelper {
   static setPropertyMetadata<T extends DBModel<T>, K extends DBModelDBDataKeys<T> = DBModelDBDataKeys<T>>(

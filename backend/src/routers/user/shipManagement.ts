@@ -30,6 +30,13 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
+
     const userService = new UserService();
     userService.createUpdateUserDefaultShipParts(user);
     userService.createDefaultUserShip(user);
@@ -124,6 +131,13 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
+
     const shipArmorToEquip: ShipArmorModel = new ShipArmorModel().parseObject(
       req.body,
     );
@@ -142,6 +156,13 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
+
     const shipCannonToEquip: ShipCannonModel =
       new ShipCannonModel().parseObject(req.body);
 
@@ -158,6 +179,13 @@ router.put(
   "/equip_ship_energy_core",
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
+
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
 
     const shipEnergyCoreToEquip: ShipEnergyCoreModel =
       new ShipEnergyCoreModel().parseObject(req.body);
@@ -176,6 +204,13 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
+
     const shipEngineToEquip: ShipEngineModel =
       new ShipEngineModel().parseObject(req.body);
     const shipEngineService = new ShipEngineService();
@@ -192,6 +227,13 @@ router.put(
   "/equip_ship_hull",
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
+
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
 
     const shipHullToEquip: ShipHullModel = new ShipHullModel().parseObject(
       req.body,
@@ -210,6 +252,13 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
+
     const shipArmorService = new ShipArmorService();
 
     await shipArmorService.unequipAll(user);
@@ -224,6 +273,13 @@ router.put(
   "/unequip_ship_cannon",
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
+
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
 
     const shipCannonToEquip: ShipCannonModel =
       new ShipCannonModel().parseObject(req.body);
@@ -242,6 +298,13 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
+
     const shipEnergyCoreService = new ShipEnergyCoreService();
 
     await shipEnergyCoreService.unequipAll(user);
@@ -257,6 +320,13 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
+
     const shipEngineService = new ShipEngineService();
 
     await shipEngineService.unequipAll(user);
@@ -271,6 +341,13 @@ router.put(
   "/unequip_ship_hull",
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
+
+    if (!user) {
+      next(
+        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+      );
+      return;
+    }
 
     const shipHullService = new ShipHullService();
 

@@ -1,23 +1,36 @@
 // import { getItem } from "~/utils/localStorage";
 import { defineStore } from "pinia";
-import type { ResponseAPI } from "extorris";
+import type { ResponseAPI } from "extorris-common";
 import type Session from "~/core/interfaces/Session";
+import { useCommsStore } from "@/store/comms";
 
-export interface AuthState {
+type PostAuthCallback = (session: Session) => void;
+
+interface AuthState {
   session: Session;
+  postAuthCallbacks: Array<PostAuthCallback>;
 }
 
 export const useAuthStore = defineStore("auth", {
   state: (): AuthState => {
     return {
       session: {},
+      postAuthCallbacks: [],
     };
   },
   getters: {
-    getSession: (state: AuthState) => {
+    authChecked: (state) => {
+      return !!(
+        state.session &&
+        state.session.expire &&
+        state.session.token &&
+        state.session.username
+      );
+    },
+    getSession: (state) => {
       return state.session;
     },
-    getToken: (state: AuthState) => {
+    getToken: (state) => {
       const localStorageToken = getLocalStorageItem("token");
       if (localStorageToken) {
         return localStorageToken;
@@ -51,6 +64,8 @@ export const useAuthStore = defineStore("auth", {
         method: "PUT",
       });
       this.setUserData({});
+      const commsStore = useCommsStore();
+      commsStore.disconnect();
     },
     async login(username: string, password: string): Promise<Session | null> {
       const { data } = await useAPI<ResponseAPI>("/api/auth/login", {
@@ -65,7 +80,9 @@ export const useAuthStore = defineStore("auth", {
         throw new Error();
       }
 
-      return this.setUserData(data.value.result);
+      const userData = this.setUserData(data.value.result);
+      this.executePostAuth();
+      return userData;
     },
     async register(
       username: string,
@@ -87,6 +104,31 @@ export const useAuthStore = defineStore("auth", {
 
       return this.setUserData(data.value.result);
     },
+    async addPostAuthCallback(callback: PostAuthCallback) {
+      if (typeof callback !== "function") {
+        return;
+      }
+
+      if (this.authChecked) {
+        await callback(this.session);
+        return;
+      }
+      this.postAuthCallbacks.push(callback);
+    },
+    async executePostAuth() {
+      if (!this.authChecked || !this.session.token) {
+        throw "Execute post auth callback was called before authentication was verified";
+      }
+      const commsStore = useCommsStore();
+      commsStore.connect(this.session.token);
+      for (let i = 0; i < this.postAuthCallbacks.length; i++) {
+        const cb = this.postAuthCallbacks[i];
+        if (typeof cb === "function") {
+          await cb(this.session);
+        }
+      }
+      this.postAuthCallbacks = [];
+    },
     async me(): Promise<Session | null> {
       try {
         const { data } = await useAPI<ResponseAPI>("/api/auth/me", {
@@ -97,7 +139,9 @@ export const useAuthStore = defineStore("auth", {
           throw new Error();
         }
 
-        return this.setUserData(data.value.result);
+        const userData = this.setUserData(data.value.result);
+        this.executePostAuth();
+        return userData;
       } catch (ex) {
         return null;
       }

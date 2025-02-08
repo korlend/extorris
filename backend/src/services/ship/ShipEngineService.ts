@@ -10,8 +10,6 @@ export default class ShipEngineService extends Service<
   ShipEngineModel,
   ShipEngineRepository
 > {
-  sessionRepo = new ShipEngineRepository();
-
   constructor() {
     super(new ShipEngineRepository());
   }

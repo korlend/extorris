@@ -1,5 +1,5 @@
-import type { DBLogical } from "extorris";
-import type { DBOperand } from "extorris";
+import type { DBLogical } from "extorris-common";
+import type { DBOperand } from "extorris-common";
 
 export default class DBFilter {
   name: string;

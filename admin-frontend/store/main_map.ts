@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 
 import MittEvents from "~/core/enums/MittEvents";
-import type { ResponseAPI } from "extorris";
+import type { ResponseAPI } from "extorris-common";
 
 interface MainMapPing {
   active: boolean;
@@ -67,7 +67,7 @@ export const useMainMapStore = defineStore("main_map", {
     },
     async loadIteration(iterationId: number): Promise<ResponseAPI | null> {
       if (!iterationId) {
-        return null
+        return null;
       }
       const { $api } = useNuxtApp();
       const response: ResponseAPI = await $api(
@@ -78,9 +78,9 @@ export const useMainMapStore = defineStore("main_map", {
       );
       return response.result;
     },
-    async loadMainMap(mainMapId: number): Promise<ResponseAPI | null> {
+    async loadMainMap(mainMapId: number | string): Promise<ResponseAPI | null> {
       if (!mainMapId) {
-        return null
+        return null;
       }
       const { $api } = useNuxtApp();
       const response: ResponseAPI = await $api(

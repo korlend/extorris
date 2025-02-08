@@ -72,14 +72,14 @@ const closeModal = () => {
 <style lang="scss" scoped>
 .modal__window {
   position: fixed;
-  transform: translate(0, -100dvh);
+  transform: translate(0, -200dvh);
   height: 100dvh;
   width: 100dvw;
   transition: all 0.1s ease;
   z-index: 300;
-  display: flex;
   justify-content: center;
   align-items: center;
+  display: flex;
 
   &.active {
     transform: translate(0, 0);

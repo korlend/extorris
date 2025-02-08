@@ -6,8 +6,6 @@ export default class TreeService extends Service<
   TreeModel,
   TreeRepository
 > {
-  sessionRepo = new TreeRepository();
-
   constructor() {
     super(new TreeRepository());
   }

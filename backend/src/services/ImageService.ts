@@ -6,8 +6,6 @@ export default class ImageService extends Service<
   ImageModel,
   ImageRepository
 > {
-  sessionRepo = new ImageRepository();
-
   constructor() {
     super(new ImageRepository());
   }

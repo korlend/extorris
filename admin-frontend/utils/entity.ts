@@ -1,18 +1,19 @@
 export function getItemLabel(item: Record<string, any>) {
-  if (!item) {
-    return '';
+  let internalItem = deepToRaw(item);
+  if (!internalItem) {
+    return "";
   }
-  if (item.username) {
-    return `${item.id} - ${item.username}`;
+  if (internalItem.username) {
+    return `${internalItem.id} - ${internalItem.username}`;
   }
-  if (item.name) {
-    return `${item.id} - ${item.name}`;
+  if (internalItem.name) {
+    return `${internalItem.id} - ${internalItem.name}`;
   }
-  if (item.code) {
-    return `${item.id} - ${item.code}`;
+  if (internalItem.code) {
+    return `${internalItem.id} - ${internalItem.code}`;
   }
-  if (item.code_name) {
-    return `${item.id} - ${item.code_name}`;
+  if (internalItem.code_name) {
+    return `${internalItem.id} - ${internalItem.code_name}`;
   }
-  return `${item.id}`;
-};
+  return `${internalItem.id}`;
+}

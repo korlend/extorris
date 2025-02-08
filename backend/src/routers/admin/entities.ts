@@ -10,10 +10,10 @@ import EntityType from "@src/enums/EntityType.js";
 import DBFilter from "@src/models/DBFilter.js";
 import ParametersLimit from "@src/models/ParametersLimit.js";
 import Service from "@src/services/Service.js";
-import FieldTypes from "@src/enums/FieldTypes.js";
 import entityModels from "@src/constants/entityModels.js";
 import entityServices from "@src/constants/entityServices.js";
 import DBModel from "@src/models/db/DBModel.js";
+import { FieldTypes } from "extorris-common";
 
 const router = express.Router();
 

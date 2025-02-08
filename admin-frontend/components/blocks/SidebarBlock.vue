@@ -76,7 +76,7 @@ const getPages = computed(() => {
 
   pages.push({
     name: "Main Map",
-    path: "/main_map/0",
+    path: "/main_map",
   });
 
   pages.push({

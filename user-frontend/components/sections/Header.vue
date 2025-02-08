@@ -3,6 +3,7 @@
     <div class="header__block-links">
       <router-link class="header__block-links-link" to="/">World Map</router-link>
       <router-link class="header__block-links-link" to="/home">My Island</router-link>
+      <router-link class="header__block-links-link" to="/test">test</router-link>
     </div>
     <div class="header__block-auth">
       <client-only>

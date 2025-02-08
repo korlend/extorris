@@ -95,20 +95,13 @@
 import create from "./Create.vue";
 import update from "./Update.vue";
 import { useEntitiesStore } from "@/store/entities";
-import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
 import { useSlidebarStore } from "@/store/slidebar";
 import SlidebarTab from "~/core/models/slidebar_tabs/SlidebarTab";
 import MittEvents from "~/core/enums/MittEvents";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
-import { FieldTypes } from "extorris";
+import { FieldTypes, ModelPropertyMetadata } from "extorris-common";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
-import {
-  ModalWindowSize,
-  useModalWindowStore,
-  type ModalWindowData,
-} from "@/store/modal_window";
-
-// const eEntityFieldTypes = EntityFieldTypes;
+import { ModalWindowSize, useModalWindowStore } from "@/store/modal_window";
 
 const { $mittEmit, $mittOn } = useNuxtApp();
 
@@ -133,6 +126,8 @@ const props = defineProps({
   },
 });
 
+const defaultPage = 1;
+
 const isLoading: Ref<boolean> = ref(true);
 
 const entityName: Ref<string> = ref(props.entity as string);
@@ -145,7 +140,7 @@ const loadedLinkedEntities: Ref<Record<string, Record<number, any>>> = ref({});
 const total: Ref<number> = ref(0);
 const totalPages: Ref<number> = ref(0);
 
-const currentPage = ref(props.page || 1);
+const currentPage = ref(props.page || defaultPage);
 const pageSize = ref(props.pageSize || 20);
 
 const filters: Ref<{ [key: string]: any }> = ref({});
@@ -206,11 +201,20 @@ const getLinkedEntity = (item: Record<string, any>, key: string) => {
   if (!fieldEntityType) {
     return null;
   }
+  if (!item[key]) {
+    return null;
+  }
   return loadedLinkedEntities.value[fieldEntityType][item[key]];
 };
 
-const reload = async (filters: { [key: string]: any } = {}) => {
+const reload = async (
+  filters: { [key: string]: any } = {},
+  resetPagination = false
+) => {
   isLoading.value = true;
+  if (resetPagination) {
+    currentPage.value = defaultPage;
+  }
   const dbFilters = createDBFilters(filters, loadedEntityKeysMetadata.value);
   const response = await entitiesStore.filterEntity(
     entityName.value,
@@ -226,7 +230,7 @@ const reload = async (filters: { [key: string]: any } = {}) => {
 };
 
 const filtersUpdate = () => {
-  reload(filters.value);
+  reload(filters.value, true);
 };
 
 const createAction = () => {

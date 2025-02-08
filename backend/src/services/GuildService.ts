@@ -6,8 +6,6 @@ export default class GuildService extends Service<
   GuildModel,
   GuildRepository
 > {
-  sessionRepo = new GuildRepository();
-
   constructor() {
     super(new GuildRepository());
   }

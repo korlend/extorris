@@ -36,7 +36,7 @@
 import { useMainMapStore } from "@/store/main_map";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 import MittEvents from "~/core/enums/MittEvents";
-import { throttle } from "extorris";
+import { throttle } from "extorris-common";
 
 const { $mittEmit } = useNuxtApp();
 

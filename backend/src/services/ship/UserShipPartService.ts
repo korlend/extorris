@@ -6,8 +6,6 @@ export default class UserShipPartService extends Service<
   UserShipPartModel,
   UserShipPartRepository
 > {
-  sessionRepo = new UserShipPartRepository();
-
   constructor() {
     super(new UserShipPartRepository());
   }

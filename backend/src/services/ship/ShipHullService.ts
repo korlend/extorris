@@ -11,8 +11,6 @@ export default class ShipHullService extends Service<
   ShipHullModel,
   ShipHullRepository
 > {
-  sessionRepo = new ShipHullRepository();
-
   constructor() {
     super(new ShipHullRepository());
   }

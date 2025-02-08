@@ -30,6 +30,9 @@ import {
   ShipEngineModel,
   ShipHullModel,
   ShipEnergyCoreModel,
+  ChatModel,
+  ChatUserModel,
+  ChatMessageModel,
 } from "@src/models/db/index.js";
 import InlandCreatureModel from "@src/models/db/InlandCreatureModel.js";
 import IterationModel from "@src/models/db/IterationModel.js";
@@ -41,6 +44,9 @@ const entityModels: Record<EntityType, any> = {
   [EntityType.ADMIN]: AdminModel,
   [EntityType.ADMIN_ROLE]: AdminRoleModel,
   [EntityType.ADMIN_SESSION]: AdminSessionModel,
+  [EntityType.CHAT]: ChatModel,
+  [EntityType.CHAT_MESSAGE]: ChatMessageModel,
+  [EntityType.CHAT_USERS]: ChatUserModel,
   [EntityType.COUNTRY]: CountryModel,
   [EntityType.DUNGEON_ISLAND]: DungeonIslandModel,
   [EntityType.EXTERNAL_CREATURE]: ExternalCreatureModel,

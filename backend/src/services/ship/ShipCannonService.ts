@@ -11,8 +11,6 @@ export default class ShipCannonService extends Service<
   ShipCannonModel,
   ShipCannonRepository
 > {
-  sessionRepo = new ShipCannonRepository();
-
   constructor() {
     super(new ShipCannonRepository());
   }

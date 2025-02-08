@@ -1,12 +1,12 @@
-import { FieldTypes } from "extorris";
+import { FieldTypes } from "extorris-common";
 import DBFilter from "~/core/models/db/DBFilter";
-import type ModelPropertyMetadata from "~/core/models/ModelPropertyMetadata";
-import type { DBOperand } from "extorris";
+import type { DBOperand, ModelPropertyMetadata } from "extorris-common";
 
 export function createDBFilters(
   filters: { [key: string]: any },
   entityKeysMetadata: { [key: string]: ModelPropertyMetadata }
 ): Array<DBFilter> {
+  filters = deepToRaw(filters);
   const filterKeys = Object.keys(filters);
   const dbFilters: Array<DBFilter> = [];
   for (let i = 0; i < filterKeys.length; i++) {

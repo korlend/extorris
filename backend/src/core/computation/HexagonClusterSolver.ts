@@ -7,7 +7,7 @@ import {
   getReverseDirection,
   HexDirection,
   randomCheck,
-} from "extorris";
+} from "extorris-common";
 
 class TempPortal {
   _tempId: number | string = randomUUID();

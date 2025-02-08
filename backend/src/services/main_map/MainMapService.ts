@@ -17,21 +17,13 @@ import {
   getHexCoordinatesRight,
   getHexCoordinatesTopLeft,
   getHexCoordinatesTopRight,
-  getHexNearbyCoords,
-  getHexesDirection,
-  getReverseDirection,
-  HexDirection,
-  randomCheck,
-  randomInt,
-} from "extorris";
+} from "extorris-common";
 import HexagonClusterSolver from "@src/core/computation/HexagonClusterSolver.js";
 
 export default class MainMapService extends Service<
   MainMapModel,
   MainMapRepository
 > {
-  sessionRepo = new MainMapRepository();
-
   constructor() {
     super(new MainMapRepository());
   }

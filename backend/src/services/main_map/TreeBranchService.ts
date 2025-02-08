@@ -6,8 +6,6 @@ export default class TreeBranchService extends Service<
   TreeBranchModel,
   TreeBranchRepository
 > {
-  sessionRepo = new TreeBranchRepository();
-
   constructor() {
     super(new TreeBranchRepository());
   }

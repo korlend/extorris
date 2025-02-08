@@ -1,14 +1,44 @@
-import { v4 as uuidv4 } from "uuid";
-
 import { UserSessionModel } from "@src/models/db/index.js";
 import UserSessionRepository from "@src/repositories/user/UserSessionRepository.js";
 import Service from "../Service.js";
+import DBFilter from "@src/models/DBFilter.js";
+import SearchRequestData from "@src/models/SearchRequestData.js";
+import RedisConnector from "@src/core/RedisConnector.js";
+import ServiceOperations from "@src/enums/ServiceOperations.js";
 
 export default class UserSessionService extends Service<
   UserSessionModel,
   UserSessionRepository
 > {
   sessionRepo = new UserSessionRepository();
+
+  preOperationCallbacks = {
+    [ServiceOperations.CREATE]: async (
+      data: UserSessionModel | Array<UserSessionModel>,
+    ) => {
+      const redisConnector = await RedisConnector.getInstance();
+      redisConnector.writeUserSession(data);
+    },
+    [ServiceOperations.UPDATE]: async (
+      data: UserSessionModel | Array<UserSessionModel>,
+    ) => {
+      const redisConnector = await RedisConnector.getInstance();
+      redisConnector.writeUserSession(data);
+    },
+    [ServiceOperations.DELETE]: async (data: number | Array<number>) => {
+      const redisConnector = await RedisConnector.getInstance();
+      if (data instanceof Array) {
+        const loadedData = await this.getAllByIds(data);
+        for (let i = 0; i < loadedData.length; i++) {
+          const item = loadedData[i];
+          await redisConnector.deleteUserSession(item.token);
+        }
+      } else {
+        const loadedItem = await this.get(data);
+        await redisConnector.deleteUserSession(loadedItem.token);
+      }
+    },
+  };
 
   constructor() {
     super(new UserSessionRepository());
@@ -18,27 +48,62 @@ export default class UserSessionService extends Service<
     return this.sessionRepo.getByToken(token);
   }
 
-  createSession(userId: number): Promise<UserSessionModel> {
+  async createSession(userId: number): Promise<UserSessionModel> {
+    const userActiveSessions = await this.getUserInactiveSessions(userId);
+    await this.deleteAll(userActiveSessions);
+
     const session: UserSessionModel = new UserSessionModel();
     session.user_id = userId;
     session.expire = new Date(
       new Date().getTime() +
         this.sessionRepo.config?.get("auth.session.userExpireTime") * 1000,
     );
-    session.token = uuidv4();
-    return this.sessionRepo.create(session);
+    session.token = crypto.randomUUID();
+    const newSession = await this.sessionRepo.create(session);
+    const redisConnector = await RedisConnector.getInstance();
+    redisConnector.writeUserSession(newSession);
+    return newSession;
   }
 
-  extendSession(session: UserSessionModel) {
+  async extendSession(session: UserSessionModel) {
     session.expire = new Date(
       new Date().getTime() +
         this.sessionRepo.config?.get("auth.session.userExpireTime") * 1000,
     );
-    return this.sessionRepo.update(session);
+    const newSession = await this.sessionRepo.update(session);
+    const redisConnector = await RedisConnector.getInstance();
+    redisConnector.writeUserSession(newSession);
+    return newSession;
   }
 
-  reduceSession(session: UserSessionModel) {
+  async reduceSession(session: UserSessionModel) {
     session.expire = new Date(new Date().getTime() - 1000);
-    return this.sessionRepo.update(session);
+    const newSession = await this.sessionRepo.update(session);
+    const redisConnector = await RedisConnector.getInstance();
+    redisConnector.writeUserSession(newSession);
+    return newSession;
+  }
+
+  async getActiveSessions() {
+    const filters: Array<DBFilter<UserSessionModel>> = [];
+    filters.push(new DBFilter("expire", new Date(), ">"));
+    const data = await this.getSearchAll(
+      new SearchRequestData(0, 10000),
+      undefined,
+      filters,
+    );
+    return data.items;
+  }
+
+  async getUserInactiveSessions(userId: number) {
+    const filters: Array<DBFilter<UserSessionModel>> = [];
+    filters.push(new DBFilter("user_id", userId));
+    filters.push(new DBFilter("expire", new Date(), "<"));
+    const data = await this.getSearchAll(
+      new SearchRequestData(0, 10000),
+      undefined,
+      filters,
+    );
+    return data.items;
   }
 }

@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 
 import MittEvents from "~/core/enums/MittEvents";
-import type { ResponseAPI } from "extorris";
+import type { ResponseAPI } from "extorris-common";
 
 interface MainMapPing {
   active: boolean;

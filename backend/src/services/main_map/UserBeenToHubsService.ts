@@ -6,8 +6,6 @@ export default class UserBeenToHubsService extends Service<
   UserBeenToHubsModel,
   UserBeenToHubsRepository
 > {
-  sessionRepo = new UserBeenToHubsRepository();
-
   constructor() {
     super(new UserBeenToHubsRepository());
   }

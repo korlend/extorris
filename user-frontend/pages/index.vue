@@ -13,7 +13,7 @@ import {
   CanvasCursors,
   type Vector2D,
   type CanvasDrawOptions,
-} from "extorris";
+} from "extorris-common";
 
 const maxDepth = 30;
 

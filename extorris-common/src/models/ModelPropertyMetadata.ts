@@ -1,4 +1,4 @@
-import FieldTypes from "../enums/FieldTypes";
+import { FieldTypes } from "../index";
 
 export default class ModelPropertyMetadata {
   fieldType?: FieldTypes;
