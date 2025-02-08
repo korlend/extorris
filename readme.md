@@ -8,6 +8,13 @@
 5. rabbitmq 3.0
 6. docker, for redis and dragonfly
 
+# DB
+
+1. Install mysql
+1. Create database "extorris" or other name
+1. Create user with select, insert, update, delete permissions for that database
+1. Run db.sql script for created database
+
 # Redis
 
 ```
@@ -20,22 +27,17 @@ docker run -p 6379:6379 --ulimit memlock=-1 docker.dragonflydb.io/dragonflydb/dr
 docker run -d -p 5672:5672 --hostname my-rabbit --name some-rabbit rabbitmq:3
 ```
 
-# DB
-
-I'm using mysql, unfortunately db auto creation is in todo list as of yet
-
 # Install
 
 ## build extorris-common for portal dependency
 
 1. cd extorris-common
-2. activate ```corepack enable``` (requires admin privileges)
-3. install packages ```yarn```
-4. run build ```yarn build```
+1. activate ```corepack enable``` (requires admin privileges)
+1. install packages ```yarn```
+1. run build ```yarn build```
 
 ## installation is similar to all projects
 
 1. activate ```corepack enable``` (requires admin privileges)
-2. install packages ```yarn```
-3. for backend install mysql TODO: add db init script (probably DB creation from DBModel annotations)
-4. run applications ```yarn dev```
+1. install packages ```yarn```
+1. run applications ```yarn dev```
