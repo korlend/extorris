@@ -19,7 +19,7 @@ router.post(
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
         session: session.prepareREST(),
-        admin: admin.prepareREST(),
+        admin: admin?.prepareREST(),
       }),
     );
   },

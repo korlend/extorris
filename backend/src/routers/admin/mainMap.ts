@@ -51,13 +51,14 @@ router.get(
     const iterationId = parseInt(req.params.iteration_id);
 
     const response: {
-      iteration?: IterationModel;
+      iteration: IterationModel | null;
       mainMaps: Array<{
         mainMap: MainMapModel;
         hubs: Array<MainMapHubModel>;
       }>;
       portals: Array<PortalModel>;
     } = {
+      iteration: null,
       mainMaps: [],
       portals: [],
     };
@@ -65,7 +66,7 @@ router.get(
     const iteration = await iterationService.get(iterationId);
     const mainMaps = await mainMapService.getAllBy(
       "iteration_id",
-      iteration.id,
+      iteration?.id,
     );
 
     response.iteration = iteration;
@@ -111,10 +112,11 @@ router.get(
     const mainMapId = parseInt(req.params.main_map_id);
 
     const response: {
-      mainMap?: MainMapModel;
+      mainMap: MainMapModel | null;
       mainMapHubs: Array<MainMapHubModel>;
       portals: Array<PortalModel>;
     } = {
+      mainMap: null,
       mainMapHubs: [],
       portals: [],
     };
@@ -122,7 +124,7 @@ router.get(
     const mainMap = await mainMapService.get(mainMapId);
     const mainMapHubs = await mainMapHubService.getAllBy(
       "main_map_id",
-      mainMap.id,
+      mainMap?.id,
     );
 
     response.mainMap = mainMap;
@@ -145,7 +147,7 @@ router.get(
 
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
-        mainMap: response.mainMap.prepareREST(),
+        mainMap: response.mainMap?.prepareREST(),
         mainMapHubs: response.mainMapHubs.map((v) => v.prepareREST()),
         portals: response.portals.map((v) => v.prepareREST()),
       }),
@@ -168,7 +170,7 @@ router.get(
 
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
-        hub: hub.prepareREST(),
+        hub: hub?.prepareREST(),
         fromPortals: fromPortals.map(v => v.prepareREST()),
         toPortals: toPortals.map(v => v.prepareREST()),
       }),
