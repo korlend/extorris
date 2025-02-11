@@ -4,6 +4,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import NodeWSServer from "@src/NodeWSServer.js";
 
+import "dotenv/config";
+
 import { CommsModels, RabbitMQModels } from "extorris-common";
 import RabbitMQConnector from "@src/RabbitMQConnector.js";
 
@@ -17,10 +19,12 @@ async function init() {
   const host = "0.0.0.0";
   const port = 8091;
 
-  const rabbitmq = await RabbitMQConnector.getInstance("amqp://localhost:5672");
+  const rabbitmq = await RabbitMQConnector.getInstance(
+    process.env.RABBITMQ || "amqp://localhost:5672",
+  );
   const wsServer = new NodeWSServer(server);
 
-  rabbitmq.setChatDequeueCallback((message) => {
+  rabbitmq?.setChatDequeueCallback((message) => {
     console.log("dequeuing message for chat", message);
     wsServer.send(
       {
@@ -42,7 +46,7 @@ async function init() {
       message.fromWhere === CommsModels.CommsSourceEnum.USER_CLIENT &&
       message.messageType === CommsModels.CommsTypesEnum.CHAT_CHANGE
     ) {
-      rabbitmq.enqueueUserChatMessage({
+      rabbitmq?.enqueueUserChatMessage({
         chatId: message.data.chatId,
         message: message.data.message,
         userId,

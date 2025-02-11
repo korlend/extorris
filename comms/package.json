@@ -2,7 +2,7 @@
   "author": "korlend",
   "name": "extorris-comms",
   "version": "1.0.0",
-  "description": "Backend of extorris",
+  "description": "Service for communications with user",
   "main": "index.js",
   "license": "ISC",
   "type": "module",
@@ -41,6 +41,7 @@
   "dependencies": {
     "amqplib": "^0.10.5",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^5.0.0",
     "extorris-common": "portal:../extorris-common",
     "ws": "^8.18.0"

@@ -12,6 +12,8 @@ import {
 
 import { adminRouter, userRouter } from "@src/routers/index.js";
 
+import "dotenv/config";
+
 // import { createNoise2D, NoiseFunction2D } from "simplex-noise";
 
 import PropagatedError from "@src/models/PropagatedError.js";
@@ -63,9 +65,11 @@ async function init(): Promise<express.Express> {
   app.use(adminApiUrlPrefix, adminRouter);
   app.use(userApiUrlPrefix, userRouter);
 
-  const rabbitmq = await RabbitMQConnector.getInstance("amqp://localhost:5672");
+  const rabbitmq = await RabbitMQConnector.getInstance(
+    process.env.RABBITMQ || "amqp://localhost:5672",
+  );
 
-  rabbitmq.setUserChatDequeueCallback((message) => {
+  rabbitmq?.setUserChatDequeueCallback((message) => {
     const chatService = new ChatService();
     console.log(
       `user ${message.userId} sent msg ${message.message} to chat ${message.chatId}`,
@@ -78,13 +82,13 @@ async function init(): Promise<express.Express> {
   });
 
   app.get("/rabbit", (req: Request, res: Response, next: NextFunction) => {
-    rabbitmq.channel.checkQueue(
+    rabbitmq?.channel.checkQueue(
       RabbitMQModels.RabbitMQKeys.CHAT_UPDATE_FOR_COMMS,
       (err, ok) => {
         console.log(ok.messageCount);
       },
     );
-    rabbitmq.channel.checkQueue(
+    rabbitmq?.channel.checkQueue(
       RabbitMQModels.RabbitMQKeys.USER_SENT_CHAT_MESSAGES,
       (err, ok) => {
         console.log(ok.messageCount);

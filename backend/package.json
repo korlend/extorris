@@ -48,6 +48,7 @@
   "dependencies": {
     "amqplib": "^0.10.5",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^5.0.0",
     "extorris-common": "portal:../extorris-common",
     "multer": "^1.4.5-lts.1",
