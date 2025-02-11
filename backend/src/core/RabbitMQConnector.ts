@@ -42,10 +42,15 @@ export default class RabbitMQConnector {
   }
 
   public static async getInstance(
-    url: string | callbackApi.Options.Connect,
-  ): Promise<RabbitMQConnector> {
+    url?: string | callbackApi.Options.Connect,
+  ): Promise<RabbitMQConnector | null> {
     if (RabbitMQConnector.instance) {
       return RabbitMQConnector.instance;
+    }
+
+    if (!url) {
+      console.error("No url for rabbitmq was presented (use env var e.g. RABBITMQ=amqp://localhost:5672)")
+      return null;
     }
 
     const connection = await RabbitMQConnector.createConnection(url);
