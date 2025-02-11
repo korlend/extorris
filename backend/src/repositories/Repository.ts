@@ -174,9 +174,9 @@ export default abstract class Repository<
     return dataArray;
   }
 
-  protected _getBy(
-    key: string,
-    value: any,
+  protected _getBy<K extends DBDataKeys>(
+    key: K,
+    value: T[K],
     fields = new ParametersLimit<T>(),
   ): Promise<T> {
     fields = this.processFields(fields);
@@ -192,17 +192,17 @@ export default abstract class Repository<
       .then((resp) => this.modelFromDataPacket(resp));
   }
 
-  getBy(
-    key: string,
-    value: any,
+  getBy<K extends DBDataKeys>(
+    key: K,
+    value: T[K],
     fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this._getBy(key, value, fields);
   }
 
-  protected _getAllBy(
-    key: string,
-    value: any,
+  protected _getAllBy<K extends DBDataKeys>(
+    key: K,
+    value: T[K],
     fields = new ParametersLimit<T>(),
     limit?: number,
   ): Promise<Array<T>> {
@@ -220,9 +220,9 @@ export default abstract class Repository<
       .then((resp) => this.modelsFromDataPacket(resp));
   }
 
-  getAllBy(
-    key: string,
-    value: any,
+  getAllBy<K extends DBDataKeys>(
+    key: K,
+    value: T[K],
     fields = new ParametersLimit<T>(),
     limit?: number,
   ): Promise<Array<T>> {

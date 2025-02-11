@@ -27,6 +27,7 @@ export default class MainMapModel extends DBModel<MainMapModel> {
   })
   iteration_id?: number;
 
+  // 0...n is first n last
   @FieldType(FieldTypes.INT)
   layer: number = 0;
 
