@@ -107,24 +107,7 @@ export const useShipStore = defineStore("ship", {
     },
     async equipShipItem(shipItem: any): Promise<any> {
       const { $api } = useNuxtApp();
-      let url = "";
-      switch (shipItem._type as ShipItemType) {
-        case ShipItemType.ARMOR:
-          url = "/api/ship/equip_ship_armor";
-          break;
-        case ShipItemType.CANNON:
-          url = "/api/ship/equip_ship_cannon";
-          break;
-        case ShipItemType.ENERGY_CORE:
-          url = "/api/ship/equip_ship_energy_core";
-          break;
-        case ShipItemType.ENGINE:
-          url = "/api/ship/equip_ship_engine";
-          break;
-        case ShipItemType.HULL:
-          url = "/api/ship/equip_ship_hull";
-          break;
-      }
+      const url = `/api/ship/equip/${shipItem._type}`;
       const response: ResponseAPI = await $api(url, {
         method: "PUT",
         body: shipItem,
@@ -133,24 +116,16 @@ export const useShipStore = defineStore("ship", {
     },
     async unequipShipItem(shipItem: any): Promise<any> {
       const { $api } = useNuxtApp();
-      let url = "";
-      switch (shipItem._type as ShipItemType) {
-        case ShipItemType.ARMOR:
-          url = "/api/ship/unequip_ship_armor";
-          break;
-        case ShipItemType.CANNON:
-          url = "/api/ship/unequip_ship_cannon";
-          break;
-        case ShipItemType.ENERGY_CORE:
-          url = "/api/ship/unequip_ship_energy_core";
-          break;
-        case ShipItemType.ENGINE:
-          url = "/api/ship/unequip_ship_engine";
-          break;
-        case ShipItemType.HULL:
-          url = "/api/ship/unequip_ship_hull";
-          break;
-      }
+      const url = `/api/ship/unequip/${shipItem._type}`;
+      const response: ResponseAPI = await $api(url, {
+        method: "PUT",
+        body: shipItem,
+      });
+      return;
+    },
+    async flyOut(shipItem: any): Promise<any> {
+      const { $api } = useNuxtApp();
+      const url = `/api/ship/unequip/${shipItem._type}`;
       const response: ResponseAPI = await $api(url, {
         method: "PUT",
         body: shipItem,

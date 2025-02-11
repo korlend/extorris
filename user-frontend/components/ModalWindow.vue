@@ -70,13 +70,16 @@ const closeModal = () => {
 </script>
 
 <style lang="scss" scoped>
+@use "sass:map" as map;
+@use "~/assets/styles/variables" as vars;
+
 .modal__window {
   position: fixed;
   transform: translate(0, -200dvh);
   height: 100dvh;
   width: 100dvw;
   transition: all 0.1s ease;
-  z-index: 300;
+  z-index: map.get(vars.$z-indices, "modal_window");
   justify-content: center;
   align-items: center;
   display: flex;

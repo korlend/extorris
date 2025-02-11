@@ -48,9 +48,12 @@ const testbtn = () => {
 </script>
 
 <style lang="scss" scoped>
+@use "sass:map" as map;
+@use "~/assets/styles/variables" as vars;
+
 .header__block {
   position: fixed;
-  z-index: 100;
+  z-index: map.get(vars.$z-indices, "header");
   width: 100%;
   height: 50px;
   border-bottom: 1px solid;

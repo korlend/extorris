@@ -1,7 +1,8 @@
 // @use "sass:color";
 
 // @import "fonts";
-// @import "variables";
+// @use "sass:map" as map;
+// @use "variables";
 // @import "mixins";
 
 .custom-scroll {

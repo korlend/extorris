@@ -79,11 +79,14 @@ const toggleChat = () => {
 </script>
 
 <style lang="scss" scoped>
+@use "sass:map" as map;
+@use "~/assets/styles/variables" as vars;
+
 .chat__block {
   position: fixed;
   left: 20px;
   bottom: 100px;
-  z-index: 100;
+  z-index: map.get(vars.$z-indices, "chat");
   width: var(--width);
   height: var(--height);
   border: 1px solid white;

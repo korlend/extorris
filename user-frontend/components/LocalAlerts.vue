@@ -103,9 +103,12 @@ const getLocalAlertStyle = (index: number, internalAlert: ILocalAlert) => {
 </script>
 
 <style lang="scss" scoped>
+@use "sass:map" as map;
+@use "~/assets/styles/variables" as vars;
+
 .global__alerts {
   position: fixed;
-  z-index: 200;
+  z-index: map.get(vars.$z-indices, "local_alerts");
   right: 0;
   bottom: 0;
   display: block;

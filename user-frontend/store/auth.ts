@@ -30,7 +30,7 @@ export const useAuthStore = defineStore("auth", {
     getSession: (state) => {
       return state.session;
     },
-    getToken: (state) => {
+    getToken: (state): string | null => {
       const localStorageToken = getLocalStorageItem("token");
       if (localStorageToken) {
         return localStorageToken;

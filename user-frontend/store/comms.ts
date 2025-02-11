@@ -2,12 +2,12 @@ import { defineStore } from "pinia";
 
 import { type ResponseAPI, CommsModels } from "extorris-common";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
+import { useAuthStore } from "./auth";
 
 type OnMessage = (message: CommsModels.CommsOutMessage) => void;
 
 interface CommsState {
   wsFailedAttempts: number;
-  isConnectedBoolean: boolean;
   wsClient: CommsModels.BrowserWSClient | null;
   onMessages: Record<string, OnMessage>;
 }
@@ -16,7 +16,6 @@ export const useCommsStore = defineStore("comms", {
   state: (): CommsState => {
     return {
       wsFailedAttempts: 0,
-      isConnectedBoolean: false,
       wsClient: null,
       onMessages: {},
     };
@@ -26,13 +25,19 @@ export const useCommsStore = defineStore("comms", {
       return state.wsClient;
     },
     isConnected: (state) => {
-      return state.isConnectedBoolean;
+      const wsClient = state.wsClient;
+      if (!wsClient) return false;
+      return wsClient.isConnected;
+    },
+    isConnecting: (state) => {
+      const wsClient = state.wsClient;
+      if (!wsClient) return false;
+      return wsClient.isConnecting;
     },
   },
   actions: {
-    connect(token: string, onOpen?: () => void) {
+    async connect(token: string, onOpen?: () => void): Promise<void> {
       const self = this;
-
       if (
         this.wsClient &&
         (this.wsClient.isConnected || this.wsClient.isConnecting)
@@ -40,46 +45,47 @@ export const useCommsStore = defineStore("comms", {
         return;
       }
 
-      this.wsClient = new CommsModels.BrowserWSClient(
-        "ws://localhost:8091",
-        token
-      );
-
-      this.wsClient.onError((error: Error) => {
-        console.log("Connection Error");
-        self.wsFailedAttempts++;
-      });
-
-      this.wsClient.onOpen(() => {
-        if (typeof onOpen === "function") {
-          onOpen();
-        }
-        console.log("WebSocket Client Connected");
-      });
-
-      this.wsClient.onClose(() => {
-        console.log("echo-protocol Client Closed");
-      });
-
-      this.wsClient.onMessage((message) => {
-        console.log("Received: '" + message + "'");
-        createAlert(
-          JSON.stringify(message.data),
-          LocalAlertTypes.INFO,
-          `${message.fromWhere} - ${message.messageType}`
+      return new Promise((resolve) => {
+        this.wsClient = new CommsModels.BrowserWSClient(
+          "ws://localhost:8091",
+          token
         );
-        const ids = Object.keys(self.onMessages);
-        for (let i = 0; i < ids.length; i++) {
-          const id = ids[i];
-          const cb = self.onMessages[id];
-          if (typeof cb === "function") {
-            cb(message);
+
+        // must implement SSE fallback
+        this.wsClient.onError((error: Error) => {
+          self.wsFailedAttempts++;
+        });
+
+        this.wsClient.onOpen(() => {
+          if (typeof onOpen === "function") {
+            onOpen();
           }
-        }
+          resolve();
+        });
+
+        // possible try to reconnect on onClose, for now reconnect on trying to send a message
+        // this.wsClient.onClose(() => {});
+
+        this.wsClient.onMessage((message) => {
+          createAlert(
+            JSON.stringify(message.data),
+            LocalAlertTypes.INFO,
+            `${message.fromWhere} - ${message.messageType}`
+          );
+          const ids = Object.keys(self.onMessages);
+          for (let i = 0; i < ids.length; i++) {
+            const id = ids[i];
+            const cb = self.onMessages[id];
+            if (typeof cb === "function") {
+              cb(message);
+            }
+          }
+        });
       });
     },
     disconnect() {
       this.wsClient?.disconnect();
+      this.wsClient = null;
     },
     // returns id to delete callback
     addOnMessage(callback: OnMessage, id: string = "") {
@@ -92,8 +98,17 @@ export const useCommsStore = defineStore("comms", {
       delete this.onMessages[id];
       return id;
     },
-    sendMessage(message: CommsModels.CommsIncMessage) {
-      return this.wsClient?.send(message);
+    async sendMessage(message: CommsModels.CommsIncMessage) {
+      if (!this.isConnected) {
+        const authStore = useAuthStore();
+        if (!authStore.getToken) {
+          throw new Error(
+            "User trying to send message, while not being authenticated"
+          );
+        }
+        await this.connect(authStore.getToken);
+      }
+      this.wsClient?.send(message);
     },
   },
 });

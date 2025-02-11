@@ -59,7 +59,6 @@ export const useChatStore = defineStore("chat", {
       });
     },
     receiveNewMessage(message: CommsModels.CommsOutMessage) {
-      console.log("frontend recieved comms message", message)
       if (
         message.fromWhere === CommsModels.CommsSourceEnum.COMMS_SERVICE &&
         message.messageType === CommsModels.CommsTypesEnum.CHAT_CHANGE
@@ -78,10 +77,6 @@ export const useChatStore = defineStore("chat", {
       const data = await $api<ResponseAPI>("/api/chat/load", {
         method: "GET",
       });
-
-      console.log(data);
-      console.log(data.result);
-      console.log(JSON.stringify(data));
 
       if (!data || !data.result) {
         throw new Error();
