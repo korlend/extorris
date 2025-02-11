@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import MittEvents from '~/core/enums/MittEvents';
 
-const model = defineModel<Date | null>({ type: Date, default: new Date() });
+const model = defineModel<Date | string | null>({ type: [Date, String], default: new Date() });
 const emit = defineEmits(["update:model-value"]);
 
 const id = Symbol();
@@ -41,7 +41,7 @@ const props = defineProps({
   },
 });
 
-const localModel: Ref<Date | null> = ref(model.value);
+const localModel: Ref<Date | null> = ref(typeof model.value === "string" ? new Date(model.value) : model.value);
 
 const modelAsString: Ref<string> = ref("");
 
@@ -50,9 +50,10 @@ const showDatePicker = ref(false);
 watch(
   () => model.value,
   (newValue) => {
-    localModel.value = newValue;
-    if (newValue) {
-      modelAsString.value = newValue.toLocaleDateString();
+    const dateValue = typeof newValue === "string" ? new Date(newValue) : newValue;
+    localModel.value = dateValue;
+    if (dateValue) {
+      modelAsString.value = dateValue.toLocaleDateString();
     } else {
       modelAsString.value = "";
     }
