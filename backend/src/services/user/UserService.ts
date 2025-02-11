@@ -105,22 +105,6 @@ export default class UserService extends Service<UserModel, UserRepository> {
     }
   }
 
-  async createDefaultUserIsland(user: UserModel): Promise<void> {
-    const userIslandService = new UserIslandService();
-    const mainMapHubService = new MainMapHubService();
-
-    const userIsland = await userIslandService.getBy("user_id", user.id);
-
-    if (!userIsland) {
-      const randomHub = await mainMapHubService.getRandomUserIslandSpawnPoint();
-
-      const newUserIsland = new UserIslandModel();
-      newUserIsland.user_id = user.id;
-      newUserIsland.main_map_hub_id = randomHub.id;
-      await userIslandService.create(newUserIsland);
-    }
-  }
-
   async checkUserPassword(user: UserModel, password: string) {
     return (
       user.password === password ||

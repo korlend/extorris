@@ -12,6 +12,7 @@ export default class UserSessionService extends Service<
 > {
   sessionRepo = new UserSessionRepository();
 
+  // setting callbacks to created/update/delete data in redis
   preOperationCallbacks = {
     [ServiceOperations.CREATE]: async (
       data: UserSessionModel | Array<UserSessionModel>,
@@ -35,6 +36,7 @@ export default class UserSessionService extends Service<
         }
       } else {
         const loadedItem = await this.get(data);
+        if (!loadedItem) return;
         await redisConnector.deleteUserSession(loadedItem.token);
       }
     },

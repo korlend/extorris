@@ -2,12 +2,6 @@ import express, { Request, Response, NextFunction } from "express";
 import ExpressResponseGenerator from "@src/core/router/ExpressResponseGenerator.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
 import ShipService from "@src/services/ship/ShipService.js";
-import UserShipPartService from "@src/services/ship/UserShipPartService.js";
-import ShipPartTypeService from "@src/services/ship/ShipPartTypeService.js";
-import DBFilter from "@src/models/DBFilter.js";
-import SearchRequestData from "@src/models/SearchRequestData.js";
-import ShipPartSubtypeService from "@src/services/ship/ShipPartSubtypeService.js";
-import ImageService from "@src/services/ImageService.js";
 import UserService from "@src/services/user/UserService.js";
 import ShipArmorService from "@src/services/ship/ShipArmorService.js";
 import ShipCannonService from "@src/services/ship/ShipCannonService.js";
@@ -21,7 +15,9 @@ import {
   ShipEngineModel,
   ShipHullModel,
 } from "@src/models/db/index.js";
-import ParametersLimit from "@src/models/ParametersLimit.js";
+import PropagatedError from "@src/models/PropagatedError.js";
+import UserIslandService from "@src/services/UserIslandService.js";
+import { ShipItemType } from "extorris-common";
 
 const router = express.Router();
 
@@ -29,13 +25,6 @@ router.get(
   "/my_ship_data",
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
-    }
 
     const userService = new UserService();
     userService.createUpdateUserDefaultShipParts(user);
@@ -57,65 +46,11 @@ router.get(
     const shipHulls = await shipHullService.getAllBy("user_id", user.id);
 
     const shipService = new ShipService();
-    // const userShipPartsService = new UserShipPartService();
-    // const shipPartTypesService = new ShipPartTypeService();
-    // const shipPartSubtypesService = new ShipPartSubtypeService();
-    // const imagesService = new ImageService();
-
     const userShip = await shipService.getBy("user_id", user.id);
-    // const userShipParts = await userShipPartsService.getAllBy(
-    //   "user_id",
-    //   user.id,
-    // );
-    // const equippedShipParts = await userShipPartsService.getAllBy(
-    //   "ship_id",
-    //   userShip.id,
-    // );
-
-    // const existingPartTypesFilters: Array<DBFilter> = [];
-    // const partTypeIds: Array<number> = [];
-
-    // for (let i = 0; i < userShipParts.length; i++) {
-    //   const partTypeId = userShipParts[i].ship_part_type_id;
-    //   if (partTypeId && !partTypeIds.some((v) => v === partTypeId)) {
-    //     partTypeIds.push(partTypeId);
-    //   }
-    // }
-    // for (let i = 0; i < partTypeIds.length; i++) {
-    //   const partTypeId = partTypeIds[i];
-    //   existingPartTypesFilters.push(new DBFilter("id", partTypeId, "=", "OR"));
-    // }
-
-    // const existingShipParts = await shipPartTypesService.getSearchAll(
-    //   new SearchRequestData(0, 10000),
-    //   undefined,
-    //   existingPartTypesFilters,
-    // );
-
-    // const shipPartSubtypes = await shipPartSubtypesService.getAll();
-
-    // const imagesIds: Array<number> = [];
-    // for (let i = 0; i < shipPartSubtypes.length; i++) {
-    //   const imageId = shipPartSubtypes[i].image_id;
-    //   if (imageId && !imagesIds.some((v) => v === imageId)) {
-    //     imagesIds.push(imageId)
-    //   }
-    // }
-
-    // const images = await imagesService.getAllByIds(imagesIds);
-
-    // const preparedShipPartSubtypes = shipPartSubtypes.map(v => ({
-    //   ...v.prepareREST(),
-    //   image: images.find(i => i.id === v.image_id)?.prepareREST(),
-    // }))
 
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
-        userShip: userShip.prepareREST(),
-        // userShipParts: userShipParts.map((v) => v.prepareREST()),
-        // equippedShipParts: equippedShipParts.map((v) => v.prepareREST()),
-        // existingShipParts: existingShipParts.items.map((v) => v.prepareREST()),
-        // shipPartSubtypes: preparedShipPartSubtypes,
+        userShip: userShip?.prepareREST(),
         shipArmors: shipArmors.map((v) => v.prepareREST()),
         shipCannons: shipCannons.map((v) => v.prepareREST()),
         shipEnergyCores: shipEnergyCores.map((v) => v.prepareREST()),
@@ -127,24 +62,94 @@ router.get(
 );
 
 router.put(
-  "/equip_ship_armor",
+  "/fly_out",
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+    const { shipId } = req.body;
+
+    const shipService = new ShipService();
+    const userIslandService = new UserIslandService();
+    let userShip = await shipService.get(shipId);
+
+    if (userShip.user_id !== user.id) {
+      throw new PropagatedError(
+        ExpressResponseTypes.ERROR,
+        "selected ship id doesn't exist or belong to current user",
       );
-      return;
     }
 
-    const shipArmorToEquip: ShipArmorModel = new ShipArmorModel().parseObject(
-      req.body,
+    const isShipReadyToFly = await shipService.isShipReadyToFly(shipId);
+
+    if (!isShipReadyToFly) {
+      throw new PropagatedError(
+        ExpressResponseTypes.ERROR,
+        "ship doesn't have necessary items equipped",
+      );
+    }
+
+    const userIslandHub = await userIslandService.getBy("user_id", user.id);
+
+    userShip.main_map_hub_id = userIslandHub.id;
+    userShip.is_parked = false;
+
+    userShip = await shipService.update(userShip);
+
+    next(
+      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
+        userShip,
+      }),
     );
-    const shipArmorService = new ShipArmorService();
+  },
+);
 
-    await shipArmorService.equip(user, shipArmorToEquip);
+router.put(
+  "/equip/:type",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { user } = res.locals;
+    const { type } = req.params;
 
+    const shipService = new ShipService();
+    const userShip = await shipService.getBy("user_id", user.id);
+
+    if (!userShip.is_parked) {
+      next(
+        ExpressResponseGenerator.getResponse(
+          ExpressResponseTypes.ERROR,
+          "Ship must be parked to change equipment",
+        ),
+      );
+    }
+
+    switch (type as ShipItemType) {
+      case ShipItemType.ARMOR:
+        const shipArmorToEquip = new ShipArmorModel().parseObject(req.body);
+        const shipArmorService = new ShipArmorService();
+        await shipArmorService.equip(user, shipArmorToEquip);
+        break;
+      case ShipItemType.CANNON:
+        const shipCannonToEquip = new ShipCannonModel().parseObject(req.body);
+        const shipCannonService = new ShipCannonService();
+        await shipCannonService.equip(user, shipCannonToEquip);
+        break;
+      case ShipItemType.ENERGY_CORE:
+        const shipEnergyCoreToEquip = new ShipEnergyCoreModel().parseObject(
+          req.body,
+        );
+        const shipEnergyCoreService = new ShipEnergyCoreService();
+        await shipEnergyCoreService.equip(user, shipEnergyCoreToEquip);
+        break;
+      case ShipItemType.ENGINE:
+        const shipEngineToEquip = new ShipEngineModel().parseObject(req.body);
+        const shipEngineService = new ShipEngineService();
+        await shipEngineService.equip(user, shipEngineToEquip);
+        break;
+      case ShipItemType.HULL:
+        const shipHullToEquip = new ShipHullModel().parseObject(req.body);
+        const shipHullService = new ShipHullService();
+        await shipHullService.equip(user, shipHullToEquip);
+        break;
+    }
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
     );
@@ -152,207 +157,47 @@ router.put(
 );
 
 router.put(
-  "/equip_ship_cannon",
+  "/unequip/:type",
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
+    const { type } = req.params;
 
-    if (!user) {
+    const shipService = new ShipService();
+    const userShip = await shipService.getBy("user_id", user.id);
+
+    if (!userShip.is_parked) {
       next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
+        ExpressResponseGenerator.getResponse(
+          ExpressResponseTypes.ERROR,
+          "Ship must be parked to change equipment",
+        ),
       );
-      return;
     }
 
-    const shipCannonToEquip: ShipCannonModel =
-      new ShipCannonModel().parseObject(req.body);
-
-    const shipCannonService = new ShipCannonService();
-    await shipCannonService.equip(user, shipCannonToEquip);
-
-    next(
-      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
-    );
-  },
-);
-
-router.put(
-  "/equip_ship_energy_core",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
+    switch (type as ShipItemType) {
+      case ShipItemType.ARMOR:
+        const shipArmorService = new ShipArmorService();
+        await shipArmorService.unequipAll(user);
+        break;
+      case ShipItemType.CANNON:
+        const shipCannonToEquip: ShipCannonModel =
+          new ShipCannonModel().parseObject(req.body);
+        const shipCannonService = new ShipCannonService();
+        await shipCannonService.unequip(shipCannonToEquip);
+        break;
+      case ShipItemType.ENERGY_CORE:
+        const shipEnergyCoreService = new ShipEnergyCoreService();
+        await shipEnergyCoreService.unequipAll(user);
+        break;
+      case ShipItemType.ENGINE:
+        const shipEngineService = new ShipEngineService();
+        await shipEngineService.unequipAll(user);
+        break;
+      case ShipItemType.HULL:
+        const shipHullService = new ShipHullService();
+        await shipHullService.unequipAll(user);
+        break;
     }
-
-    const shipEnergyCoreToEquip: ShipEnergyCoreModel =
-      new ShipEnergyCoreModel().parseObject(req.body);
-    const shipEnergyCoreService = new ShipEnergyCoreService();
-
-    await shipEnergyCoreService.equip(user, shipEnergyCoreToEquip);
-
-    next(
-      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
-    );
-  },
-);
-
-router.put(
-  "/equip_ship_engine",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
-    }
-
-    const shipEngineToEquip: ShipEngineModel =
-      new ShipEngineModel().parseObject(req.body);
-    const shipEngineService = new ShipEngineService();
-
-    await shipEngineService.equip(user, shipEngineToEquip);
-
-    next(
-      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
-    );
-  },
-);
-
-router.put(
-  "/equip_ship_hull",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
-    }
-
-    const shipHullToEquip: ShipHullModel = new ShipHullModel().parseObject(
-      req.body,
-    );
-    const shipHullService = new ShipHullService();
-
-    await shipHullService.equip(user, shipHullToEquip);
-    next(
-      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
-    );
-  },
-);
-
-router.put(
-  "/unequip_ship_armor",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
-    }
-
-    const shipArmorService = new ShipArmorService();
-
-    await shipArmorService.unequipAll(user);
-
-    next(
-      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
-    );
-  },
-);
-
-router.put(
-  "/unequip_ship_cannon",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
-    }
-
-    const shipCannonToEquip: ShipCannonModel =
-      new ShipCannonModel().parseObject(req.body);
-
-    const shipCannonService = new ShipCannonService();
-    await shipCannonService.unequip(shipCannonToEquip);
-
-    next(
-      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
-    );
-  },
-);
-
-router.put(
-  "/unequip_ship_energy_core",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
-    }
-
-    const shipEnergyCoreService = new ShipEnergyCoreService();
-
-    await shipEnergyCoreService.unequipAll(user);
-
-    next(
-      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
-    );
-  },
-);
-
-router.put(
-  "/unequip_ship_engine",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
-    }
-
-    const shipEngineService = new ShipEngineService();
-
-    await shipEngineService.unequipAll(user);
-
-    next(
-      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
-    );
-  },
-);
-
-router.put(
-  "/unequip_ship_hull",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = res.locals;
-
-    if (!user) {
-      next(
-        ExpressResponseGenerator.getResponse(ExpressResponseTypes.FORBIDDEN),
-      );
-      return;
-    }
-
-    const shipHullService = new ShipHullService();
-
-    await shipHullService.unequipAll(user);
-
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {}),
     );
