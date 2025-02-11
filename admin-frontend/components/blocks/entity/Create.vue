@@ -1,12 +1,12 @@
 <template>
-  <v-container class="create-entity">
-    <div class="create-entity-top__bar">
-      <h4 class="create-entity-top__bar-text">Creating {{ entity }}</h4>
-      <span class="create-entity-actions">
-        <v-btn class="create-entity-actions-apply" @click="createEntity">
+  <v-container class="create__entity">
+    <div class="create__entity-top__bar">
+      <h4 class="create__entity-top__bar-text">Creating {{ entity }}</h4>
+      <span class="create__entity-actions">
+        <v-btn class="create__entity-actions-apply" @click="createEntity">
           Create
         </v-btn>
-        <v-btn class="create-entity-actions-reset" @click="reset">
+        <v-btn class="create__entity-actions-reset" @click="reset">
           Reset
         </v-btn>
       </span>
@@ -23,7 +23,6 @@
           xs="6"
           cols="12">
           <inputs-number
-            class="create-entity-number"
             v-model="localData[data.key]"
             :label="data.key"
             :disabled="isFieldDisabled(data)"
@@ -41,13 +40,29 @@
           xs="6"
           cols="12">
           <inputs-number
-            class="create-entity-number"
             v-model="localData[data.key]"
             :label="data.key"
             :disabled="isFieldDisabled(data)"
             @update:model-value="
               (v) => dataUpdated(data.key, v)
             "></inputs-number>
+        </v-col>
+        <v-col
+          v-if="data.metadata.fieldType === FieldTypes.BOOLEAN"
+          xxl="2"
+          xl="2"
+          lg="2"
+          md="4"
+          sm="6"
+          xs="6"
+          cols="12">
+          <inputs-boolean
+            v-model="localData[data.key]"
+            :label="data.key"
+            :disabled="isFieldDisabled(data)"
+            @update:model-value="
+              (v) => dataUpdated(data.key, v)
+            "></inputs-boolean>
         </v-col>
         <v-col
           v-if="data.metadata.fieldType === FieldTypes.PASSWORD"
@@ -59,7 +74,6 @@
           xs="6"
           cols="12">
           <inputs-string
-            class="create-entity-string"
             v-model="localData[data.key]"
             :label="data.key"
             :disabled="isFieldDisabled(data)"
@@ -77,7 +91,6 @@
           xs="6"
           cols="12">
           <inputs-string
-            class="create-entity-string"
             v-model="localData[data.key]"
             :label="data.key"
             :disabled="isFieldDisabled(data)"
@@ -95,7 +108,6 @@
           xs="6"
           cols="12">
           <inputs-string-select
-            class="create-entity-string__select"
             v-model="localData[data.key]"
             :disabled="isFieldDisabled(data)"
             :label="data.key"
@@ -114,7 +126,6 @@
           xs="6"
           cols="12">
           <inputs-entity
-            class="create-entity-entity"
             v-model="localData[data.key]"
             :disabled="isFieldDisabled(data)"
             :entity="getFieldEntity(data.key)"
@@ -133,7 +144,6 @@
           xs="6"
           cols="12">
           <inputs-file-selector
-            class="create-entity-entity"
             v-model="localData[data.key]"
             :disabled="isFieldDisabled(data)"
             :label="data.key"
@@ -158,7 +168,7 @@
               (v: any) => dataUpdated(data.key, v)
             "></inputs-date-picker>
         </v-col>
-        <div>{{ localData[data.key] }}</div>
+        <!-- <div>{{ localData[data.key] }}</div> -->
       </template>
     </v-row>
   </v-container>
@@ -259,7 +269,7 @@ const reset = () => {
 </script>
 
 <style lang="scss" scoped>
-.create-entity {
+.create__entity {
   border: 1px solid grey;
   margin: 5px;
 
@@ -297,9 +307,6 @@ const reset = () => {
       align-items: center;
       margin: 5px;
     }
-  }
-
-  &-number {
   }
 }
 </style>

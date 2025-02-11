@@ -1,12 +1,12 @@
 <template>
-  <v-container class="create-entity">
-    <div class="create-entity-top__bar">
-      <h4 class="create-entity-top__bar-text">Creating {{ entity }}</h4>
-      <span class="create-entity-actions">
-        <v-btn class="create-entity-actions-apply" @click="updateEntity">
+  <v-container class="update__entity">
+    <div class="update__entity-top__bar">
+      <h4 class="update__entity-top__bar-text">Creating {{ entity }}</h4>
+      <span class="update__entity-actions">
+        <v-btn class="update__entity-actions-apply" @click="updateEntity">
           Update
         </v-btn>
-        <v-btn class="create-entity-actions-reload" @click="reload">
+        <v-btn class="update__entity-actions-reload" @click="reload">
           Reload
         </v-btn>
       </span>
@@ -23,7 +23,6 @@
           xs="6"
           cols="12">
           <inputs-number
-            class="create-entity-number"
             v-model="localData[data.key]"
             :label="data.key"
             :disabled="isFieldDisabled(data)"
@@ -41,13 +40,29 @@
           xs="6"
           cols="12">
           <inputs-number
-            class="create-entity-number"
             v-model="localData[data.key]"
             :label="data.key"
             :disabled="isFieldDisabled(data)"
             @update:model-value="
               (v) => dataUpdated(data.key, v)
             "></inputs-number>
+        </v-col>
+        <v-col
+          v-if="data.metadata.fieldType === FieldTypes.BOOLEAN"
+          xxl="2"
+          xl="2"
+          lg="2"
+          md="4"
+          sm="6"
+          xs="6"
+          cols="12">
+          <inputs-boolean
+            v-model="localData[data.key]"
+            :label="data.key"
+            :disabled="isFieldDisabled(data)"
+            @update:model-value="
+              (v) => dataUpdated(data.key, v)
+            "></inputs-boolean>
         </v-col>
         <v-col
           v-if="data.metadata.fieldType === FieldTypes.PASSWORD"
@@ -59,7 +74,6 @@
           xs="6"
           cols="12">
           <inputs-string
-            class="create-entity-string"
             v-model="localData[data.key]"
             :label="data.key"
             :disabled="isFieldDisabled(data)"
@@ -77,7 +91,6 @@
           xs="6"
           cols="12">
           <inputs-string
-            class="create-entity-string"
             v-model="localData[data.key]"
             :label="data.key"
             :disabled="isFieldDisabled(data)"
@@ -95,7 +108,6 @@
           xs="6"
           cols="12">
           <inputs-string-select
-            class="create-entity-string__select"
             v-model="localData[data.key]"
             :disabled="isFieldDisabled(data)"
             :label="data.key"
@@ -114,7 +126,6 @@
           xs="6"
           cols="12">
           <inputs-entity
-            class="create-entity-entity"
             v-model="localData[data.key]"
             :disabled="isFieldDisabled(data)"
             :entity="getFieldEntity(data.key)"
@@ -133,7 +144,6 @@
           xs="6"
           cols="12">
           <inputs-file-selector
-            class="create-entity-entity"
             v-model="localData[data.key]"
             :disabled="isFieldDisabled(data)"
             :label="data.key"
@@ -157,7 +167,7 @@
               (v: any) => dataUpdated(data.key, v)
             "></inputs-date-picker>
         </v-col>
-        <div>{{ localData[data.key] }}</div>
+        <!-- <div>{{ localData[data.key] }}</div> -->
       </template>
     </v-row>
   </v-container>
@@ -271,7 +281,7 @@ const reload = async () => {
 </script>
 
 <style lang="scss" scoped>
-.create-entity {
+.update__entity {
   border: 1px solid grey;
   margin: 5px;
 
@@ -281,8 +291,6 @@ const reload = async () => {
     justify-content: space-between;
 
     &-text {
-      // text-align: center;
-      // line-height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -293,7 +301,6 @@ const reload = async () => {
     display: flex;
     justify-content: right;
     align-items: center;
-    // margin: 50px 0;
 
     &-apply {
       margin: 5px;
@@ -309,9 +316,6 @@ const reload = async () => {
       align-items: center;
       margin: 5px;
     }
-  }
-
-  &-number {
   }
 }
 </style>
