@@ -8,10 +8,10 @@ import {
 declare global {
   module Express {
     interface Locals {
-      user?: UserModel;
-      user_session?: UserSessionModel;
-      admin?: AdminModel;
-      admin_session?: AdminSessionModel;
+      user: UserModel;
+      user_session: UserSessionModel;
+      admin: AdminModel;
+      admin_session: AdminSessionModel;
     }
   }
 }
