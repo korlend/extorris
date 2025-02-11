@@ -1014,6 +1014,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv@npm:^16.4.7":
+  version: 16.4.7
+  resolution: "dotenv@npm:16.4.7"
+  checksum: 10c0/be9f597e36a8daf834452daa1f4cc30e5375a5968f98f46d89b16b983c567398a330580c88395069a77473943c06b877d1ca25b4afafcdd6d4adb549e8293462
+  languageName: node
+  linkType: hard
+
 "dunder-proto@npm:^1.0.0, dunder-proto@npm:^1.0.1":
   version: 1.0.1
   resolution: "dunder-proto@npm:1.0.1"
@@ -1394,6 +1401,7 @@ __metadata:
     amqplib: "npm:^0.10.5"
     body-parser: "npm:^1.20.3"
     cors: "npm:^2.8.5"
+    dotenv: "npm:^16.4.7"
     express: "npm:^5.0.0"
     extorris-common: "portal:../extorris-common"
     module-alias: "npm:^2.2.3"
