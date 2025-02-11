@@ -6,7 +6,7 @@ CREATE TABLE
     `description` text,
     PRIMARY KEY (`id`),
     UNIQUE KEY `admin_roles_name` (`name`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 2 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.countries definition
 CREATE TABLE
@@ -17,7 +17,7 @@ CREATE TABLE
     PRIMARY KEY (`id`),
     UNIQUE KEY `countries_unique_code` (`code`),
     UNIQUE KEY `countries_unique_name` (`name`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 10 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.guilds definition
 CREATE TABLE
@@ -43,7 +43,7 @@ CREATE TABLE
       `is_temp` tinyint (1) DEFAULT '0',
       `size` int unsigned DEFAULT NULL,
       PRIMARY KEY (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 5 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.inland_creatures definition
 CREATE TABLE
@@ -62,7 +62,7 @@ CREATE TABLE
     `end_date` datetime DEFAULT NULL,
     `active` tinyint (1) DEFAULT '0',
     PRIMARY KEY (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 53 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.translations definition
 CREATE TABLE
@@ -97,7 +97,7 @@ CREATE TABLE
       UNIQUE KEY `admins_unique_email` (`email`),
       KEY `admins_admin_roles_FK` (`role_id`),
       CONSTRAINT `admins_admin_roles_FK` FOREIGN KEY (`role_id`) REFERENCES `admin_roles` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 5 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.chats definition
 CREATE TABLE
@@ -110,7 +110,7 @@ CREATE TABLE
     PRIMARY KEY (`id`),
     KEY `chats_guilds_FK` (`guild_id`),
     CONSTRAINT `chats_guilds_FK` FOREIGN KEY (`guild_id`) REFERENCES `guilds` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.external_creature_species definition
 CREATE TABLE
@@ -134,7 +134,7 @@ CREATE TABLE
     UNIQUE KEY `languages_unique_name` (`name`),
     KEY `languages_countries_FK` (`country_id`),
     CONSTRAINT `languages_countries_FK` FOREIGN KEY (`country_id`) REFERENCES `countries` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.main_maps definition
 CREATE TABLE
@@ -149,7 +149,7 @@ CREATE TABLE
     PRIMARY KEY (`id`),
     KEY `main_map_iteration_FK` (`iteration_id`),
     CONSTRAINT `main_map_iteration_FK` FOREIGN KEY (`iteration_id`) REFERENCES `iterations` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-  ) ENGINE = InnoDB AUTO_INCREMENT = 59 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.nest_types definition
 CREATE TABLE
@@ -184,7 +184,7 @@ CREATE TABLE
     KEY `ship_part_subtypes_images_FK` (`image_id`),
     CONSTRAINT `ship_part_subtypes_images_FK` FOREIGN KEY (`image_id`) REFERENCES `images` (`id`),
     CONSTRAINT `ship_part_subtypes_translations_FK` FOREIGN KEY (`name_id`) REFERENCES `translations` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 7 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.ship_part_types definition
 CREATE TABLE
@@ -204,7 +204,7 @@ CREATE TABLE
     KEY `ship_part_types_ship_part_subtypes_FK` (`subtype_id`),
     CONSTRAINT `ship_part_types_ship_part_subtypes_FK` FOREIGN KEY (`subtype_id`) REFERENCES `ship_part_subtypes` (`id`),
     CONSTRAINT `ship_part_types_translations_FK` FOREIGN KEY (`name_id`) REFERENCES `translations` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 15 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.translations_languages definition
 CREATE TABLE
@@ -255,7 +255,7 @@ CREATE TABLE
       UNIQUE KEY `users_phone` (`phone`),
       KEY `users_guilds_FK` (`guild_id`),
       CONSTRAINT `users_guilds_FK` FOREIGN KEY (`guild_id`) REFERENCES `guilds` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.admin_sessions definition
 CREATE TABLE
@@ -270,7 +270,7 @@ CREATE TABLE
     UNIQUE KEY `admin_sessions_token` (`token`),
     KEY `admin_sessions_admins_FK` (`admin_id`),
     CONSTRAINT `admin_sessions_admins_FK` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 37 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.chat_messages definition
 CREATE TABLE
@@ -285,7 +285,7 @@ CREATE TABLE
     KEY `chat_messages_users_FK` (`user_id`),
     CONSTRAINT `chat_messages_chats_FK` FOREIGN KEY (`chat_id`) REFERENCES `chats` (`id`),
     CONSTRAINT `chat_messages_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 80 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.chat_users definition
 CREATE TABLE
@@ -314,7 +314,7 @@ CREATE TABLE
     PRIMARY KEY (`id`),
     KEY `main_map_hub_main_map_FK` (`main_map_id`),
     CONSTRAINT `main_map_hub_main_map_FK` FOREIGN KEY (`main_map_id`) REFERENCES `main_maps` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-  ) ENGINE = InnoDB AUTO_INCREMENT = 20331 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.nests definition
 CREATE TABLE
@@ -344,7 +344,7 @@ CREATE TABLE
     KEY `portals_main_map_hubs_FK_1` (`to_hub_id`),
     CONSTRAINT `portals_main_map_hubs_FK` FOREIGN KEY (`from_hub_id`) REFERENCES `main_map_hubs` (`id`) ON DELETE RESTRICT,
     CONSTRAINT `portals_main_map_hubs_FK_1` FOREIGN KEY (`to_hub_id`) REFERENCES `main_map_hubs` (`id`) ON DELETE RESTRICT
-  ) ENGINE = InnoDB AUTO_INCREMENT = 22558 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.ships definition
 CREATE TABLE
@@ -359,7 +359,7 @@ CREATE TABLE
     KEY `ships_main_map_hubs_FK` (`main_map_hub_id`),
     CONSTRAINT `ships_main_map_hubs_FK` FOREIGN KEY (`main_map_hub_id`) REFERENCES `main_map_hubs` (`id`),
     CONSTRAINT `ships_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.tree_branches definition
 CREATE TABLE
@@ -395,12 +395,15 @@ CREATE TABLE
     `id` int unsigned NOT NULL AUTO_INCREMENT,
     `user_id` int unsigned NOT NULL,
     `main_map_hub_id` int unsigned DEFAULT NULL,
+    `hub_pos_x` int NOT NULL DEFAULT '0',
+    `hub_pos_y` int NOT NULL DEFAULT '0',
+    `layer` int unsigned NOT NULL DEFAULT '0',
     PRIMARY KEY (`id`),
     KEY `user_islands_users_FK` (`user_id`),
     KEY `user_islands_main_map_hubs_FK` (`main_map_hub_id`),
     CONSTRAINT `user_islands_main_map_hubs_FK` FOREIGN KEY (`main_map_hub_id`) REFERENCES `main_map_hubs` (`id`),
     CONSTRAINT `user_islands_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.user_sessions definition
 CREATE TABLE
@@ -413,7 +416,7 @@ CREATE TABLE
     PRIMARY KEY (`id`),
     KEY `sessions_users_FK` (`user_id`),
     CONSTRAINT `sessions_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 41 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.user_ship_modules definition
 CREATE TABLE
@@ -454,7 +457,7 @@ CREATE TABLE
     CONSTRAINT `user_ship_parts_ship_part_types_FK` FOREIGN KEY (`ship_part_type_id`) REFERENCES `ship_part_types` (`id`),
     CONSTRAINT `user_ship_parts_ships_FK` FOREIGN KEY (`ship_id`) REFERENCES `ships` (`id`),
     CONSTRAINT `user_ship_parts_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 34 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.dungeon_islands definition
 CREATE TABLE
@@ -499,7 +502,7 @@ CREATE TABLE
     KEY `ship_armors_ships_FK` (`ship_id`),
     CONSTRAINT `ship_armors_ships_FK` FOREIGN KEY (`ship_id`) REFERENCES `ships` (`id`),
     CONSTRAINT `ship_armors_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 7 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.ship_cannons definition
 CREATE TABLE
@@ -516,7 +519,7 @@ CREATE TABLE
     KEY `ship_cannons_ships_FK` (`ship_id`),
     CONSTRAINT `ship_cannons_ships_FK` FOREIGN KEY (`ship_id`) REFERENCES `ships` (`id`),
     CONSTRAINT `ship_cannons_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.ship_energy_cores definition
 CREATE TABLE
@@ -532,7 +535,7 @@ CREATE TABLE
     KEY `ship_energy_core_ships_FK` (`ship_id`),
     CONSTRAINT `ship_energy_core_ships_FK` FOREIGN KEY (`ship_id`) REFERENCES `ships` (`id`),
     CONSTRAINT `ship_energy_core_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.ship_engines definition
 CREATE TABLE
@@ -549,7 +552,7 @@ CREATE TABLE
     KEY `ship_engines_ships_FK` (`ship_id`),
     CONSTRAINT `ship_engines_ships_FK` FOREIGN KEY (`ship_id`) REFERENCES `ships` (`id`),
     CONSTRAINT `ship_engines_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 -- extorris.ship_hulls definition
 CREATE TABLE
@@ -568,4 +571,4 @@ CREATE TABLE
     KEY `ship_hulls_ships_FK` (`ship_id`),
     CONSTRAINT `ship_hulls_ships_FK` FOREIGN KEY (`ship_id`) REFERENCES `ships` (`id`),
     CONSTRAINT `ship_hulls_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-  ) ENGINE = InnoDB AUTO_INCREMENT = 3 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
