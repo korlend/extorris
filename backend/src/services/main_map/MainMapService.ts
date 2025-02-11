@@ -3,6 +3,7 @@ import {
   MainMapHubModel,
   MainMapModel,
   PortalModel,
+  UserIslandModel,
 } from "@src/models/db/index.js";
 import MainMapRepository from "@src/repositories/main_map/MainMapRepository.js";
 import Service from "../Service.js";
@@ -19,6 +20,8 @@ import {
   getHexCoordinatesTopRight,
 } from "extorris-common";
 import HexagonClusterSolver from "@src/core/computation/HexagonClusterSolver.js";
+import DBFilter from "@src/models/DBFilter.js";
+import IterationService from "../IterationService.js";
 
 export default class MainMapService extends Service<
   MainMapModel,
@@ -112,5 +115,51 @@ export default class MainMapService extends Service<
     }
 
     return hexagonLinked;
+  }
+
+  async getUserIslandLocation(
+    userIsland: UserIslandModel,
+  ): Promise<{ map: MainMapModel | null; hub: MainMapHubModel | null }> {
+    const mainMapHubService = new MainMapHubService();
+    if (!userIsland?.main_map_hub_id) {
+      return {
+        map: null,
+        hub: null,
+      };
+    }
+    const hub = await mainMapHubService.get(userIsland.main_map_hub_id);
+
+    if (!hub?.main_map_id) {
+      return {
+        map: null,
+        hub: hub,
+      };
+    }
+    const map = await this.get(hub?.main_map_id);
+
+    return {
+      map,
+      hub,
+    };
+  }
+
+  async getActiveLayer(
+    layer: number,
+    iterationId?: number,
+  ): Promise<MainMapModel | null> {
+    const iterationService = new IterationService();
+    let iteration: IterationModel | null = null;
+    if (iterationId) {
+      iteration = await iterationService.get(iterationId);
+    }
+    if (!iteration) {
+      iteration = await iterationService.getCurrentIteration();
+    }
+    if (!iteration) return null;
+    const filters: Array<DBFilter<MainMapModel>> = [];
+    filters.push(new DBFilter("layer", layer));
+    filters.push(new DBFilter("iteration_id", iteration.id));
+    const mainMap = await this.getSearchSingle(filters);
+    return mainMap;
   }
 }

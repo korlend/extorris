@@ -77,8 +77,9 @@ export default class ChatService extends Service<ChatModel, ChatRepository> {
     newMessage.message = message;
     newMessage.user_id = userId;
     const chat = await this.get(chatId);
-    if (chat.type === ChatTypes.ALL_CHAT) {
+    if (chat?.type === ChatTypes.ALL_CHAT) {
       const createdMessage = await chatMessageService.create(newMessage);
+      if (!createdMessage) return;
       this.sendChatUpdate(createdMessage);
     }
 
@@ -90,13 +91,16 @@ export default class ChatService extends Service<ChatModel, ChatRepository> {
     chatMessage: ChatMessageModel,
     updateUserIds?: Array<number>,
   ) {
-    if (!chatMessage.chat_id || !chatMessage.message || !chatMessage.user_id) {
+    if (
+      !chatMessage ||
+      !chatMessage.chat_id ||
+      !chatMessage.message ||
+      !chatMessage.user_id
+    ) {
       return;
     }
-    const rabbitmq = await RabbitMQConnector.getInstance(
-      "amqp://localhost:5672",
-    );
-    rabbitmq.enqueueChatMessage({
+    const rabbitmq = await RabbitMQConnector.getInstance();
+    rabbitmq?.enqueueChatMessage({
       id: chatMessage.id,
       chatId: chatMessage.chat_id,
       message: chatMessage.message,

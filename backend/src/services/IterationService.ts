@@ -2,7 +2,12 @@ import IterationModel from "@src/models/db/IterationModel.js";
 import IterationRepository from "@src/repositories/IterationRepository.js";
 import Service from "./Service.js";
 import MainMapService from "./main_map/MainMapService.js";
-import { MainMapHubModel, MainMapModel, PortalModel } from "@src/models/db/index.js";
+import {
+  MainMapHubModel,
+  MainMapModel,
+  PortalModel,
+  UserIslandModel,
+} from "@src/models/db/index.js";
 import DateUtils from "@src/core/utils/DateUtils.js";
 import ParametersLimit from "@src/models/ParametersLimit.js";
 import MainMapHubService from "./main_map/MainMapHubService.js";
@@ -64,6 +69,32 @@ export default class IterationService extends Service<
     return iteration;
   }
 
+  async getUserIslandLocation(userIsland: UserIslandModel): Promise<{
+    iteration: IterationModel | null;
+    map: MainMapModel | null;
+    hub: MainMapHubModel | null;
+  }> {
+    const mainMapService = new MainMapService();
+    const { map, hub } = await mainMapService.getUserIslandLocation(userIsland);
+    if (!map?.iteration_id) {
+      return {
+        hub,
+        map,
+        iteration: null,
+      };
+    }
+    const iteration = await this.get(map?.iteration_id);
+    return {
+      hub,
+      map,
+      iteration,
+    };
+  }
+
+  getCurrentIteration(): Promise<IterationModel | null> {
+    return this.getBy("active", true);
+  }
+
   async delete(model: IterationModel): Promise<void>;
   async delete(id: number): Promise<void>;
   async delete(data: number | IterationModel): Promise<void> {
@@ -79,7 +110,7 @@ export default class IterationService extends Service<
 
     const mainMaps = await mainMapService.getAllBy(
       "iteration_id",
-      iteration.id,
+      iteration?.id,
       new ParametersLimit<MainMapModel>([], ["id", "iteration_id"]),
     );
 
@@ -112,6 +143,6 @@ export default class IterationService extends Service<
     await portalService.deleteAll(allPortals);
     await mainMapHubService.deleteAll(allMainMapsHubs);
     await mainMapService.deleteAll(mainMaps);
-    await this._delete(iteration.id);
+    await this._delete(iteration?.id);
   }
 }

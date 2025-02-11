@@ -1,4 +1,9 @@
-import { MainMapHubModel, MainMapModel } from "@src/models/db/index.js";
+import {
+  IterationModel,
+  MainMapHubModel,
+  MainMapModel,
+  UserIslandModel,
+} from "@src/models/db/index.js";
 import MainMapHubRepository from "@src/repositories/main_map/MainMapHubRepository.js";
 import Service from "../Service.js";
 import { randomInt } from "crypto";
@@ -26,8 +31,10 @@ export default class MainMapHubService extends Service<
     return mainMapHub;
   }
 
-  async getRandomUserIslandSpawnPoint(): Promise<MainMapHubModel> {
-    const maxDepth = 10;
+  async getRandomUserIslandSpawnPoint(
+    mainMap: MainMapModel,
+  ): Promise<MainMapHubModel> {
+    const maxDepth = mainMap.map_depth;
     const depthsHubsArray = [];
     for (let depth = 0; depth <= maxDepth; depth++) {
       for (let hub = 0; hub < depth * 6; hub++) {
@@ -39,14 +46,23 @@ export default class MainMapHubService extends Service<
     }
     const randomHubNumber = randomInt(depthsHubsArray.length);
     const result = depthsHubsArray[randomHubNumber];
-    return await this.getHub(result.depth, result.hub);
+    return await this.getHub(result.depth, result.hub, mainMap.id);
   }
 
-  async getHub(depth: number, hub: number) {
+  async getHub(depth: number, hub: number, mainMapId: number) {
     const filters: Array<DBFilter<MainMapHubModel>> = [];
     filters.push(new DBFilter("on_depth", depth));
     filters.push(new DBFilter("hub_number", hub));
+    filters.push(new DBFilter("main_map_id", mainMapId));
     return this.getSearchSingle(filters);
+  }
+
+  async getUserIslandLocation(
+    userIsland?: UserIslandModel,
+  ): Promise<MainMapHubModel | null> {
+    if (!userIsland?.main_map_hub_id) return null;
+    const hub = await this.get(userIsland.main_map_hub_id);
+    return hub;
   }
 
   // async getUserHubHistory(iterationId: number): Promise<Array<MainMapHubModel>> {
