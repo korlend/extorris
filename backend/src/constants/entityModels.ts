@@ -14,8 +14,6 @@ import {
   PortalModel,
   ShipModel,
   ShipModuleTypeModel,
-  ShipPartTypeModel,
-  ShipPartSubtypeModel,
   TranslationModel,
   TranslationLanguageModel,
   TreeModel,
@@ -23,7 +21,6 @@ import {
   UserModel,
   UserSessionModel,
   UserShipModuleModel,
-  UserShipPartModel,
   UserBeenToHubsModel,
   ShipArmorModel,
   ShipCannonModel,
@@ -67,8 +64,6 @@ const entityModels: Record<EntityType, any> = {
   [EntityType.SHIP_ENERGY_CORE]: ShipEnergyCoreModel,
   [EntityType.SHIP_HULL]: ShipHullModel,
   [EntityType.SHIP_MODULE_TYPE]: ShipModuleTypeModel,
-  [EntityType.SHIP_PART_TYPE]: ShipPartTypeModel,
-  [EntityType.SHIP_PART_SUBTYPE]: ShipPartSubtypeModel,
   [EntityType.TRANSLATION]: TranslationModel,
   [EntityType.TRANSLATION_LANGUAGE]: TranslationLanguageModel,
   [EntityType.TREE]: TreeModel,
@@ -77,7 +72,6 @@ const entityModels: Record<EntityType, any> = {
   [EntityType.USER_ISLAND]: UserIslandModel,
   [EntityType.USER_SESSION]: UserSessionModel,
   [EntityType.USER_SHIP_MODULE]: UserShipModuleModel,
-  [EntityType.USER_SHIP_PART]: UserShipPartModel,
   [EntityType.USER_BEEN_TO_HUBS]: UserBeenToHubsModel,
 };
 

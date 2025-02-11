@@ -18,11 +18,8 @@ import UserBeenToHubsService from "@src/services/main_map/UserBeenToHubsService.
 import NestService from "@src/services/NestService.js";
 import NestTypeService from "@src/services/NestTypeService.js";
 import ShipModuleTypeService from "@src/services/ship/ShipModuleTypeService.js";
-import ShipPartSubtypeService from "@src/services/ship/ShipPartSubtypeService.js";
-import ShipPartTypeService from "@src/services/ship/ShipPartTypeService.js";
 import ShipService from "@src/services/ship/ShipService.js";
 import UserShipModuleService from "@src/services/ship/UserShipModuleService.js";
-import UserShipPartService from "@src/services/ship/UserShipPartService.js";
 import LanguageService from "@src/services/translation/LanguageService.js";
 import TranslationService from "@src/services/translation/TranslationService.js";
 import UserService from "@src/services/user/UserService.js";
@@ -64,8 +61,6 @@ const entityServices: Record<EntityType, any> = {
   [EntityType.SHIP_ENERGY_CORE]: ShipEnergyCoreService,
   [EntityType.SHIP_HULL]: ShipHullService,
   [EntityType.SHIP_MODULE_TYPE]: ShipModuleTypeService,
-  [EntityType.SHIP_PART_TYPE]: ShipPartTypeService,
-  [EntityType.SHIP_PART_SUBTYPE]: ShipPartSubtypeService,
   [EntityType.TRANSLATION]: TranslationService,
   [EntityType.TRANSLATION_LANGUAGE]: TranslationService,
   [EntityType.TREE]: TreeService,
@@ -74,7 +69,6 @@ const entityServices: Record<EntityType, any> = {
   [EntityType.USER_ISLAND]: UserIslandService,
   [EntityType.USER_SESSION]: UserSessionService,
   [EntityType.USER_SHIP_MODULE]: UserShipModuleService,
-  [EntityType.USER_SHIP_PART]: UserShipPartService,
   [EntityType.USER_BEEN_TO_HUBS]: UserBeenToHubsService,
 };
 

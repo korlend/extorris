@@ -25,8 +25,6 @@ enum EntityType {
   SHIP_ENERGY_CORE = "ship_energy_core",
   SHIP_CANNON = "ship_cannon",
   SHIP_MODULE_TYPE = "ship_module_type",
-  SHIP_PART_TYPE = "ship_part_type",
-  SHIP_PART_SUBTYPE = "ship_part_subtype",
   TRANSLATION = "translation",
   TRANSLATION_LANGUAGE = "translation_language",
   TREE = "tree",
@@ -36,7 +34,6 @@ enum EntityType {
   USER_ISLAND = "user_island",
   USER_SESSION = "user_session",
   USER_SHIP_MODULE = "user_ship_module",
-  USER_SHIP_PART = "user_ship_part",
 }
 
 export default EntityType;

@@ -10,12 +10,6 @@ import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
 import { DBModelDBDataKeys } from "@src/types/DBModelDBDataKeys.js";
 import ServiceOperations from "@src/enums/ServiceOperations.js";
 
-type OperationsCallbacks<T extends DBModel<T>> = {
-  [ServiceOperations.CREATE]:
-    | ((data: Array<T> | T, fields: ParametersLimit<T>) => void)
-    | null;
-};
-
 export default abstract class Service<
   T extends DBModel<T>,
   TRepo extends Repository<T>,
@@ -51,17 +45,17 @@ export default abstract class Service<
     return this.repo.getByModel(model);
   }
 
-  async getBy(
-    key: DBDataKeys,
-    value: T[DBDataKeys],
+  async getBy<K extends DBDataKeys>(
+    key: K,
+    value: T[K],
     fields = new ParametersLimit<T>(),
   ): Promise<T> {
     return this.repo.getBy(key, value, fields);
   }
 
-  async getAllBy(
-    key: DBDataKeys,
-    value: T[DBDataKeys],
+  async getAllBy<K extends DBDataKeys>(
+    key: K,
+    value: T[K],
     fields = new ParametersLimit<T>(),
     limit?: number,
   ): Promise<Array<T>> {

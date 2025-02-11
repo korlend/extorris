@@ -1,13 +1,9 @@
 import RedisConnector from "@src/core/RedisConnector.js";
 import AdminRoleService from "@src/services/admin/AdminRoleService.js";
 import AdminService from "@src/services/admin/AdminService.js";
-import ShipPartSubtypeService from "@src/services/ship/ShipPartSubtypeService.js";
-import ShipPartTypeService from "@src/services/ship/ShipPartTypeService.js";
 import UserSessionService from "@src/services/user/UserSessionService.js";
 import getAdminRoles from "defaults/models/getAdminRoles.js";
 import getAdmins from "defaults/models/getAdmins.js";
-import getShipPartSubtypes from "defaults/models/getShipPartSubtypes.js";
-import getShipPartTypes from "defaults/models/getShipPartTypes.js";
 
 async function dbDataInit(config: any) {
   const promises = [];
