@@ -19,8 +19,6 @@ import NestTypeModel from "./NestTypeModel.js";
 import PortalModel from "./main_map/PortalModel.js";
 import ShipModel from "./ship/ShipModel.js";
 import ShipModuleTypeModel from "./ship/ShipModuleTypeModel.js";
-import ShipPartTypeModel from "./ship/ShipPartTypeModel.js";
-import ShipPartSubtypeModel from "./ship/ShipPartSubtypeModel.js";
 import TranslationLanguageModel from "./translation/TranslationLanguageModel.js";
 import TranslationModel from "./translation/TranslationModel.js";
 import TreeModel from "./main_map/TreeModel.js";
@@ -29,7 +27,6 @@ import UserIslandModel from "./UserIslandModel.js";
 import UserModel from "./user/UserModel.js";
 import UserSessionModel from "./user/UserSessionModel.js";
 import UserShipModuleModel from "./ship/UserShipModuleModel.js";
-import UserShipPartModel from "./ship/UserShipPartModel.js";
 import UserBeenToHubsModel from "./main_map/UserBeenToHubsModel.js";
 import ShipArmorModel from "./ship/ShipArmorModel.js";
 import ShipCannonModel from "./ship/ShipCannonModel.js";
@@ -59,8 +56,6 @@ export {
   PortalModel,
   ShipModel,
   ShipModuleTypeModel,
-  ShipPartTypeModel,
-  ShipPartSubtypeModel,
   TranslationLanguageModel,
   TranslationModel,
   TreeModel,
@@ -69,7 +64,6 @@ export {
   UserModel,
   UserSessionModel,
   UserShipModuleModel,
-  UserShipPartModel,
   UserBeenToHubsModel,
   ShipArmorModel,
   ShipCannonModel,
