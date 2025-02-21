@@ -1,9 +1,8 @@
 import FieldType from "@src/decorators/FieldType.js";
 import Immutable from "@src/decorators/Immutable.js";
-import { FieldTypes } from "extorris-common";
+import { FieldTypes, HubLinksTypes } from "extorris-common";
 import DBModel from "@src/models/db/DBModel.js";
 import EntityType from "@src/enums/EntityType.js";
-import HubLinksTypes from "@src/enums/HubLinksTypes.js";
 import { DBModelOnlyDBData } from "@src/types/DBModelOnlyDBData.js";
 
 export default class MainMapModel extends DBModel<MainMapModel> {

@@ -22,7 +22,7 @@ export default class ShipCannonService extends Service<
     const filters: Array<DBFilter<ShipCannonModel>> = [];
     filters.push(new DBFilter("ship_id", userShip.id));
 
-    const shipParts = await this.getSearchAll(new SearchRequestData(), undefined, filters);
+    const shipParts = await this.getSearchAll(new SearchRequestData(), filters);
     for (let i = 0; i < shipParts.items.length; i++) {
       const shipPart = shipParts.items[i];
       shipPart.ship_id = null;
@@ -41,7 +41,7 @@ export default class ShipCannonService extends Service<
     const shipCannonFilters: Array<DBFilter<ShipCannonModel>> = [];
     shipCannonFilters.push(new DBFilter("ship_id", userShip.id));
 
-    const shipCannons = await shipCannonService.getSearchAll(new SearchRequestData(), undefined, shipCannonFilters);
+    const shipCannons = await shipCannonService.getSearchAll(new SearchRequestData(), shipCannonFilters);
 
     const diffInSlots = equippedShipHull.cannon_slots - shipCannons.items.length;
     if (diffInSlots < 0) {

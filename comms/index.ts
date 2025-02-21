@@ -8,21 +8,63 @@ import "dotenv/config";
 
 import { CommsModels, RabbitMQModels } from "extorris-common";
 import RabbitMQConnector from "@src/RabbitMQConnector.js";
+import RedisConnector from "@src/RedisConnector.js";
 
 let healthcheck = 0;
 
-// known users
+const recalcTimeoutMS = 50;
+let cycleActive = true;
+let timesSent = 0;
+
+const resendPositions = async (wsServer: NodeWSServer) => {
+  if (!cycleActive) {
+    setTimeout(() => resendPositions(wsServer), recalcTimeoutMS);
+    return;
+  }
+  // console.log("Sending positions... ", timesSent);
+  const redis = await RedisConnector.getInstance();
+  const activeHubs = await redis.getActiveHubs();
+  for (let i = 0; i < activeHubs.length; i++) {
+    const hub = activeHubs[i];
+    const shipsPositions = await redis.getShipsPositions(hub.shipIds);
+    if (!shipsPositions) {
+      continue;
+    }
+    wsServer.sendHubData(
+      {
+        fromWhere: CommsModels.CommsSourceEnum.COMMS_SERVICE,
+        messageType: CommsModels.CommsTypesEnum.SHIP_POSITION_CHANGE,
+        data: {
+          ships: shipsPositions.map((pos) => ({
+            id: pos.id,
+            angle: pos.angle,
+            hp: pos.hp,
+            speed: pos.speed,
+            x: pos.x,
+            y: pos.y,
+          })),
+          hubId: hub.id,
+        },
+      },
+      hub.id,
+    );
+  }
+  timesSent++;
+  setTimeout(() => resendPositions(wsServer), recalcTimeoutMS);
+};
 
 async function init() {
   const app = express();
   const server = http.createServer(app);
-  const host = "0.0.0.0";
-  const port = 8091;
+  const host = process.env.HOST || "0.0.0.0";
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 8091;
+  const redis = await RedisConnector.getInstance();
 
   const rabbitmq = await RabbitMQConnector.getInstance(
     process.env.RABBITMQ || "amqp://localhost:5672",
   );
   const wsServer = new NodeWSServer(server);
+  resendPositions(wsServer);
 
   rabbitmq?.setChatDequeueCallback((message) => {
     console.log("dequeuing message for chat", message);
@@ -41,7 +83,7 @@ async function init() {
     );
   });
 
-  wsServer.setOnMessage((ws, message, userId) => {
+  wsServer.setOnMessage(async (ws, message, userId) => {
     if (
       message.fromWhere === CommsModels.CommsSourceEnum.USER_CLIENT &&
       message.messageType === CommsModels.CommsTypesEnum.CHAT_CHANGE
@@ -51,6 +93,26 @@ async function init() {
         message: message.data.message,
         userId,
       });
+      return;
+    }
+
+    if (
+      message.fromWhere === CommsModels.CommsSourceEnum.USER_CLIENT &&
+      message.messageType === CommsModels.CommsTypesEnum.SHIP_POSITION_CHANGE
+    ) {
+      const shipId = await redis.getUserIdShipId(userId);
+      if (!shipId) {
+        return;
+      }
+
+      const { angle, speed } = message.data;
+
+      redis.writeShipUserInstructions(shipId, {
+        angle: angle,
+        speed: speed,
+        user_id: userId,
+        ship_id: shipId,
+      });
     }
   });
 
@@ -59,6 +121,22 @@ async function init() {
   app.set("port", port);
 
   app.use(bodyParser.json({}));
+
+  app.all(
+    "/activate_calculations",
+    (req: Request, res: Response, next: NextFunction) => {
+      cycleActive = true;
+      res.status(200).send(cycleActive);
+    },
+  );
+
+  app.all(
+    "/disable_calculations",
+    (req: Request, res: Response, next: NextFunction) => {
+      cycleActive = false;
+      res.status(200).send(cycleActive);
+    },
+  );
 
   app.all("/test", (req: Request, res: Response, next: NextFunction) => {
     healthcheck = healthcheck + 1;

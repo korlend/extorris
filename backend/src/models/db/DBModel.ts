@@ -12,7 +12,6 @@ export default abstract class DBModel<T extends DBModel<T>> {
   // [key: string]: any
 
   abstract id: number;
-  deleted?: boolean = undefined;
   abstract _tableName: string;
   abstract _entityType: EntityType;
   // name: string = '';
@@ -66,10 +65,6 @@ export default abstract class DBModel<T extends DBModel<T>> {
 
   isImmutable(parameterName: DBModelDBDataKeys<T>): boolean {
     return !!MetadataHelper.getPropertyMetadata<T>(parameterName, this as DBModel<T> as T)?.isImmutable;
-  }
-
-  hasDeleted(): boolean {
-    return this.deleted !== undefined;
   }
 
   toObject(fields: ParametersLimit<T> = new ParametersLimit()): DBModelOnlyDBData<T> {
@@ -137,9 +132,6 @@ export default abstract class DBModel<T extends DBModel<T>> {
     const array: Array<DBModelDBDataKeys<T>> = [];
     for (let i = 0; i < entries.length; i++) {
       const name = entries[i][0];
-      if (!this.hasDeleted() && name === "deleted") {
-        continue;
-      }
       array.push(name);
     }
     return array;

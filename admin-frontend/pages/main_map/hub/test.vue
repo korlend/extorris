@@ -73,7 +73,7 @@ const shipData = ref({
   x: 500,
   y: 500,
   speed: 0,
-  angle: 45,
+  angle: 0,
   acceleration: 0,
 });
 
@@ -139,7 +139,7 @@ const redraw = (context?: CanvasRenderingContext2D | null) => {
     currentScaling,
     0,
     0,
-    currentScaling,
+    -currentScaling,
     currentShift.value.x,
     currentShift.value.y
   );
@@ -166,7 +166,7 @@ const redraw = (context?: CanvasRenderingContext2D | null) => {
     context.fillStyle = `rgb(102,255,51)`;
     context.translate(shipData.value.x, shipData.value.y);
     context.rotate((shipData.value.angle * Math.PI) / 180);
-    context.scale(0.5, 0.5);
+    // context.scale(0.5, 0.5);
     // const ship = getShip();
     // context.fill(ship);
     context.drawImage(shipImage, -width / 2, -height / 2);
@@ -191,9 +191,9 @@ const recalculateShipPosition = (currentTime: Date, previousTime: Date) => {
   const one_rad = 180 / Math.PI;
   const radians = angle / one_rad;
   const sin = Math.sin(radians);
-  const r = speed / (currentTime.getTime() - previousTime.getTime());
-  let sk1 = sin * r;
-  let sk2 = Math.sqrt(Math.pow(r, 2) - Math.pow(sk1, 2));
+  const radius = speed / (currentTime.getTime() - previousTime.getTime());
+  let sk1 = sin * radius;
+  let sk2 = Math.sqrt(Math.pow(radius, 2) - Math.pow(sk1, 2));
   if (angle > 90 && angle < 270) {
     shipData.value.x += sk1;
     shipData.value.y += sk2;

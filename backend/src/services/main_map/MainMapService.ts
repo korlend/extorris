@@ -152,7 +152,7 @@ export default class MainMapService extends Service<
     if (iterationId) {
       iteration = await iterationService.get(iterationId);
     }
-    if (!iteration) {
+    if (!iteration || !iteration.active) {
       iteration = await iterationService.getCurrentIteration();
     }
     if (!iteration) return null;

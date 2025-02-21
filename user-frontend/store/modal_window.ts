@@ -34,7 +34,7 @@ export const useModalWindowStore = defineStore("modal_window", {
       return state.active;
     },
     getData: (state: ModalWindowState): ModalWindowData | undefined => {
-      return state.data;
+      return deepToRaw(state.data);
     },
     getResolve: (state: ModalWindowState): Function | undefined => {
       return state.resolve;

@@ -4,6 +4,8 @@ import { type ResponseAPI, CommsModels } from "extorris-common";
 import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 import { useAuthStore } from "./auth";
 
+import { v4 as uuidv4 } from 'uuid';
+
 type OnMessage = (message: CommsModels.CommsOutMessage) => void;
 
 interface CommsState {
@@ -24,30 +26,20 @@ export const useCommsStore = defineStore("comms", {
     getWSClient: (state) => {
       return state.wsClient;
     },
-    isConnected: (state) => {
-      const wsClient = state.wsClient;
-      if (!wsClient) return false;
-      return wsClient.isConnected;
-    },
-    isConnecting: (state) => {
-      const wsClient = state.wsClient;
-      if (!wsClient) return false;
-      return wsClient.isConnecting;
-    },
   },
   actions: {
     async connect(token: string, onOpen?: () => void): Promise<void> {
       const self = this;
       if (
         this.wsClient &&
-        (this.wsClient.isConnected || this.wsClient.isConnecting)
+        (this.wsClient.isOpen || this.wsClient.isConnecting)
       ) {
         return;
       }
 
       return new Promise((resolve) => {
         this.wsClient = new CommsModels.BrowserWSClient(
-          "ws://localhost:8091",
+          "ws://192.168.1.102:8091",
           token
         );
 
@@ -67,11 +59,11 @@ export const useCommsStore = defineStore("comms", {
         // this.wsClient.onClose(() => {});
 
         this.wsClient.onMessage((message) => {
-          createAlert(
-            JSON.stringify(message.data),
-            LocalAlertTypes.INFO,
-            `${message.fromWhere} - ${message.messageType}`
-          );
+          // createAlert(
+          //   JSON.stringify(message.data),
+          //   LocalAlertTypes.INFO,
+          //   `${message.fromWhere} - ${message.messageType}`
+          // );
           const ids = Object.keys(self.onMessages);
           for (let i = 0; i < ids.length; i++) {
             const id = ids[i];
@@ -89,17 +81,22 @@ export const useCommsStore = defineStore("comms", {
     },
     // returns id to delete callback
     addOnMessage(callback: OnMessage, id: string = "") {
-      id = id || window.crypto.randomUUID();
+      id = id || uuidv4();
       this.onMessages[id] = callback;
       return id;
     },
     removeOnMessage(id: string = "") {
-      id = id || window.crypto.randomUUID();
+      id = id || uuidv4();
       delete this.onMessages[id];
       return id;
     },
     async sendMessage(message: CommsModels.CommsIncMessage) {
-      if (!this.isConnected) {
+      if (this.wsClient?.isConnecting) {
+        setTimeout(() => this.sendMessage(message), 100);
+        return;
+      }
+      if (this.wsClient?.isClosed) {
+        this.disconnect();
         const authStore = useAuthStore();
         if (!authStore.getToken) {
           throw new Error(

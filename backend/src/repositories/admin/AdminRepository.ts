@@ -17,7 +17,6 @@ export default class AdminRepository extends Repository<AdminModel> {
         `
       select * from ${this.target}
       where id = ?
-      ${this.defaultFilters()}
     `,
         [id],
       )
@@ -32,7 +31,6 @@ export default class AdminRepository extends Repository<AdminModel> {
         `
       select * from ${this.target}
       where email = ?
-      ${this.defaultFilters()}
     `,
         [email],
       )
@@ -45,7 +43,6 @@ export default class AdminRepository extends Repository<AdminModel> {
         `
       select * from ${this.target}
       where username = ?
-      ${this.defaultFilters()}
     `,
         [username],
       )
@@ -62,7 +59,6 @@ export default class AdminRepository extends Repository<AdminModel> {
         `
       select * from ${this.target}
       where firstname = ?
-      ${this.defaultFilters()}
     `,
         [firstname],
       )
@@ -76,7 +72,6 @@ export default class AdminRepository extends Repository<AdminModel> {
       select u.* from ${this.target} u
       left join ${this.adminSessionRepo.target} s on u.id = s.admin_id
       where s.token = ?
-      ${this.defaultFilters("u")}
     `,
         [token],
       )
@@ -129,30 +124,6 @@ export default class AdminRepository extends Repository<AdminModel> {
       });
   }
 
-  getAdminsByMallId(
-    from: number = 0,
-    pageSize: number = 10,
-    mallId: number,
-    parametersLimit: ParametersLimit<AdminModel> = new ParametersLimit(),
-  ): Promise<AdminModel> {
-    return this.connector
-      .query(
-        `
-      select ${this.adminModel.parametersKeys(parametersLimit).join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      ${mallId ? `and mall_id = ${mallId}` : ""}
-      ${pageSize ? `limit ${from},${pageSize}` : ""}
-    `,
-      )
-      .then((resp) => {
-        if (resp && resp.length) {
-          return resp;
-        }
-        return [];
-      });
-  }
-
   getAllNotApprovedAdminsAndAdmin(
     fieldsExclude: ParametersLimit<AdminModel> = new ParametersLimit(),
   ): Promise<AdminModel> {
@@ -160,9 +131,7 @@ export default class AdminRepository extends Repository<AdminModel> {
       .query(
         `
       select ${this.adminModel.parametersKeys(fieldsExclude).join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      and approved = 0
+      where approved = 0
       or email = 'admin@admin.admin'
     `,
       )

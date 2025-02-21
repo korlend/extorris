@@ -38,25 +38,33 @@ interface CommsOutMessagePosition {
   messageType: CommsTypesEnum.SHIP_POSITION_CHANGE;
 
   data: {
-    mapId: number;
+    ships: Array<{
+      id: number;
+      speed: number;
+      angle: number;
+      hp: number;
+      x: number;
+      y: number;
+    }>,
     hubId: number;
-    speed: number;
-    angle: number;
-    x: number;
-    y: number;
     // portals: Array<any>
     // enemies: Array<any>
     // nests: Array<any>
     // playerShips: Array<any>
     // playerIslands: Array<any>
-    // playerIslands: Array<any>
   };
 }
 
-type CommsIncMessage = CommsIncMessageChat | CommsIncMessagePosition
-type CommsOutMessage = CommsOutMessageChat | CommsOutMessagePosition
+interface CommsIncMessageSubscribeToHub {
+  fromWhere: CommsSourceEnum.USER_CLIENT;
+  messageType: CommsTypesEnum.HUB_SUBSCRIBE;
 
-export {
-  type CommsIncMessage,
-  type CommsOutMessage,
+  data: {
+    hubId: number;
+  },
 }
+
+type CommsIncMessage = CommsIncMessageChat | CommsIncMessagePosition | CommsIncMessageSubscribeToHub;
+type CommsOutMessage = CommsOutMessageChat | CommsOutMessagePosition;
+
+export { type CommsIncMessage, type CommsOutMessage };

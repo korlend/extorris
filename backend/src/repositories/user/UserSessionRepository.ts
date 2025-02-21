@@ -12,7 +12,6 @@ export default class UserSessionRepository extends Repository<UserSessionModel> 
         `
       select * from ${this.target}
       where token = ?
-      ${this.defaultFilters()}
     `,
         [token],
       )

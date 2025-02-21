@@ -4,10 +4,12 @@ import DBFilter from "@src/models/DBFilter.js";
 export default class DBFilterBuilder<T extends DBModel<T>> {
   public query: string;
   public values: Array<any>;
+  private prefix: string;
 
-  constructor(filters?: Array<DBFilter<T>>) {
+  constructor(filters?: Array<DBFilter<T>>, prefix: string = "") {
     this.query = this.buildQuery(filters);
     this.values = this.buildValues(filters);
+    this.prefix = prefix;
   }
 
   private buildQuery(filters?: Array<DBFilter<T>>): string {
@@ -15,13 +17,14 @@ export default class DBFilterBuilder<T extends DBModel<T>> {
       return "";
     }
 
-    let finalString: string = "and ";
+    let finalString: string = "";
     for (let i = 0; i < filters.length; i++) {
+      const prefix = this.prefix ? `${this.prefix}.` : "";
       const filter = filters[i];
       if (filter.section === "OPEN") {
         finalString += "("
       }
-      finalString += `?? ${filter.operand} ?`;
+      finalString += `${prefix}?? ${filter.operand} ?`;
       if (filter.section === "CLOSE") {
         finalString += ")"
       }

@@ -44,7 +44,6 @@ export default class ChatService extends Service<ChatModel, ChatRepository> {
 
     const chatsSearch = await this.getSearchAll(
       new SearchRequestData(0, 100),
-      undefined,
       chatFilters,
     );
     const chats = chatsSearch.items;

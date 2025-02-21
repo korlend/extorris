@@ -1,6 +1,6 @@
 enum ExpressAPIType {
-  USER = 'user',
-  ADMIN = 'admin',
+  USER = "user",
+  ADMIN = "admin",
 }
 
-export default ExpressAPIType
+export default ExpressAPIType;

@@ -12,7 +12,8 @@ export default defineNuxtConfig({
 
   modules: [
     '@pinia/nuxt',
-    'vuetify-nuxt-module'
+    'vuetify-nuxt-module',
+    'nuxt-typed-router'
   ],
   vuetify: {
     moduleOptions: {

@@ -184,6 +184,9 @@ async function init(): Promise<express.Express> {
           result: prev.responseObject || null,
           description: prev.text || undefined,
         });
+        if (prev.statusCode !== 200) {
+          console.log(prev.responseObject);
+        }
         return;
       }
     },

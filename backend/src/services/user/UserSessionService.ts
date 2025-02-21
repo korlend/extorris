@@ -91,7 +91,6 @@ export default class UserSessionService extends Service<
     filters.push(new DBFilter("expire", new Date(), ">"));
     const data = await this.getSearchAll(
       new SearchRequestData(0, 10000),
-      undefined,
       filters,
     );
     return data.items;
@@ -103,7 +102,6 @@ export default class UserSessionService extends Service<
     filters.push(new DBFilter("expire", new Date(), "<"));
     const data = await this.getSearchAll(
       new SearchRequestData(0, 10000),
-      undefined,
       filters,
     );
     return data.items;

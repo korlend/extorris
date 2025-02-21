@@ -129,21 +129,7 @@ router.get(
 
     response.mainMap = mainMap;
     response.mainMapHubs = mainMapHubs;
-
-    const portalFilters: Array<DBFilter<PortalModel>> = [];
-
-    for (let j = 0; j < mainMapHubs.length; j++) {
-      const hub = mainMapHubs[j];
-      portalFilters.push(new DBFilter("from_hub_id", hub.id, "=", "OR"));
-      portalFilters.push(new DBFilter("to_hub_id", hub.id, "=", "OR"));
-    }
-
-    response.portals = await portalService.getAll(
-      0,
-      10000,
-      new ParametersLimit(),
-      portalFilters,
-    );
+    response.portals = await portalService.getHubPortals(mainMapHubs.map(hub => hub.id))
 
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {

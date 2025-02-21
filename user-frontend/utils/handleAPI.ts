@@ -12,6 +12,10 @@ export function handleAPIError(errorData: ResponseAPI) {
     switch (errorData.status) {
       case 440: {
         message = "Session expired";
+        break;
+      }
+      default: {
+        message = errorData.result;
       }
     }
   }

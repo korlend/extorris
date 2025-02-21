@@ -18,6 +18,10 @@ import {
 import PropagatedError from "@src/models/PropagatedError.js";
 import UserIslandService from "@src/services/UserIslandService.js";
 import { ShipItemType } from "extorris-common";
+import RedisConnector from "@src/core/RedisConnector.js";
+import PortalService from "@src/services/main_map/PortalService.js";
+import MainMapHubService from "@src/services/main_map/MainMapHubService.js";
+import ParametersLimit from "@src/models/ParametersLimit.js";
 
 const router = express.Router();
 
@@ -26,9 +30,9 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
-    const userService = new UserService();
-    userService.createUpdateUserDefaultShipParts(user);
-    userService.createDefaultUserShip(user);
+    const shipService = new ShipService();
+    shipService.createUpdateUserDefaultShipParts(user);
+    shipService.createDefaultUserShip(user);
 
     const shipArmorService = new ShipArmorService();
     const shipCannonService = new ShipCannonService();
@@ -45,7 +49,6 @@ router.get(
     const shipEngines = await shipEngineService.getAllBy("user_id", user.id);
     const shipHulls = await shipHullService.getAllBy("user_id", user.id);
 
-    const shipService = new ShipService();
     const userShip = await shipService.getBy("user_id", user.id);
 
     next(
@@ -66,20 +69,16 @@ router.put(
   async (req: Request, res: Response, next: NextFunction) => {
     const { user } = res.locals;
 
-    const { shipId } = req.body;
-
     const shipService = new ShipService();
     const userIslandService = new UserIslandService();
-    let userShip = await shipService.get(shipId);
+    const hubService = new MainMapHubService();
+    let userShip = await shipService.getBy("user_id", user.id);
 
-    if (userShip.user_id !== user.id) {
-      throw new PropagatedError(
-        ExpressResponseTypes.ERROR,
-        "selected ship id doesn't exist or belong to current user",
-      );
+    if (!userShip) {
+      throw new PropagatedError(ExpressResponseTypes.ERROR, "user has no ship");
     }
 
-    const isShipReadyToFly = await shipService.isShipReadyToFly(shipId);
+    const isShipReadyToFly = await shipService.isShipReadyToFly(userShip.id);
 
     if (!isShipReadyToFly) {
       throw new PropagatedError(
@@ -88,12 +87,61 @@ router.put(
       );
     }
 
-    const userIslandHub = await userIslandService.getBy("user_id", user.id);
+    const userIsland = await userIslandService.getBy("user_id", user.id);
+    if (!userIsland.main_map_hub_id) {
+      throw new PropagatedError(
+        ExpressResponseTypes.ERROR,
+        "user island is not linked to a hub",
+      );
+    }
 
-    userShip.main_map_hub_id = userIslandHub.id;
+    userShip.main_map_hub_id = userIsland.main_map_hub_id;
     userShip.is_parked = false;
 
     userShip = await shipService.update(userShip);
+    const redis = await RedisConnector.getInstance();
+    const userIslandHub = await hubService.get(userIsland.main_map_hub_id);
+
+    await shipService.writeShipToRedis(userShip);
+    await redis.writeShipPosition(userShip, userIsland);
+    await hubService.writeActiveHubToRedis(userIslandHub.id);
+
+    next(
+      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
+        userShip,
+      }),
+    );
+  },
+);
+
+router.put(
+  "/recall_ship",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { user } = res.locals;
+
+    const shipService = new ShipService();
+    const userIslandService = new UserIslandService();
+    const hubService = new MainMapHubService();
+    let userShip = await shipService.getBy("user_id", user.id);
+
+    const shipWasAtHubId = userShip.main_map_hub_id;
+
+    if (!userShip) {
+      throw new PropagatedError(ExpressResponseTypes.ERROR, "user has no ship");
+    }
+
+    const userIsland = await userIslandService.getBy("user_id", user.id);
+
+    userShip.main_map_hub_id = userIsland.main_map_hub_id;
+    userShip.is_parked = true;
+    userShip = await shipService.update(userShip);
+
+    const redis = await RedisConnector.getInstance();
+    await redis.writeShipPosition(userShip, userIsland);
+
+    if (shipWasAtHubId) {
+      await hubService.writeActiveHubToRedis(shipWasAtHubId);
+    }
 
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
@@ -113,11 +161,9 @@ router.put(
     const userShip = await shipService.getBy("user_id", user.id);
 
     if (!userShip.is_parked) {
-      next(
-        ExpressResponseGenerator.getResponse(
-          ExpressResponseTypes.ERROR,
-          "Ship must be parked to change equipment",
-        ),
+      throw new PropagatedError(
+        ExpressResponseTypes.ERROR,
+        "Ship must be parked to change equipment",
       );
     }
 
@@ -166,11 +212,9 @@ router.put(
     const userShip = await shipService.getBy("user_id", user.id);
 
     if (!userShip.is_parked) {
-      next(
-        ExpressResponseGenerator.getResponse(
-          ExpressResponseTypes.ERROR,
-          "Ship must be parked to change equipment",
-        ),
+      throw new PropagatedError(
+        ExpressResponseTypes.ERROR,
+        "Ship must be parked to change equipment",
       );
     }
 

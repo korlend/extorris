@@ -120,7 +120,6 @@ router.post(
     }
     const data = await entityService.getSearchAll(
       new SearchRequestData(from, pageSize, sortBy, sortDirection),
-      new ParametersLimit(),
       filters,
     );
     const total = data.total;
@@ -168,7 +167,6 @@ router.post(
       }
       const data = await service.getSearchAll(
         new SearchRequestData(0, 10000),
-        new ParametersLimit(),
         dbFilters,
       );
       loadedLinkedEntities[entityType] = [];
@@ -223,7 +221,6 @@ router.post(
     //     ];
     //     const loadedSearchData = await service.getSearchAll(
     //       new SearchRequestData(from, pageSize),
-    //       undefined,
     //       filters,
     //     );
     //     for (let k = 0; k < loadedSearchData.items.length; k++) {

@@ -6,7 +6,7 @@ import PropagatedError from "@src/models/PropagatedError.js";
 import MainMapHubService from "./main_map/MainMapHubService.js";
 import MainMapService from "./main_map/MainMapService.js";
 import UserBeenToHubsService from "./main_map/UserBeenToHubsService.js";
-import { UserModel } from "@src/models/db/index.js";
+import { MainMapHubModel, UserModel } from "@src/models/db/index.js";
 
 export default class UserIslandService extends Service<
   UserIslandModel,
@@ -26,6 +26,11 @@ export default class UserIslandService extends Service<
     }
 
     return userIsland;
+  }
+
+  async getUsersIslands(hub: MainMapHubModel) {
+    const islands = await this.getAllBy("main_map_hub_id", hub.id);
+    return islands;
   }
 
   async spawnUserIsland(userIsland: UserIslandModel, iterationId?: number) {

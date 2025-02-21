@@ -13,8 +13,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   const session = useAuthStore();
 
   const api = $fetch.create({
-    // baseURL: process.env.BACKEND_URL || "http://192.168.1.102:8090",
-    baseURL: process.env.BACKEND_URL || "http://localhost:8090",
+    baseURL: process.env.BACKEND_URL || "http://192.168.1.102:8090",
     onRequest({ request, options, error }) {
       const token = session.getToken;
       if (token) {

@@ -33,16 +33,6 @@ export default abstract class Repository<
     this.keyAsId = keyAsId;
   }
 
-  defaultFilters(prefix: string = "") {
-    if (this.model.deleted === undefined) {
-      return "";
-    }
-    if (prefix) {
-      prefix += ".";
-    }
-    return `and (${prefix}deleted = 0 or ${prefix}deleted is null)`;
-  }
-
   protected _get(id: number, fields = new ParametersLimit<T>()): Promise<T> {
     if (!id) {
       throw new DBError();
@@ -53,7 +43,6 @@ export default abstract class Repository<
         `
       select ${this.model.parametersKeys(fields).join(", ")} from ${this.target}
       where id = ?
-      ${this.defaultFilters()}
       `,
         [id],
       )
@@ -91,9 +80,7 @@ export default abstract class Repository<
       .query(
         `
       select ${parameters.join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      ${filterBuilder.query}
+      ${filterBuilder.query ? "where" : ""} ${filterBuilder.query}
       order by ?? ${sort_direction}
       limit ?,?
     `,
@@ -132,7 +119,6 @@ export default abstract class Repository<
 
   protected async _anyModelsFromDataPacket(
     dataObj: any,
-    model: IParsable<any>,
   ): Promise<Array<any>> {
     const dataArray: Array<T> = [];
 
@@ -146,7 +132,7 @@ export default abstract class Repository<
   }
 
   protected async _modelsFromDataPacket(dataObj: any): Promise<Array<T>> {
-    return this._anyModelsFromDataPacket(dataObj, this.model);
+    return this._anyModelsFromDataPacket(dataObj);
   }
 
   async modelFromDataPacket(dataObj: any): Promise<T> {
@@ -185,7 +171,6 @@ export default abstract class Repository<
         `
       select ${this.model.parametersKeys(fields).join(", ")} from ${this.target}
       where ${key} = ?
-      ${this.defaultFilters()}
     `,
         [value],
       )
@@ -212,7 +197,6 @@ export default abstract class Repository<
         `
       select ${this.model.parametersKeys(fields).join(", ")} from ${this.target}
       where ${key} = ?
-      ${this.defaultFilters()}
       ${limit ? `limit 0,${limit}` : ""}
     `,
         [value],
@@ -239,7 +223,6 @@ export default abstract class Repository<
         `
       select * from ${this.target}
       where id is not null
-      ${this.defaultFilters()}
       ${Array.from(map.keys())
         .map((v) => ` and ${v} = ? `)
         .join("")}
@@ -266,7 +249,6 @@ export default abstract class Repository<
         `
       select * from ${this.target}
       where id is not null
-      ${this.defaultFilters()}
       ${Array.from(map.keys())
         .map((v) => ` and ${v} = ? `)
         .join("")}
@@ -289,7 +271,6 @@ export default abstract class Repository<
         `
       select * from ${this.target}
       where ${byKey} not in (${ids.join(",")})
-      ${this.defaultFilters()}
     `,
       )
       .then((resp) => this.modelsFromDataPacket(resp));
@@ -305,7 +286,6 @@ export default abstract class Repository<
       select * from ${this.target}
       where ${byKey} not in (${ids.join(",")})
       and (is_local = 0 or is_local is null)
-      ${this.defaultFilters()}
     `,
       )
       .then((resp) => this.modelsFromDataPacket(resp));
@@ -327,9 +307,7 @@ export default abstract class Repository<
       .query(
         `
       select ${this.model.parametersKeys(fields).join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      ${filterBuilder.query}
+      ${filterBuilder.query ? "where" : ""} ${filterBuilder.query}
       order by id
       ${pageSize ? `limit ${from},${pageSize}` : ""}
     `,
@@ -359,11 +337,15 @@ export default abstract class Repository<
 
   getSearchAll(
     searchRequestData: SearchRequestData,
-    fields = new ParametersLimit<T>(),
     filters?: Array<DBFilter<T>>,
+    fields = new ParametersLimit<T>(),
   ): Promise<SearchData<T>> {
     fields = this.processFields(fields);
     const { from, size, sort_by, sort_direction } = searchRequestData;
+
+    if (!filters) {
+      filters = [];
+    }
 
     const filterBuilder = new DBFilterBuilder(filters);
 
@@ -371,9 +353,7 @@ export default abstract class Repository<
       .query(
         `
       select ${this.model.parametersKeys(fields).join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      ${filterBuilder.query}
+      ${filterBuilder.query ? "where" : ""} ${filterBuilder.query}
       order by ?? ${sort_direction}
       limit ?,?
     `,
@@ -402,9 +382,7 @@ export default abstract class Repository<
       .query(
         `
       select ${this.model.parametersKeys(fields).join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      ${filterBuilder.query}
+      ${filterBuilder.query ? "where" : ""} ${filterBuilder.query}
       order by ?? ${sort_direction}
     `,
         filterBuilder.values.concat([sort_by]),
@@ -467,9 +445,7 @@ export default abstract class Repository<
       .query(
         `
       select ${this.model.parametersKeys(fields).join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      ${filterBuilder.query}
+      ${filterBuilder.query ? "where" : ""} ${filterBuilder.query}
       order by ?? ${sort_direction}
       limit ?,?
     `,
@@ -490,9 +466,7 @@ export default abstract class Repository<
       .query(
         `
       select count(*) as count from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      ${filterBuilder.query}
+      ${filterBuilder.query ? "where" : ""} ${filterBuilder.query}
     `,
         filterBuilder.values,
       )
@@ -514,7 +488,6 @@ export default abstract class Repository<
         `
       select * from ${this.target}
       where id in (${ids.map((v) => "?").join(",")})
-      ${this.defaultFilters()}
     `,
         [...ids],
       )
@@ -533,7 +506,6 @@ export default abstract class Repository<
         `
       select * from ${this.target}
       where ${key} in (${values.map((v) => "?").join(",")})
-      ${this.defaultFilters()}
     `,
         [...values],
       )
@@ -548,7 +520,6 @@ export default abstract class Repository<
         `
       select * from ${this.target}
       where id >= ? and id <= ?
-      ${this.defaultFilters()}
     `,
         [from, to],
       )
@@ -567,7 +538,6 @@ export default abstract class Repository<
       select i.* from ${this.target} i
       left join ${linksTarget} em on i.id = em.${mainModelIdKey}
       where em.${linkModelKey} = ?
-      ${this.defaultFilters("i")}
     `,
         [linkedModel.id],
       )
@@ -729,9 +699,6 @@ export default abstract class Repository<
     if (!model || !model.id) {
       throw new DBError();
     }
-    if (this.model.hasDeleted()) {
-      return this.markOnDeletion(model);
-    }
     return this.connector.query(
       `
       DELETE FROM ${this.target}
@@ -742,34 +709,12 @@ export default abstract class Repository<
   }
 
   deleteAll(models: Array<T>): Promise<any> {
-    if (this.model.hasDeleted()) {
-      return this.markOnDeletionAll(models);
-    }
     return this.connector.query(
       `
       DELETE FROM ${this.target}
       WHERE ${models.map((v) => "id = ?").join(" or ")}
     `,
       models.map((v) => v.id),
-    );
-  }
-
-  markOnDeletion(model: T) {
-    model.deleted = true;
-    return this._update(
-      model,
-      new ParametersLimit<T>([], ["id", "deleted"] as Array<DBDataKeys>),
-    );
-  }
-
-  markOnDeletionAll(models: Array<T>) {
-    models = models.map((model) => {
-      model.deleted = true;
-      return model;
-    });
-    return this.updateAll(
-      models,
-      new ParametersLimit<T>([], ["id", "deleted"] as Array<DBDataKeys>),
     );
   }
 }

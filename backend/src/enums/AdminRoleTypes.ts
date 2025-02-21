@@ -1,5 +1,5 @@
 enum AdminRoleTypes {
-  ROOT = 'root',
+  ROOT = "root",
 }
 
-export default AdminRoleTypes
+export default AdminRoleTypes;

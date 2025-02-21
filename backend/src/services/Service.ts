@@ -84,10 +84,10 @@ export default abstract class Service<
 
   async getSearchAll(
     searchRequestData: SearchRequestData,
-    fields = new ParametersLimit<T>(),
     filters?: Array<DBFilter<T>>,
+    fields = new ParametersLimit<T>(),
   ): Promise<SearchData<T>> {
-    return this.repo.getSearchAll(searchRequestData, fields, filters);
+    return this.repo.getSearchAll(searchRequestData, filters, fields);
   }
 
   async getSearchSingle(

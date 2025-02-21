@@ -24,7 +24,6 @@ export default class ChatMessageService extends Service<
       filters.push(new DBFilter("chat_id", chatId));
       const chatMessages = await this.getSearchAll(
         new SearchRequestData(0, limit, "id", "desc"),
-        undefined,
         filters,
       );
       if (chatMessages?.items?.length) {

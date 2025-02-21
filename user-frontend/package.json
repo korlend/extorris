@@ -16,13 +16,16 @@
     "extorris-common": "portal:../extorris-common",
     "mitt": "^3.0.1",
     "nuxt": "^3.13.0",
+    "nuxt-typed-router": "3.7.3",
     "pinia": "^2.2.4",
+    "uuid": "^11.1.0",
     "vue": "latest",
     "vue-router": "latest",
     "websocket": "^1.0.35"
   },
   "devDependencies": {
     "@types/websocket": "^1",
+    "prettier": "^2.5.x || 3.x",
     "sass": "^1.79.5",
     "sass-loader": "^16.0.2",
     "vite-plugin-vuetify": "^2.0.4",

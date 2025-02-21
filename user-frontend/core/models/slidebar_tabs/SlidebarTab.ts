@@ -1,7 +1,8 @@
 import type { Component, Prop } from "vue";
+import { v4 as uuidv4 } from 'uuid';
 
 export default class SlidebarTab {
-  uuid: string = window.crypto.randomUUID();
+  uuid: string = uuidv4();
   component: Component;
   props: Record<string, any>;
   tabName?: string;

@@ -5,7 +5,7 @@ import {
   isProxy,
 } from 'vue';
 
-export function deepToRaw<T extends Record<string, any>>(sourceObj: T): T {
+export function deepToRaw<T extends any>(sourceObj: T): T | undefined {
   const objectIterator = (input: any): any => {
     if (Array.isArray(input)) {
       return input.map((item) => objectIterator(item));

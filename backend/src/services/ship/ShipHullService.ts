@@ -22,7 +22,7 @@ export default class ShipHullService extends Service<
     const filters: Array<DBFilter<ShipHullModel>> = [];
     filters.push(new DBFilter("ship_id", userShip.id));
 
-    const shipParts = await this.getSearchAll(new SearchRequestData(), undefined, filters);
+    const shipParts = await this.getSearchAll(new SearchRequestData(), filters);
     for (let i = 0; i < shipParts.items.length; i++) {
       const shipPart = shipParts.items[i];
       shipPart.ship_id = null;

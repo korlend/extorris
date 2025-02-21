@@ -4,11 +4,16 @@
       {{ fpsArray.length }}
     </div>
     <div class="controls">
-      <button class="controls-button" @click="snapToCenter">snap to center</button>
+      <button class="controls-button" @click="snapToCenter">
+        snap to center
+      </button>
       <span>canvasMousePos: {{ canvasMousePos }}</span>
       <span>currentShift: {{ currentShift }}</span>
       <span>amount: {{ amount }}</span>
-      <span>timeFromInit: {{ (new Date().getTime() - timeFromInit.getTime()) / 1000 }}</span>
+      <span
+        >timeFromInit:
+        {{ (new Date().getTime() - timeFromInit.getTime()) / 1000 }}</span
+      >
     </div>
     <!-- <div class="debug">
       <span>activeHover: {{ globalActiveHover }}</span>
@@ -245,10 +250,14 @@ const canvasFill = (
     if (rotate) {
       context.rotate((rotate * Math.PI) / 180);
     }
-    if (color) {
-      context.fillStyle = color;
+    if (path instanceof Path2D) {
+      if (color) {
+        context.fillStyle = color;
+      }
+      context.fill(path);
+    } else {
+      context.drawImage(path.image, path.width, path.height);
     }
-    context.fill(element.path);
     context.restore();
   }
 };
@@ -262,7 +271,10 @@ const canvasStroke = (
   }
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i];
-    const { path, color, position, rotate } = element;
+    const { path, color, position, rotate, width, height } = element;
+    if (!(path instanceof Path2D)) {
+      continue;
+    }
     context.save();
     if (position) {
       context.translate(position.x, position.y);
@@ -517,7 +529,7 @@ const snapToCenter = () => {
   currentShift.value.y = windowSizes.value.height / 2;
   prevShift.x = windowSizes.value.width / 2;
   prevShift.y = windowSizes.value.height / 2;
-}
+};
 
 const dragStart = (event: MouseEvent | TouchEvent) => {
   event.stopPropagation();

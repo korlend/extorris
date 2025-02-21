@@ -12,7 +12,6 @@ export default class AdminSessionRepository extends Repository<AdminSessionModel
         `
       select * from ${this.target}
       where token = ?
-      ${this.defaultFilters()}
     `,
         [token],
       )

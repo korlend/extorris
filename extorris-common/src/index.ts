@@ -1,8 +1,9 @@
 import ChatTypes from "./enums/ChatTypes";
 import FieldTypes from "./enums/FieldTypes";
 import ShipItemType from "./enums/ShipItemType";
+import HubLinksTypes from "./enums/HubLinksTypes";
 
-export { FieldTypes, ShipItemType, ChatTypes };
+export { FieldTypes, ShipItemType, ChatTypes, HubLinksTypes };
 
 import type { CanvasClickEvent } from "./canvas";
 import { CanvasComponent } from "./canvas";

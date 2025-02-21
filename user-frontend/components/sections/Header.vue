@@ -1,9 +1,30 @@
 <template>
   <div class="header__block">
     <div class="header__block-links">
-      <router-link class="header__block-links-link" to="/">World Map</router-link>
-      <router-link class="header__block-links-link" to="/home">My Island</router-link>
-      <router-link class="header__block-links-link" to="/test">test</router-link>
+      <router-link
+        class="header__block-links-link"
+        :class="{ active: routeName === 'index' }"
+        to="/"
+        >My Island</router-link
+      >
+      <router-link
+        class="header__block-links-link"
+        :class="{ active: routeName === 'map' }"
+        to="/map"
+        >Map</router-link
+      >
+      <router-link
+        class="header__block-links-link"
+        :class="{ active: routeName === 'hub-id' }"
+        to="/hub"
+        >Hub</router-link
+      >
+      <router-link
+        class="header__block-links-link"
+        :class="{ active: routeName === 'test' }"
+        to="/test"
+        >test</router-link
+      >
     </div>
     <div class="header__block-auth">
       <client-only>
@@ -32,8 +53,14 @@ import AlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 const authStore = useAuthStore();
 const localAlertsStore = useLocalAlertsStore();
 
+const route = useRoute();
+
 const session = computed(() => {
   return authStore.getSession;
+});
+
+const routeName = computed(() => {
+  return route.name;
 })
 
 const logout = async () => {
@@ -44,7 +71,7 @@ const logout = async () => {
 
 const testbtn = () => {
   openModalWindow({});
-}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -68,12 +95,24 @@ const testbtn = () => {
     align-items: center;
 
     & > * {
-      margin: 0 10px;
+      padding: 0 10px;
     }
 
     &-link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
       text-decoration: none;
       color: white;
+
+      &.active {
+        color: lightblue;
+      }
+
+      &:hover {
+        background-color: darkblue;
+      }
     }
   }
 
@@ -88,6 +127,5 @@ const testbtn = () => {
       float: right;
     }
   }
-
 }
 </style>

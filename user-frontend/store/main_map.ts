@@ -1,95 +1,91 @@
 import { defineStore } from "pinia";
 
-import MittEvents from "~/core/enums/MittEvents";
-import type { ResponseAPI } from "extorris-common";
+import type { HubLinksTypes, ResponseAPI } from "extorris-common";
 
-interface MainMapPing {
-  active: boolean;
+export interface Iteration {
+  id: number;
+  start_date: string;
+  end_date: string;
+  active: number;
 }
 
-type MainMapPings = Record<number, Record<number, MainMapPing>>;
+export interface MainMap {
+  id: number;
+  iteration_id: number;
+  layer: number;
+  map_depth: number;
+  hub_links_type: HubLinksTypes;
+}
+
+export interface Hub {
+  id: number;
+  main_map_id: number;
+  contamination_level: number;
+  on_depth: number;
+  hub_number: number;
+}
+
+export interface Portal {
+  id: number;
+  from_hub_id: number;
+  to_hub_id: number;
+  from_hub_position_x: number;
+  from_hub_position_y: number;
+  to_hub_position_x: number;
+  to_hub_position_y: number;
+}
 
 interface MainMapState {
-  pings: MainMapPings;
+  iteration?: Iteration;
+  maps: Array<MainMap>;
+  hubs: Array<Hub>;
+  portals: Array<Portal>;
 }
 
 export const useMainMapStore = defineStore("main_map", {
   state: (): MainMapState => {
     return {
-      pings: {},
+      iteration: undefined,
+      maps: [],
+      hubs: [],
+      portals: [],
     };
   },
   getters: {
-    getPings: (state: MainMapState): MainMapPings => {
-      return state.pings;
+    getIteration: (state) => {
+      return state.iteration || null;
+    },
+    getMaps: (state) => {
+      return state.maps || [];
+    },
+    getHubs: (state) => {
+      return state.hubs || [];
+    },
+    getPortals: (state) => {
+      return state.portals || [];
     },
   },
   actions: {
-    createPing(itemDepth: number, itemNumber: number) {
-      const { $mittEmit } = useNuxtApp();
-
-      if (!this.pings[itemDepth]) {
-        this.pings[itemDepth] = {};
-      }
-      if (!this.pings[itemDepth][itemNumber]) {
-        this.pings[itemDepth][itemNumber] = {
-          active: true,
-        };
-        $mittEmit(MittEvents.MAIN_MAP_PING);
-        return;
-      }
-
-      this.pings[itemDepth][itemNumber].active = true;
-      $mittEmit(MittEvents.MAIN_MAP_PING);
-    },
-    deletePing(itemDepth: number, itemNumber: number) {
-      if (!this.pings[itemDepth]) {
-        this.pings[itemDepth] = {};
-      }
-      if (!this.pings[itemDepth][itemNumber]) {
-        this.pings[itemDepth][itemNumber] = {
-          active: false,
-        };
-        return;
-      }
-
-      this.pings[itemDepth][itemNumber].active = false;
-    },
-    async loadHub(
-      hubId: number,
-    ): Promise<ResponseAPI> {
+    async loadIteration() {
       const { $api } = useNuxtApp();
       const response: ResponseAPI = await $api(
-        `/api/main_map/load_hub/${hubId}`,
+        `/api/main_map/load_active_iteration`,
         {
           method: "GET",
         }
       );
-      return response.result;
-    },
-    async loadMainMap(
-      iterationId: number,
-    ): Promise<ResponseAPI> {
-      const { $api } = useNuxtApp();
-      const response: ResponseAPI = await $api(
-        `/api/main_map/load_iteration/${iterationId}`,
-        {
-          method: "GET",
-        }
-      );
-      return response.result;
-    },
-    async loadIteration(
-      iterationId: number,
-    ): Promise<ResponseAPI> {
-      const { $api } = useNuxtApp();
-      const response: ResponseAPI = await $api(
-        `/api/main_map/load_iteration/${iterationId}`,
-        {
-          method: "GET",
-        }
-      );
-      return response.result;
+      const result = response.result;
+      console.log(result);
+      this.iteration = result.iteration;
+      this.maps = result.maps;
+      this.hubs = result.hubs;
+      this.portals = result.portals;
+      return {
+        iteration: this.iteration,
+        maps: this.maps,
+        hubs: this.hubs,
+        portals: this.portals,
+      };
     },
   },
 });

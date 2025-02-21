@@ -5,6 +5,14 @@
         <span>{{ getUserShip?.name }}</span>
       </div>
       <div class="shipyard__menu-left-stats">123</div>
+      <div class="shipyard__menu-left-actions">
+        <v-btn color="default" :disabled="!isShipParked" @click="flyOut"
+          >Fly Out</v-btn
+        >
+        <v-btn color="default" :disabled="isShipParked" @click="recallShip"
+          >Recall Ship</v-btn
+        >
+      </div>
     </div>
     <div class="shipyard__menu-right">
       <div class="shipyard__menu-right-loadout">
@@ -95,9 +103,11 @@
 
 <script setup lang="ts">
 import { ShipItemType } from "extorris-common";
+import { useModalWindowStore } from "~/store/modal_window";
 import { useShipStore } from "~/store/ship";
 
 const shipStore = useShipStore();
+const modalStore = useModalWindowStore();
 
 onMounted(async () => {
   await reloadShipInfo();
@@ -105,6 +115,10 @@ onMounted(async () => {
 
 const getUserShip = computed(() => {
   return shipStore.getUserShip;
+});
+
+const isShipParked = computed(() => {
+  return !!getUserShip.value?.is_parked;
 });
 
 const getEquippedArmor = computed(() => {
@@ -162,13 +176,23 @@ const reloadShipInfo = async () => {
   return response;
 };
 
+const flyOut = async () => {
+  await shipStore.flyOut();
+  modalStore.closeModal();
+};
+
+const recallShip = async () => {
+  await shipStore.recallShip();
+  await reloadShipInfo();
+};
+
 const equipItem = async (shipItem: any) => {
   await shipStore.equipShipItem(shipItem);
   await reloadShipInfo();
 };
 
 const unequipItem = async (shipItem: any) => {
-  console.log(shipItem)
+  console.log(shipItem);
   await shipStore.unequipShipItem(shipItem);
   await reloadShipInfo();
 };
@@ -191,16 +215,24 @@ const getEquippedCannon = (index: number) => {
     width: 20%;
     max-width: 300px;
     height: 100%;
-    flex-grow: 1;
-    flex-basis: 0;
+    display: flex;
+    flex-flow: column;
+    justify-content: space-between;
 
     &-image {
       height: 300px;
       border-right: 1px solid grey;
-      // border-right: 1px solid grey;
       border-bottom: 1px solid grey;
       background-image: url("boat.png");
       background-size: cover;
+    }
+
+    &-stats {
+    }
+
+    &-actions {
+      display: flex;
+      justify-content: space-between;
     }
   }
 

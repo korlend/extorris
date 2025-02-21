@@ -34,10 +34,10 @@ export default class UserIslandModel extends DBModel<UserIslandModel> {
     const instance = new UserIslandModel();
     instance.id = object.id;
     instance.user_id = object.user_id;
+    instance.main_map_hub_id = object.main_map_hub_id;
     instance.hub_pos_x = object.hub_pos_x;
     instance.hub_pos_y = object.hub_pos_y;
     instance.layer = object.layer;
-    instance.main_map_hub_id = object.main_map_hub_id;
     return instance;
   }
 }

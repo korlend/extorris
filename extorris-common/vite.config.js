@@ -8,8 +8,8 @@ export default defineConfig({
   plugins: [
     vue(),
     cssInjectedByJsPlugin({ useStrictCSP: true, relativeCSSInjection: false }),
-    // dts({ rollupTypes: true }),
-    dts({ insertTypesEntry: true }),
+    dts({ rollupTypes: true }),
+    // dts({ insertTypesEntry: true }),
   ],
   build: {
     lib: {

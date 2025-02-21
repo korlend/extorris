@@ -22,7 +22,7 @@ export class BrowserWSClient {
     this.client = new WebSocketClient(`${url}?token=${auth}`);
 
     this.client.onerror = (error) => {
-      console.error(error);
+      console.error("websocket onerror: ", error);
       if (typeof this.onerror === "function") {
         this.onerror(error);
       }
@@ -49,12 +49,20 @@ export class BrowserWSClient {
     };
   }
 
-  get isConnecting() {
-    return this.client._readyState === this.client.CONNECTING;
+  get isClosed() {
+    return this.client.readyState === this.client.CLOSED;
   }
 
-  get isConnected() {
-    return this.client._readyState === this.client.OPEN;
+  get isClosing() {
+    return this.client.readyState === this.client.CLOSING;
+  }
+
+  get isOpen() {
+    return this.client.readyState === this.client.OPEN;
+  }
+
+  get isConnecting() {
+    return this.client.readyState === this.client.CONNECTING;
   }
 
   onError(callback: WSErrorCallback): void {

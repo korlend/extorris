@@ -131,7 +131,7 @@ const loadMore = () => {
   reloadItems(searchString.value);
 };
 
-const fullReload = async (value: ModelType) => {
+const fullReload = async (value?: string) => {
   pagesLoaded.value = 1;
   await reloadItems(value);
 };
@@ -147,7 +147,7 @@ const reloadEntityKeysMedadata = async () => {
   loadedEntityKeysMetadata.value = response.keysMetadata;
 };
 
-const reloadItems = async (text: ModelType) => {
+const reloadItems = async (text?: ModelType) => {
   const response = await loadItems(text, props.filters);
   items.value = response.items;
   total.value = response.total;
@@ -166,7 +166,7 @@ const reloadItems = async (text: ModelType) => {
 };
 
 const loadItems = async (
-  text: ModelType,
+  text?: ModelType,
   filters: { [key: string]: any } = {}
 ) => {
   let dbFilters: Array<DBFilter> = [];

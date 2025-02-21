@@ -15,73 +15,53 @@ import ParametersLimit from "@src/models/ParametersLimit.js";
 import DBFilter from "@src/models/DBFilter.js";
 import SearchRequestData from "@src/models/SearchRequestData.js";
 import PropagatedError from "@src/models/PropagatedError.js";
+import UserIslandService from "@src/services/UserIslandService.js";
+import UserBeenToHubsService from "@src/services/main_map/UserBeenToHubsService.js";
+import ShipService from "@src/services/ship/ShipService.js";
 
 const router = express.Router();
 
 router.get(
   "/load_active_iteration",
   async (req: Request, res: Response, next: NextFunction) => {
+    const { user } = res.locals;
+
     const iterationService = new IterationService();
     const mainMapService = new MainMapService();
     const mainMapHubService = new MainMapHubService();
     const portalService = new PortalService();
 
-    const response: {
-      iteration?: IterationModel;
-      mainMaps: Array<{
-        mainMap: MainMapModel;
-        hubs: Array<MainMapHubModel>;
-      }>;
-      portals: Array<PortalModel>;
-    } = {
-      mainMaps: [],
-      portals: [],
-    };
-    const iterationRequestData = new SearchRequestData(0, 1, "updated", "DESC");
     const iterationFilters: Array<DBFilter<IterationModel>> = [];
     iterationFilters.push(new DBFilter("active", true, "=", "AND"));
-    iterationFilters.push(new DBFilter("start_date", new Date(), "<", "AND"));
-    iterationFilters.push(new DBFilter("end_date", new Date(), ">", "AND"));
-    const iterations = await iterationService.getSearchAll(iterationRequestData, undefined, iterationFilters);
-    if (!iterations.items) {
-      throw new PropagatedError(ExpressResponseTypes.ERROR, "no active iterations found");
+    // for now just using active filter on iteration
+    // iterationFilters.push(new DBFilter("start_date", new Date(), "<", "AND"));
+    // iterationFilters.push(new DBFilter("end_date", new Date(), ">", "AND"));
+    const iteration = await iterationService.getSearchSingle(iterationFilters);
+    if (!iteration) {
+      throw new PropagatedError(
+        ExpressResponseTypes.ERROR,
+        "no active iterations found",
+      );
     }
-    const iteration = iterations.items[0];
-    // const userHubs
     const mainMaps = await mainMapService.getAllBy(
       "iteration_id",
       iteration.id,
     );
-
-    response.iteration = iteration;
-    const portalFilters: Array<DBFilter<PortalModel>> = [];
-
-    for (let i = 0; i < mainMaps.length; i++) {
-      const map = mainMaps[i];
-      const mapHubs = await mainMapHubService.getAllBy("main_map_id", map.id);
-      response.mainMaps.push({
-        mainMap: map,
-        hubs: mapHubs,
-      });
-      for (let j = 0; j < mapHubs.length; j++) {
-        const hub = mapHubs[j];
-        portalFilters.push(new DBFilter("from_hub_id", hub.id, "=", "OR"));
-        portalFilters.push(new DBFilter("to_hub_id", hub.id, "=", "OR"));
-      }
-    }
-
-    response.portals = await portalService.getAll(
-      0,
-      10000,
-      new ParametersLimit(),
-      portalFilters,
+    const userHubs = await mainMapHubService.getUserAvailableHubs(
+      user.id,
+      mainMaps.map((map) => map.id),
+    );
+    const portals = await portalService.getHubPortals(
+      userHubs.map((hub) => hub.id),
     );
 
     next(
-      ExpressResponseGenerator.getResponse(
-        ExpressResponseTypes.SUCCESS,
-        response,
-      ),
+      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
+        iteration: iteration.prepareREST(),
+        maps: mainMaps.map((v) => v.prepareREST()),
+        hubs: userHubs.map((v) => v.prepareREST()),
+        portals: portals.map((v) => v.prepareREST()),
+      }),
     );
   },
 );
@@ -89,29 +69,53 @@ router.get(
 router.get(
   "/load_hub/:hub_id",
   async (req: Request, res: Response, next: NextFunction) => {
-    const iterationService = new IterationService();
-    const mainMapService = new MainMapService();
+    let hubId = parseInt(req.params.hub_id);
+    const { user } = res.locals;
+
     const mainMapHubService = new MainMapHubService();
     const portalService = new PortalService();
+    const userIslandService = new UserIslandService();
+    const userBeenToHubsService = new UserBeenToHubsService();
+    const shipService = new ShipService();
 
-    const hubId = parseInt(req.params.hub_id);
+    const isUserBeenToHub = await userBeenToHubsService.isUserBeenToHub(
+      user.id,
+      hubId,
+    );
+
+    // deciding which hub to load
+    if (!hubId || !isUserBeenToHub) {
+      const userShip = await shipService.getBy("user_id", user.id);
+      if (!userShip?.main_map_hub_id) {
+        const userIsland = await userIslandService.getBy("user_id", user.id);
+        if (!userIsland.main_map_hub_id) {
+          next(
+            ExpressResponseGenerator.getResponse(
+              ExpressResponseTypes.ERROR,
+              `User has no ship personal island, should be impossible`,
+            ),
+          );
+          return;
+        }
+        hubId = userIsland.main_map_hub_id;
+      } else {
+        hubId = userShip.main_map_hub_id;
+      }
+    }
 
     const hub = await mainMapHubService.get(hubId);
 
-    const portals = await portalService.getAllBy("from_hub_id", hubId);
+    const portals = await portalService.getHubPortals(hub.id);
+    const usersIslands = await userIslandService.getUsersIslands(hub);
 
     next(
-      ExpressResponseGenerator.getResponse(
-        ExpressResponseTypes.SUCCESS,
-        {
-          hub,
-          portals,
-        },
-      ),
+      ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
+        hub: hub.prepareREST(),
+        portals: portals.map(v => v.prepareREST()),
+        usersIslands: usersIslands.map(v => v.prepareREST()),
+      }),
     );
   },
 );
-
-
 
 export default router;

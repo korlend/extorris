@@ -2,6 +2,7 @@ import { UserModel } from "@src/models/db/index.js";
 import Repository from "../Repository.js";
 import ParametersLimit from "@src/models/ParametersLimit.js";
 import UserSessionRepository from "./UserSessionRepository.js";
+import ShipRepository from "../ship/ShipRepository.js";
 
 export default class UserRepository extends Repository<UserModel> {
   userModel = new UserModel();
@@ -11,13 +12,28 @@ export default class UserRepository extends Repository<UserModel> {
     super(new UserModel());
   }
 
+  getEveryUserShipId(): Promise<
+    Array<{
+      user_id: number;
+      ship_id: number;
+    }>
+  > {
+    const shipRepository = new ShipRepository();
+    return this.connector.query(
+      `
+      select u.id as user_id, s.id as ship_id from ${this.target} u
+      left join ${shipRepository.target} s on u.id = s.user_id
+      limit 10000
+    `,
+    );
+  }
+
   getUserPassword(id: number): Promise<string> {
     return this.connector
       .query(
         `
       select * from ${this.target}
       where id = ?
-      ${this.defaultFilters()}
     `,
         [id],
       )
@@ -32,7 +48,6 @@ export default class UserRepository extends Repository<UserModel> {
         `
       select * from ${this.target}
       where email = ?
-      ${this.defaultFilters()}
     `,
         [email],
       )
@@ -45,7 +60,6 @@ export default class UserRepository extends Repository<UserModel> {
         `
       select * from ${this.target}
       where username = ?
-      ${this.defaultFilters()}
     `,
         [username],
       )
@@ -62,7 +76,6 @@ export default class UserRepository extends Repository<UserModel> {
         `
       select * from ${this.target}
       where firstname = ?
-      ${this.defaultFilters()}
     `,
         [firstname],
       )
@@ -76,7 +89,6 @@ export default class UserRepository extends Repository<UserModel> {
       select u.* from ${this.target} u
       left join ${this.userSessionRepo.target} s on u.id = s.user_id
       where s.token = ?
-      ${this.defaultFilters("u")}
     `,
         [token],
       )
@@ -106,13 +118,6 @@ export default class UserRepository extends Repository<UserModel> {
     return this.getAll(0, 0, new ParametersLimit(["password"]));
   }
 
-  // removeSessions(userId: number) {
-  //   this.connector.query(`
-  //     DELETE FROM ${this.userSessionRepo.target}
-  //     WHERE user_id = ?
-  //   `, [userId])
-  // }
-
   getTotal(): Promise<number> {
     return this.connector
       .query(
@@ -129,30 +134,6 @@ export default class UserRepository extends Repository<UserModel> {
       });
   }
 
-  getUsersByMallId(
-    from: number = 0,
-    pageSize: number = 10,
-    mallId: number,
-    parametersLimit: ParametersLimit<UserModel> = new ParametersLimit(),
-  ): Promise<UserModel> {
-    return this.connector
-      .query(
-        `
-      select ${this.userModel.parametersKeys(parametersLimit).join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      ${mallId ? `and mall_id = ${mallId}` : ""}
-      ${pageSize ? `limit ${from},${pageSize}` : ""}
-    `,
-      )
-      .then((resp) => {
-        if (resp && resp.length) {
-          return resp;
-        }
-        return [];
-      });
-  }
-
   getAllNotApprovedUsersAndAdmin(
     fieldsExclude: ParametersLimit<UserModel> = new ParametersLimit(),
   ): Promise<UserModel> {
@@ -160,9 +141,7 @@ export default class UserRepository extends Repository<UserModel> {
       .query(
         `
       select ${this.userModel.parametersKeys(fieldsExclude).join(",")} from ${this.target}
-      where id is not null
-      ${this.defaultFilters()}
-      and approved = 0
+      where approved = 0
       or email = 'admin@admin.admin'
     `,
       )

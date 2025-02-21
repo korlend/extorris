@@ -5,7 +5,11 @@ import { CommsModels, RedisModels } from "extorris-common";
 import RedisConnector from "./RedisConnector.js";
 
 type OnError = (self: WebSocket, error: Error) => void;
-type OnMessage = (ws: WebSocket, data: CommsModels.CommsIncMessage, userId: number) => void;
+type OnMessage = (
+  ws: WebSocket,
+  data: CommsModels.CommsIncMessage,
+  userId: number,
+) => void;
 
 type OnConnection = (userId: number) => void;
 
@@ -20,6 +24,7 @@ export default class NodeWSServer {
 
   private webSocketMappedUsers: Map<WebSocket, number> = new Map();
   private userMappedWebSockets: Record<number, WebSocket> = {};
+  private hubSubscribedUsersIds: Record<number, Set<number>> = {};
 
   constructor(server: http.Server) {
     this.wss = new WebSocketServer({ noServer: true });
@@ -40,20 +45,27 @@ export default class NodeWSServer {
     });
 
     ws.on("message", (data: WebSocket.RawData, isBinary: boolean) => {
-      const parsedData = JSON.parse(data.toString());
       const userId = self.webSocketMappedUsers.get(ws);
-      console.log(`Received message ${data} from ${userId}`);
       if (!userId) {
-        console.log("mapping webSocketMappedUsers failed")
+        console.error("error, can't find user id");
         return;
       }
+
+      const parsedData: CommsModels.CommsIncMessage = JSON.parse(
+        data.toString(),
+      );
+
+      if (parsedData.messageType === CommsModels.CommsTypesEnum.HUB_SUBSCRIBE) {
+        self.addHubSubscribe(userId, parsedData.data.hubId);
+      }
+
       if (typeof self.customOnMessage === "function") {
         self.customOnMessage(ws, parsedData, userId);
       }
     });
 
     ws.on("close", (code: number, reason: Buffer) => {
-      console.log(`closed connection with code: ${code} because "${reason}"`)
+      console.log(`closed connection with code: ${code} because "${reason}"`);
       self.deleteMapWebSocket(ws);
     });
   }
@@ -103,17 +115,44 @@ export default class NodeWSServer {
     this.webSocketMappedUsers.set(ws, userId);
     this.userMappedWebSockets[userId] = ws;
 
-    console.log("mapping ws and user id", userId)
+    console.log("mapping ws and user id", userId);
   }
 
   private deleteMapWebSocket(ws: WebSocket) {
     const userId = this.webSocketMappedUsers.get(ws);
     this.webSocketMappedUsers.delete(ws);
 
-    console.log(`removed ${userId} from mapped websockets`)
+    console.log(`removed ${userId} from mapped websockets`);
 
     if (userId) {
       delete this.userMappedWebSockets[userId];
+    }
+  }
+
+  private addHubSubscribe(userId: number, hubId: number) {
+    if (!this.hubSubscribedUsersIds[hubId]) {
+      this.hubSubscribedUsersIds[hubId] = new Set([userId]);
+    } else {
+      this.hubSubscribedUsersIds[hubId].add(userId);
+    }
+    console.log("SET of hubSubscribedUsersIds", this.hubSubscribedUsersIds, this.hubSubscribedUsersIds[hubId])
+  }
+
+  private deleteHubSubscribe(userId: number, hubId: number) {
+    if (this.hubSubscribedUsersIds[hubId]) {
+      this.hubSubscribedUsersIds[hubId].delete(userId);
+    }
+  }
+
+  private sendUserMessage(
+    message: CommsModels.CommsOutMessage,
+    ws: WebSocket,
+    onFail?: () => void,
+  ) {
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(Buffer.from(JSON.stringify(message)));
+    } else if (typeof onFail === "function") {
+      onFail();
     }
   }
 
@@ -133,19 +172,22 @@ export default class NodeWSServer {
     if (usersIds) {
       for (let i = 0; i < usersIds.length; i++) {
         const userId = usersIds[i];
-        const ws = this.userMappedWebSockets[userId];
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(Buffer.from(JSON.stringify(message)));
-        }
+        this.sendUserMessage(message, this.userMappedWebSockets[userId]);
       }
     } else {
-      console.log("sending message to all clients")
-      this.wss.clients.forEach((ws) => {
-        console.log(ws.readyState);
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(Buffer.from(JSON.stringify(message)));
-        }
-      });
+      this.wss.clients.forEach((ws) => this.sendUserMessage(message, ws));
     }
+  }
+
+  sendHubData(message: CommsModels.CommsOutMessage, hubId: number) {
+    const userSet = this.hubSubscribedUsersIds[hubId];
+    if (!userSet) {
+      return;
+    }
+    userSet.forEach((userId) => {
+      this.sendUserMessage(message, this.userMappedWebSockets[userId], () => {
+        this.deleteHubSubscribe(userId, hubId);
+      });
+    });
   }
 }

@@ -3,6 +3,15 @@ import { ShipItemType } from "extorris-common";
 
 import type { ResponseAPI } from "extorris-common";
 
+interface ShipDataResponse {
+  userShip: any;
+  shipArmors: Array<any>;
+  shipCannons: Array<any>;
+  shipEnergyCores: Array<any>;
+  shipEngines: Array<any>;
+  shipHulls: Array<any>;
+}
+
 interface ShipState {
   userShip?: any;
   shipArmors: Array<any>;
@@ -10,6 +19,13 @@ interface ShipState {
   shipEnergyCores: Array<any>;
   shipEngines: Array<any>;
   shipHulls: Array<any>;
+}
+
+function applyShipItemType(array: Array<any>, type: ShipItemType) {
+  return array.map((v: any) => ({
+    ...v,
+    _type: type,
+  }));
 }
 
 export const useShipStore = defineStore("ship", {
@@ -74,63 +90,71 @@ export const useShipStore = defineStore("ship", {
     },
   },
   actions: {
-    setUserShip(ship: Record<string, any>) {
-      this.userShip = ship;
+    setUserShip(shipData: ShipDataResponse) {
+      this.userShip = shipData.userShip;
+      this.shipArmors = applyShipItemType(
+        shipData.shipArmors,
+        ShipItemType.ARMOR
+      );
+      this.shipCannons = applyShipItemType(
+        shipData.shipCannons,
+        ShipItemType.CANNON
+      );
+      this.shipEnergyCores = applyShipItemType(
+        shipData.shipEnergyCores,
+        ShipItemType.ENERGY_CORE
+      );
+      this.shipEngines = applyShipItemType(
+        shipData.shipEngines,
+        ShipItemType.ENGINE
+      );
+      this.shipHulls = applyShipItemType(shipData.shipHulls, ShipItemType.HULL);
     },
-    async loadShipInfo(): Promise<ResponseAPI> {
+    async loadShipInfo(): Promise<void> {
       const { $api } = useNuxtApp();
-      const response: ResponseAPI = await $api("/api/ship/my_ship_data", {
-        method: "GET",
-      });
-      this.setUserShip(response.result?.userShip);
-      this.shipArmors = response.result?.shipArmors.map((v: any) => ({
-        ...v,
-        _type: ShipItemType.ARMOR,
-      }));
-      this.shipCannons = response.result?.shipCannons.map((v: any) => ({
-        ...v,
-        _type: ShipItemType.CANNON,
-      }));
-      this.shipEnergyCores = response.result?.shipEnergyCores.map((v: any) => ({
-        ...v,
-        _type: ShipItemType.ENERGY_CORE,
-      }));
-      this.shipEngines = response.result?.shipEngines.map((v: any) => ({
-        ...v,
-        _type: ShipItemType.ENGINE,
-      }));
-      this.shipHulls = response.result?.shipHulls.map((v: any) => ({
-        ...v,
-        _type: ShipItemType.HULL,
-      }));
-      return response;
+      const response: ResponseAPI<ShipDataResponse> = await $api(
+        "/api/ship/my_ship_data",
+        {
+          method: "GET",
+        }
+      );
+      this.setUserShip(response.result);
     },
-    async equipShipItem(shipItem: any): Promise<any> {
+    async equipShipItem(shipItem: any): Promise<void> {
       const { $api } = useNuxtApp();
       const url = `/api/ship/equip/${shipItem._type}`;
-      const response: ResponseAPI = await $api(url, {
+      await $api(url, {
         method: "PUT",
         body: shipItem,
       });
-      return;
     },
-    async unequipShipItem(shipItem: any): Promise<any> {
+    async unequipShipItem(shipItem: any): Promise<void> {
       const { $api } = useNuxtApp();
       const url = `/api/ship/unequip/${shipItem._type}`;
-      const response: ResponseAPI = await $api(url, {
+      await $api(url, {
         method: "PUT",
         body: shipItem,
       });
-      return;
     },
-    async flyOut(shipItem: any): Promise<any> {
+    async flyOut(): Promise<void> {
       const { $api } = useNuxtApp();
-      const url = `/api/ship/unequip/${shipItem._type}`;
-      const response: ResponseAPI = await $api(url, {
+      const url = `/api/ship/fly_out`;
+      await $api(url, {
         method: "PUT",
-        body: shipItem,
       });
-      return;
+      useRouter().push({
+        name: "hub-id",
+        params: {
+          id: 0,
+        },
+      });
+    },
+    async recallShip(): Promise<void> {
+      const { $api } = useNuxtApp();
+      const url = `/api/ship/recall_ship`;
+      await $api(url, {
+        method: "PUT",
+      });
     },
   },
 });

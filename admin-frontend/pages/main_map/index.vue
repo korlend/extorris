@@ -154,7 +154,6 @@ const resetCanvasBlock = (iteration?: any) => {
     const pos = calcPos(hub.hub_number, hub.on_depth, hexSize);
     const portals = mappedPortalsByHubId.value[hub.id];
 
-    const portalLines: Array<CanvasElement> = [];
     if (portals?.length) {
       for (let j = 0; j < portals.length; j++) {
         const portal = portals[j];
@@ -164,11 +163,6 @@ const resetCanvasBlock = (iteration?: any) => {
           linkedHub.on_depth,
           hexSize
         );
-        // console.log(`hub[${hub.on_depth}-${hub.hub_number}]`, pos.x, pos.y, `linkedHub[${linkedHub.on_depth}-${linkedHub.hub_number}]`, linkedHubPos.x, linkedHubPos.y)
-        // portalLines.push({
-        //   path: getLine(pos, linkedHubPos),
-        //   color: `rgb(50,250,250)`,
-        // });
         newCanvasBlocks.push({
           zindex: 1,
           position: pos,
@@ -370,11 +364,14 @@ const generateIteration = async () => {
   );
 };
 
-const selectIteration = (iterationId: number | string | null) => {
+const selectIteration = (iterationId?: number | string | null) => {
+  if (!iterationId) {
+    return;
+  }
   currentIterationId.value = iterationId;
 };
 
-const selectMainMap = async (mainMapId: number | string | null) => {
+const selectMainMap = async (mainMapId?: number | string | null) => {
   if (!mainMapId) {
     return;
   }
