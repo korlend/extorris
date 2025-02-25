@@ -31,7 +31,7 @@ onMounted(async () => {
 });
 
 const reconnectWS = async () => {
-  commsStore.connect(sessionStore.getToken);
+  // commsStore.connect(sessionStore.getToken);
   // console.log("trying to connect");
   // const token = sessionStore.getToken;
   // if (client) {
