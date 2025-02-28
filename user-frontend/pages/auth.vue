@@ -1,28 +1,28 @@
 <template>
   <div class="auth">
-      <CommonLoader class="auth-block" :active="isLoading">
-        <v-text-field
-          v-model="username"
-          class="auth-block-username"
-          label="Username"
-          @keydown.enter="send" />
-        <v-text-field
-          v-if="newAccount"
-          v-model="email"
-          class="auth-block-email"
-          label="Email"
-          @keydown.enter="send" />
-        <v-text-field
-          v-model="password"
-          class="auth-block-password"
-          type="password"
-          label="Password"
-          @keydown.enter="send" />
-        <v-btn class="auth-block-btn" @click="send">{{
-          newAccount ? "register" : "Login"
-        }}</v-btn>
-        <v-switch v-model="newAccount" label="New account"></v-switch>
-      </CommonLoader>
+    <CommonLoader class="auth-block" :active="isLoading">
+      <v-text-field
+        v-model="username"
+        class="auth-block-username"
+        label="Username"
+        @keydown.enter="send" />
+      <v-text-field
+        v-if="newAccount"
+        v-model="email"
+        class="auth-block-email"
+        label="Email"
+        @keydown.enter="send" />
+      <v-text-field
+        v-model="password"
+        class="auth-block-password"
+        type="password"
+        label="Password"
+        @keydown.enter="send" />
+      <v-btn class="auth-block-btn" @click="send">{{
+        newAccount ? "register" : "Login"
+      }}</v-btn>
+      <v-switch v-model="newAccount" label="New account"></v-switch>
+    </CommonLoader>
   </div>
 </template>
 
@@ -31,6 +31,8 @@ import { useAuthStore } from "@/store/auth";
 import AlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 
 const authStore = useAuthStore();
+
+const router = useRouter();
 
 definePageMeta({
   layout: "empty",
@@ -62,7 +64,7 @@ const login = async () => {
       return;
     }
     createAlert(`Hello ${session?.username}`, AlertTypes.SUCCESS);
-    navigateTo("/");
+    await router.push("/");
   } catch (ex) {
     createAlert("Wrong username or password", AlertTypes.ERROR);
   }
