@@ -1,0 +1,67 @@
+@use "sass:map" as map;
+@use "./variables.scss" as vars;
+
+/// Mixin to manage responsive breakpoints
+/// @param {String} $breakpoint - Breakpoint name
+/// @require $breakpoints
+@mixin respond-from($breakpoint) {
+  // If the key exists in the map
+  @if map.has-key(vars.$breakpoints, $breakpoint) {
+    // Prints a media query based on the value
+    @media (min-width: map.get(vars.$breakpoints, $breakpoint)) {
+      @content;
+    }
+  }
+  // If the key doesn't exist in the map
+  @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map.keys(vars.$breakpoints)}.";
+  }
+}
+
+/// Mixin to manage responsive breakpoints
+/// @param {String} $breakpoint - Breakpoint name
+/// @require $breakpoints
+@mixin respond-to($breakpoint) {
+  // If the key exists in the map
+  @if map.has-key(vars.$breakpoints, $breakpoint) {
+    // Prints a media query based on the value
+    @media (max-width: (map.get(vars.$breakpoints, $breakpoint) - 1)) {
+      @content;
+    }
+  }
+  // If the key doesn't exist in the map
+  @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map.keys(vars.$breakpoints)}.";
+  }
+}
+
+/// Mixin to manage responsive breakpoints
+/// @param {String} $breakpoint - Breakpoint name
+/// @require $breakpoints
+@mixin respond-from-to($breakpoint-from, $breakpoint-to) {
+  // If the key exists in the map
+  @if map.has-key(vars.$breakpoints, $breakpoint-from) and
+    map_has_key(vars.$breakpoints, $breakpoint-to)
+  {
+    // Prints a media query based on the value
+    @media (min-width: map.get(vars.$breakpoints, $breakpoint-from)) and (max-width: (map_get(vars.$breakpoints, $breakpoint-to) - 1)) {
+      @content;
+    }
+  }
+  // If the key doesn't exist in the map
+  @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint-from}` or `#{$breakpoint-to}`. "
+        + "Available breakpoints are: #{map.keys(vars.$breakpoints)}.";
+  }
+}
+
+@mixin apply-z($z) {
+  @if map.has-key(vars.$z-indices, $z) {
+    z-index: map.get(vars.$z-indices, $z);
+  } @else {
+    @warn "Unfortunately, there is no z-index name `#{$z}`. "
+        + "Available indices are: #{map.keys(vars.$z-indices)}.";
+  }
+}

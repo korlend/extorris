@@ -1,6 +1,16 @@
 $z-indices: (
-  "chat": 100,
-  "header": 100,
-  "modal_window": 200,
-  "local_alerts": 300,
+  chat: 100,
+  header: 100,
+  modal_window: 200,
+  local_alerts: 300,
 );
+
+$breakpoints: (
+  xs: 0,
+  sm: 480px,
+  md: 720px,
+  slg: 960px,
+  lg: 1200px,
+  xl: 1440px,
+  xxl: 1920px,
+) !default;
