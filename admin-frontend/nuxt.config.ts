@@ -34,6 +34,12 @@ export default defineNuxtConfig({
     }
   },
 
+  runtimeConfig: {
+    public: {
+      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || "http://localhost:8090",
+    },
+  },
+
   vite: {
     css: {
       preprocessorOptions: {

@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2024-04-03',
+  compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
 
   devServer: {
@@ -8,13 +8,10 @@ export default defineNuxtConfig({
     port: 8080,
   },
 
-  css: ['~/assets/styles/main.scss'],
+  css: ["~/assets/styles/main.scss"],
 
-  modules: [
-    '@pinia/nuxt',
-    'vuetify-nuxt-module',
-    'nuxt-typed-router'
-  ],
+  modules: ["@pinia/nuxt", "vuetify-nuxt-module", "nuxt-typed-router"],
+
   vuetify: {
     moduleOptions: {
       /* module specific options */
@@ -32,17 +29,24 @@ export default defineNuxtConfig({
           },
         },
       },
-    }
+    },
+  },
+
+  runtimeConfig: {
+    public: {
+      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || "http://localhost:8090",
+      commsUrl: process.env.NUXT_PUBLIC_COMMS_URL || "ws://localhost:8091",
+    },
   },
 
   vite: {
     css: {
       preprocessorOptions: {
         scss: {
-          api: 'modern-compiler',
+          api: "modern-compiler",
           // additionalData: '@use "@/assets/main.scss" as *;',
         },
       },
     },
   },
-})
+});
