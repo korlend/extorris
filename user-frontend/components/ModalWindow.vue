@@ -72,6 +72,7 @@ const closeModal = () => {
 <style lang="scss" scoped>
 @use "sass:map" as map;
 @use "~/assets/styles/variables" as vars;
+@use "~/assets/styles/mixins" as mixins;
 
 .modal__window {
   position: fixed;
@@ -79,7 +80,7 @@ const closeModal = () => {
   height: 100dvh;
   width: 100dvw;
   transition: all 0.1s ease;
-  z-index: map.get(vars.$z-indices, "modal_window");
+  @include mixins.apply-z(modal_window);
   justify-content: center;
   align-items: center;
   display: flex;
@@ -90,9 +91,12 @@ const closeModal = () => {
 
   &-inner {
     position: absolute;
-    border-radius: 50px;
+    // border-radius: 50px;
     // background-image: linear-gradient(to right, rgba(0, 105, 52, 0.9), rgba(63, 143, 255, 0.9));
     backdrop-filter: blur(20px);
+    border: 1px solid grey;
+    max-width: 90dvw;
+    max-height: 80dvh;
 
     &.large {
       height: 800px;
@@ -107,6 +111,11 @@ const closeModal = () => {
     &.small {
       height: 300px;
       width: 500px;
+    }
+
+    @include mixins.respond-to(md) {
+      max-width: 100dvw;
+      max-height: 90dvh;
     }
 
     &-component {
