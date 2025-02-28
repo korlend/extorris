@@ -36,6 +36,7 @@ import {
   HexDirection,
 } from "./utils/hexagonHelper";
 import { throttle } from "./utils/throttle";
+import { calcDistance } from "./utils/calc";
 import { randomCheck, randomInt } from "./utils/randomizers";
 
 import ModelPropertyMetadata from "./models/ModelPropertyMetadata";
@@ -87,6 +88,7 @@ export {
   throttle,
   randomCheck,
   randomInt,
+  calcDistance,
 };
 
 export {
