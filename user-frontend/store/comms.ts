@@ -39,7 +39,7 @@ export const useCommsStore = defineStore("comms", {
 
       return new Promise((resolve) => {
         this.wsClient = new CommsModels.BrowserWSClient(
-          "ws://192.168.1.102:8091",
+          "ws://localhost:8091",
           token
         );
 

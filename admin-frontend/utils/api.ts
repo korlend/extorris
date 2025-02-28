@@ -1,6 +1,6 @@
 
 export function getBackendUrl() {
-  return process.env.BACKEND_URL || "http://192.168.1.102:8090";
+  return process.env.BACKEND_URL || "http://localhost:8090";
 }
 
 export function getImagesUrl() {
