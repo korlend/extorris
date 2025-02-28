@@ -386,8 +386,8 @@ export default class HexagonClusterSolver {
     this.connectingEmptyHubs();
     this.findAndConnectHubsClusters();
 
-    const clusters = this.formingClusters()
-    if (clusters.length) {
+    const clusters = this.formingClusters();
+    if (clusters.length > 1) {
       this.findAndConnectHubsClusters();
     }
 
