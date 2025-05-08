@@ -1,8 +1,7 @@
-import type CanvasCursors from "./CanvasCursors";
 import type Vector2D from "src/interfaces/Vector2D";
-import type CanvasElement from "./CanvasElement";
+import type { CanvasClickEvent, CanvasCursors, CanvasElement } from ".";
 
-type HoverChange = {
+export type HoverChange = {
   fill?: Array<CanvasElement>;
   stroke?: Array<CanvasElement>;
   cursor?: CanvasCursors;
@@ -15,7 +14,7 @@ export default interface CanvasBlock {
   children?: Array<CanvasBlock>;
   hoverWhen?: Array<Path2D>;
   hoverChange?: HoverChange;
-  clickCallback?: Function;
+  clickCallback?: (event: CanvasClickEvent) => void;
   position?: Vector2D;
   rotate?: number; // degrees
   zindex?: number;

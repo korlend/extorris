@@ -3,17 +3,15 @@
     <div class="fps" v-if="showFPS">
       {{ fpsArray.length }}
     </div>
-    <div class="controls">
-      <button class="controls-button" @click="snapToCenter">
-        snap to center
-      </button>
-      <span>canvasMousePos: {{ canvasMousePos }}</span>
-      <span>currentShift: {{ currentShift }}</span>
-      <span>amount: {{ amount }}</span>
-      <span
+    <div class="controls" v-if="showDebug">
+      <button class="controls-button" @click="snapToCenter">stc</button>
+      <span>cmp: {{ canvasMousePos }}</span>
+      <span>cs: {{ currentShift }}</span>
+      <!-- <span>amount: {{ amount }}</span> -->
+      <!-- <span
         >timeFromInit:
         {{ (new Date().getTime() - timeFromInit.getTime()) / 1000 }}</span
-      >
+      > -->
     </div>
     <!-- <div class="debug">
       <span>activeHover: {{ globalActiveHover }}</span>
@@ -25,9 +23,12 @@
       :width="canvasWidth"
       :height="canvasHeight"
       @wheel="scrollEvent"
-      @click="clickEvent"
-      @mousedown.prevent.stop="dragStart"
-      @mousemove="mouseMove">
+      @touchstart="dragStart"
+      @touchend="dragEnd"
+      @mousedown="dragStart"
+      @mouseup="dragEnd"
+      @touchmove="dragEvent"
+      @mousemove="dragEvent">
       <div>loading</div>
     </canvas>
   </div>
@@ -43,13 +44,17 @@ import {
   onMounted,
   onBeforeUnmount,
   computed,
+  watch,
 } from "vue";
 import type Vector2D from "src/interfaces/Vector2D";
-import type CanvasBlock from "./CanvasBlock";
-import type CanvasClickEvent from "./CanvasClickEvent";
-import CanvasCursors from "./CanvasCursors";
-import type CanvasElement from "./CanvasElement";
-import type CanvasDrawOptions from "./CanvasDrawOptions";
+import {
+  type CanvasClickEvent,
+  type CanvasBlock,
+  type CanvasElement,
+  type CanvasDrawOptions,
+  CanvasCursors,
+} from "./";
+import { calcDistance } from "../utils/calc";
 
 type DrawFunction = (
   context: CanvasRenderingContext2D,
@@ -57,6 +62,10 @@ type DrawFunction = (
 ) => void;
 
 type CanvasBlocks = Array<CanvasBlock>;
+
+const emit = defineEmits<{
+  (e: "action:click", canvasEvent: CanvasClickEvent): void;
+}>();
 
 const props = defineProps({
   drawFunction: {
@@ -79,15 +88,15 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  showDebug: {
+    type: Boolean,
+    default: true,
+  },
   centerOnRender: {
     type: Boolean,
     default: true,
   },
 });
-
-const emit = defineEmits<{
-  (e: "action:click", canvasEvent: CanvasClickEvent): void;
-}>();
 
 const canvasRef = useTemplateRef("canvasRefName");
 const canvasParentElementRef = useTemplateRef("canvasParentElementRefName");
@@ -106,13 +115,15 @@ let lastRedrawTime = new Date();
 
 let context: CanvasRenderingContext2D | null | undefined;
 
-const canvasMousePos: Ref<Vector2D> = ref({ x: 0, y: 0 });
+const canvasMousePos: Ref<Vector2D | null> = ref(null);
 
 let currentScaling = 1;
 const maxScaling = 1;
 const minScaling = 0.1;
 const scalingStep = 0.1;
 const floorScaling = 100;
+const pinchScalingStep = 0.01;
+const pinchScalingThreshold = 10;
 
 const fpsArray: Ref<Array<Date>> = ref([]);
 
@@ -121,11 +132,17 @@ let draggingEndPosX: number = 0;
 let draggingStartPosY: number = 0;
 let draggingEndPosY: number = 0;
 
+let touchStartEvent: MouseEvent | TouchEvent | null = null;
+let touchStartTime: Date | null = null;
+let touchStartCoords: { x: number; y: number } | null = null;
+
+let pinchInitDistance: number | null = null;
+
 const isDragging: Ref<boolean> = ref(false);
 const prevShift: { x: number; y: number } = { x: 0, y: 0 };
 const currentShift: Ref<{ x: number; y: number }> = ref({ x: 0, y: 0 });
 
-const windowSizes: Ref<{ height: number; width: number }> = ref({
+const windowSize: Ref<{ height: number; width: number }> = ref({
   height: 0,
   width: 0,
 });
@@ -134,16 +151,14 @@ const cursor: Ref<CanvasCursors> = ref(CanvasCursors.DEFAULT);
 
 let canvasParentElementPos: Vector2D = { x: 0, y: 0 };
 
+watch(windowSize, () => {
+  canvasWidth.value = windowSize.value.width - canvasParentElementPos.x;
+  canvasHeight.value = windowSize.value.height - canvasParentElementPos.y;
+})
+
 onBeforeMount(() => {});
 
 onMounted(() => {
-  /*
-  for showing portals on main map
-  bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
-  */
-
-  // window.addEventListener("mousemove", throttle(dragEvent, dragDelay));
-  // window.addEventListener("touchmove", throttle(dragEvent, dragDelay));
   if (canvasParentElementRef.value) {
     const { left, top } = canvasParentElementRef.value.getBoundingClientRect();
     canvasParentElementPos = {
@@ -152,16 +167,14 @@ onMounted(() => {
     };
   }
   setWindowSizes();
-  window.addEventListener("mousemove", dragEvent);
-  window.addEventListener("touchmove", dragEvent);
   window.addEventListener("resize", windowResize);
 
   if (props.centerOnRender) {
     snapToCenter();
   }
 
-  canvasWidth.value = windowSizes.value.width - canvasParentElementPos.x;
-  canvasHeight.value = windowSizes.value.height - canvasParentElementPos.y;
+  // canvasWidth.value = windowSize.value.width - canvasParentElementPos.x;
+  // canvasHeight.value = windowSize.value.height - canvasParentElementPos.y;
 
   context = canvasRef.value?.getContext("2d");
   if (context !== null && context !== undefined) {
@@ -171,8 +184,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   rendering = false;
-  window.removeEventListener("mousemove", dragEvent);
-  window.removeEventListener("touchmove", dragEvent);
+  // window.removeEventListener("mousemove", dragEvent);
+  // window.removeEventListener("touchmove", dragEvent);
   window.removeEventListener("resize", windowResize);
 });
 
@@ -295,6 +308,9 @@ const checkHover = (
   hoverWhen: Array<Path2D> = []
 ): boolean => {
   const mousePos = getCanvasDrawOptions().canvasMousePos;
+  if (!mousePos) {
+    return false;
+  }
   for (let i = 0; i < hoverWhen.length; i++) {
     if (context.isPointInPath(hoverWhen[i], mousePos.x, mousePos.y)) {
       return true;
@@ -447,7 +463,7 @@ const getCanvasDrawOptions = (): CanvasDrawOptions => {
   };
 };
 
-const clickEvent = async (event: MouseEvent) => {
+const clickEvent = async (event: MouseEvent | TouchEvent) => {
   if (!context) {
     return;
   }
@@ -479,25 +495,17 @@ const clickEvent = async (event: MouseEvent) => {
       context.restore();
     }
   }
-  if (typeof clickedCanvasBlock?.clickCallback === "function") {
-    await clickedCanvasBlock.clickCallback(
-      event,
-      context,
-      getCanvasDrawOptions(),
-      clickedCanvasBlock
-    );
-  }
-  emit("action:click", {
+  const clickEvent = {
     event,
     context,
     options: getCanvasDrawOptions(),
     clickedCanvasBlock,
-  });
+  };
+  if (typeof clickedCanvasBlock?.clickCallback === "function") {
+    await clickedCanvasBlock.clickCallback(clickEvent);
+  }
+  emit("action:click", clickEvent);
   context.restore();
-};
-
-const mouseMove = (event: MouseEvent) => {
-  canvasMousePos.value = { x: event.layerX, y: event.layerY };
 };
 
 const scrollEvent = (event: WheelEvent) => {
@@ -516,19 +524,13 @@ const scrollEvent = (event: WheelEvent) => {
   newCurrentScaling =
     Math.floor(newCurrentScaling * floorScaling) / floorScaling;
   currentScaling = newCurrentScaling;
-
-  // context.setTransform(1, 0, 0, 1, 0, 0);
-  // context.scale(currentScaling, currentScaling);
-
-  // event.preventDefault();
-  // event.stopPropagation();
 };
 
 const snapToCenter = () => {
-  currentShift.value.x = windowSizes.value.width / 2;
-  currentShift.value.y = windowSizes.value.height / 2;
-  prevShift.x = windowSizes.value.width / 2;
-  prevShift.y = windowSizes.value.height / 2;
+  currentShift.value.x = windowSize.value.width / 2;
+  currentShift.value.y = windowSize.value.height / 2;
+  prevShift.x = windowSize.value.width / 2;
+  prevShift.y = windowSize.value.height / 2;
 };
 
 const dragStart = (event: MouseEvent | TouchEvent) => {
@@ -540,27 +542,33 @@ const dragStart = (event: MouseEvent | TouchEvent) => {
     x = event.x;
     y = event.y;
   } else if (event instanceof TouchEvent) {
-    x = event?.touches?.[0].clientX;
-    y = event?.touches?.[0].clientY;
+    if (event.targetTouches.length === 1) {
+      x = event?.touches?.[0].clientX;
+      y = event?.touches?.[0].clientY;
+    } else if (event.targetTouches.length === 2) {
+      dragEnd();
+      const touch1 = event?.touches?.[0];
+      const touch2 = event?.touches?.[1];
+      const point1 = { x: touch1.clientX, y: touch1.clientY };
+      const point2 = { x: touch2.clientX, y: touch2.clientY };
+      pinchInitDistance = calcDistance(point1, point2);
+      return;
+    }
   }
+
+  canvasMousePos.value = { x, y };
+  touchStartEvent = event;
+  touchStartTime = new Date();
+  touchStartCoords = { x, y };
 
   isDragging.value = true;
   draggingStartPosX = x;
   draggingEndPosX = x;
   draggingStartPosY = y;
   draggingEndPosY = y;
-  window.addEventListener("mouseup", dragEnd);
-  window.addEventListener("touchend", dragEnd);
 };
 
-const dragEnd = () => {
-  // this.currentShift -= diffX;
-
-  // setTimeout(() => {
-  //   this.calculateShift();
-  // }, ANIMATION_TIME_MS);
-  // shiftX.value = shiftX.value + draggingEndPosX.value;
-
+const dragEnd = (event?: MouseEvent | TouchEvent) => {
   isDragging.value = false;
   draggingStartPosX = 0;
   draggingEndPosX = 0;
@@ -568,31 +576,75 @@ const dragEnd = () => {
   draggingEndPosY = 0;
   prevShift.x = currentShift.value.x;
   prevShift.y = currentShift.value.y;
-  window.removeEventListener("mouseup", dragEnd);
-  window.removeEventListener("touchend", dragEnd);
+
+  if (touchStartTime) {
+    const diff = new Date().getTime() - touchStartTime.getTime();
+    console.log(diff);
+    if (diff < 150 && touchStartEvent) {
+      clickEvent(touchStartEvent);
+    }
+  }
+  touchStartEvent = null;
+  touchStartTime = null;
+  touchStartCoords = null;
+  canvasMousePos.value = null;
 };
 
 const dragEvent = (event: MouseEvent | TouchEvent) => {
-  if (isDragging.value) {
-    // this.preventEvent(event);
-    let x = 0;
-    let y = 0;
-    if (event instanceof MouseEvent) {
-      x = event.x;
-      y = event.y;
-    } else if (event?.touches) {
+  event.stopPropagation();
+  event.preventDefault();
+  let x, y;
+  if (event instanceof MouseEvent) {
+    x = event.layerX;
+    y = event.layerY;
+  } else if (event instanceof TouchEvent) {
+    if (event.targetTouches.length === 1) {
       x = event?.touches?.[0].clientX;
       y = event?.touches?.[0].clientY;
+    } else if (event.targetTouches.length === 2) {
+      doubleTouchDrag(event);
+      return;
     }
+  }
+  if (x !== undefined && y !== undefined) {
+    canvasMousePos.value = { x, y };
+    if (isDragging.value) {
+      draggingEndPosX = x;
+      draggingEndPosY = y;
+      const newShiftX = prevShift.x + draggingEndPosX - draggingStartPosX;
+      const newShiftY = prevShift.y + draggingEndPosY - draggingStartPosY;
+      currentShift.value.x = newShiftX;
+      currentShift.value.y = newShiftY;
+    }
+  }
+};
 
-    draggingEndPosX = x;
-    draggingEndPosY = y;
-
-    const newShiftX = prevShift.x + draggingEndPosX - draggingStartPosX;
-    const newShiftY = prevShift.y + draggingEndPosY - draggingStartPosY;
-
-    currentShift.value.x = newShiftX;
-    currentShift.value.y = newShiftY;
+const doubleTouchDrag = (event: TouchEvent) => {
+  if (event.targetTouches.length === 2) {
+    const touch1 = event?.touches?.[0];
+    const touch2 = event?.touches?.[1];
+    const point1 = { x: touch1.clientX, y: touch1.clientY };
+    const point2 = { x: touch2.clientX, y: touch2.clientY };
+    const newPinchDistance = calcDistance(point1, point2);
+    if (!pinchInitDistance) {
+      pinchInitDistance = newPinchDistance;
+      return;
+    }
+    const diff = newPinchDistance - pinchInitDistance;
+    const absDiff = Math.abs(diff);
+    if (absDiff < pinchScalingThreshold) {
+      return;
+    }
+    let newCurrentScaling = currentScaling;
+    if (diff < 0) {
+      newCurrentScaling -= pinchScalingStep;
+    } else {
+      newCurrentScaling += pinchScalingStep;
+    }
+    if (newCurrentScaling > maxScaling || newCurrentScaling < minScaling) {
+      return;
+    }
+    currentScaling = newCurrentScaling;
   }
 };
 
@@ -601,8 +653,8 @@ const windowResize = () => {
 };
 
 const setWindowSizes = () => {
-  windowSizes.value.height = window.innerHeight;
-  windowSizes.value.width = window.innerWidth;
+  windowSize.value.height = window.innerHeight;
+  windowSize.value.width = window.innerWidth;
 };
 </script>
 
@@ -621,6 +673,8 @@ const setWindowSizes = () => {
 }
 
 .controls {
+  display: flex;
+  flex-flow: row;
   position: absolute;
   bottom: 0px;
   width: 100%;
