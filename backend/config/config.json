@@ -42,16 +42,6 @@
         "/auth/posts",
         "/auth/login_username",
         "/auth/login_email"
-      ],
-      "defaultAdmins": [
-        {
-          "username": "root",
-          "password": "1234",
-          "role": "root",
-          "email": "korlend51@gmail.com"
-        }
-      ],
-      "defaultRoles": [
       ]
     }
   }
