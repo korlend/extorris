@@ -1,5 +1,5 @@
 <template>
-  <span class="string-input">
+  <span class="string__input">
     <v-text-field
       v-model="localModel"
       type="string"
@@ -51,7 +51,7 @@ onMounted(async () => {});
 </script>
 
 <style lang="scss" scoped>
-.string-input {
+.string__input {
   width: 100%;
 }
 </style>

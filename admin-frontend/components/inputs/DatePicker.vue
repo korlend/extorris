@@ -1,5 +1,5 @@
 <template>
-  <span class="date-input">
+  <span class="date__input">
     <inputs-string
       v-model="modelAsString"
       :label="label"
@@ -9,7 +9,7 @@
       @click:clear="clearDatePicker"
       @click.stop="() => toggleDatePicker()" />
     <div
-      class="date-input-datepicker"
+      class="date__input-datepicker"
       :class="{ shown: showDatePicker }"
       v-on-click-outside="() => toggleDatePicker(false)">
       <v-date-picker
@@ -112,7 +112,7 @@ const clearDatePicker = () => {
 </script>
 
 <style lang="scss" scoped>
-.date-input {
+.date__input {
   width: 100%;
 
   &-datepicker {

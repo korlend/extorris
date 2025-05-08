@@ -5,7 +5,7 @@
       :class="{ hidden: !showChat }"
       @click="toggleChat">
     </div>
-    <div class="chat__block-select__chat custom-scroll">
+    <div class="chat__block-select__chat custom__scroll">
       <span
         class="chat__block-select__chat-item"
         :class="{ selected: chat.id === currentChat?.id }"
@@ -92,6 +92,7 @@ const toggleChat = () => {
   border: 1px solid white;
   backdrop-filter: blur(10px);
   transition: left 0.2s ease;
+  max-width: calc(100dvw - 20px);
 
   &.hidden {
     left: calc(-1 * var(--width));

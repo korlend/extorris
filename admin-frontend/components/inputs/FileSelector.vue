@@ -1,5 +1,5 @@
 <template>
-  <span class="file-selector">
+  <span class="file__selector">
     <v-file-input
       v-model="localModel"
       :label="label"
@@ -56,7 +56,7 @@ onMounted(async () => {});
 </script>
 
 <style lang="scss" scoped>
-.file-selector {
+.file__selector {
   width: 100%;
   display: flex;
 }

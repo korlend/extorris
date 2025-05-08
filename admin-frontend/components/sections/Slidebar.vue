@@ -60,18 +60,13 @@ const slidebarStore = useSlidebarStore();
 
 const { currentTab } = storeToRefs(slidebarStore);
 
-// watch()
-
 onMounted(() => {
   window.addEventListener("keydown", keydown);
 });
 
 onBeforeUnmount(() => {
-  // removeWatch();
   window.removeEventListener("keydown", keydown);
 });
-
-// const currentTab: Ref<SlidebarTab | undefined> = ref();
 
 const isActive = computed(() => {
   return slidebarStore.isActive;

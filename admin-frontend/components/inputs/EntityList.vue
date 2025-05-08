@@ -1,5 +1,5 @@
 <template>
-  <div class="entity__list custom-scroll" @click.stop="">
+  <div class="entity__list custom__scroll" @click.stop="">
     <div class="entity__list-search__box">
       <inputs-string
         v-model="searchString"

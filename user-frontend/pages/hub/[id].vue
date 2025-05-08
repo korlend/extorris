@@ -377,7 +377,7 @@ const getRectangle = (width: number, height: number): Path2D => {
 .hub {
   &-controls {
     position: fixed;
-    z-index: 100;
+    z-index: 10;
     bottom: 100px;
     width: 100%;
     display: flex;

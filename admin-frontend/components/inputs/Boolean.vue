@@ -1,5 +1,5 @@
 <template>
-  <span class="number-input">
+  <span class="number__input">
     <v-switch
       v-model="model"
       color="primary"
@@ -32,7 +32,7 @@ onMounted(async () => {});
 </script>
 
 <style lang="scss" scoped>
-.number-input {
+.number__input {
   width: 100%;
 }
 </style>

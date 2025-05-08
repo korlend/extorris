@@ -1,11 +1,11 @@
 <template>
-  <div class="footer-block"></div>
+  <div class="footer__section"></div>
 </template>
 
 <script setup lang="ts"></script>
 
 <style scoped>
-.footer-block {
+.footer__section {
   z-index: 100;
   position: fixed;
   bottom: 0;

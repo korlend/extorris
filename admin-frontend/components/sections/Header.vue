@@ -1,14 +1,14 @@
 <template>
-  <div class="header-block">
+  <div class="header__block">
     <client-only>
       <v-btn @click="testbtn">test</v-btn>
-      <v-chip color="primary" class="header-block__username">
+      <v-chip color="primary" class="header__block-username">
         {{ session.username }}
       </v-chip>
-      <v-chip color="primary" class="header-block__email">
+      <v-chip color="primary" class="header__block-email">
         {{ session.email }}
       </v-chip>
-      <span class="header-block__logout-btn">
+      <span class="header__block-logout__btn">
         <v-btn icon @click="logout">
           <v-icon>mdi-logout</v-icon>
         </v-btn>
@@ -41,7 +41,7 @@ const testbtn = () => {
 </script>
 
 <style lang="scss" scoped>
-.header-block {
+.header__block {
   position: sticky;
   z-index: 100;
   width: 100%;
@@ -53,7 +53,7 @@ const testbtn = () => {
   justify-content: right;
   align-items: center;
 
-  &__logout-btn {
+  &-logout__btn {
     // padding: auto;
     height: 100%;
     float: right;

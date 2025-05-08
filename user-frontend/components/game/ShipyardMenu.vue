@@ -203,9 +203,15 @@ const getEquippedCannon = (index: number) => {
   }
   return null;
 };
+
+const getItemName = (shipItem: any) => {
+
+}
 </script>
 
 <style lang="scss" scoped>
+@use "~/assets/styles/mixins" as mixins;
+
 .shipyard__menu {
   width: 100%;
   height: 100%;
@@ -255,12 +261,23 @@ const getEquippedCannon = (index: number) => {
         justify-content: space-between;
 
         &-item {
-          width: 100px;
-          height: 100px;
+          width: 50px;
+          height: 50px;
           opacity: 0.8;
           transition: all linear 0.2s;
           overflow-wrap: break-word;
           cursor: pointer;
+          text-overflow: ellipsis;
+
+          @include mixins.respond-from(md) {
+            width: 70px;
+            height: 70px;
+          }
+
+          @include mixins.respond-from(lg) {
+            width: 100px;
+            height: 100px;
+          }
 
           &:hover {
             opacity: 1;
@@ -288,12 +305,24 @@ const getEquippedCannon = (index: number) => {
 
       &-cell {
         $cell: &;
-        width: 100px;
-        height: 100px;
+        width: 50px;
+        height: 50px;
         overflow-wrap: break-word;
         margin: 5px;
         cursor: pointer;
         transition: all linear 0.2s;
+        text-overflow: ellipsis;
+        font-size: x-small;
+
+        @include mixins.respond-from(md) {
+          width: 70px;
+          height: 70px;
+        }
+
+        @include mixins.respond-from(lg) {
+          width: 100px;
+          height: 100px;
+        }
 
         &:hover {
           margin: 3px;

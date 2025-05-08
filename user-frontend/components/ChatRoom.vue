@@ -1,6 +1,6 @@
 <template>
   <div class="chat__room">
-    <div class="chat__room-messages custom-scroll">
+    <div class="chat__room-messages custom__scroll">
       <div v-for="message in filteredMessages">
         {{ `${message.user_id}: ${message.message}` }}
       </div>

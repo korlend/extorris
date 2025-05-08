@@ -1,5 +1,5 @@
 <template>
-  <span class="number-input">
+  <span class="number__input">
     <v-text-field
       v-model="localModel"
       type="number"
@@ -47,7 +47,7 @@ onMounted(async () => {});
 </script>
 
 <style lang="scss" scoped>
-.number-input {
+.number__input {
   width: 100%;
 }
 </style>

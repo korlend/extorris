@@ -1,17 +1,17 @@
 <template>
   <v-app class="default__layout">
     <client-only>
-      <slidebar-block />
+      <SectionsSlidebar />
       <ModalWindow />
       <div>
-        <header-block />
+        <SectionsHeader />
       </div>
       <div class="default__layout-page__container">
-        <sidebar-block />
-        <!-- <footer-block /> -->
+        <SectionsSidebar />
+        <!-- <SectionsFooter /> -->
         <!-- .... -->
         <div
-          class="default__layout-page__container-slot custom-scroll"
+          class="default__layout-page__container-slot custom__scroll"
           :class="{ 'disabled-scroll': isOnMapPage }">
           <slot />
         </div>
@@ -21,10 +21,6 @@
 </template>
 
 <script setup lang="ts">
-import SidebarBlock from "@/components/blocks/SidebarBlock.vue";
-import SlidebarBlock from "@/components/blocks/SlidebarBlock.vue";
-// import FooterBlock from "@/components/blocks/FooterBlock.vue";
-import HeaderBlock from "@/components/blocks/HeaderBlock.vue";
 
 import { useRoute } from "vue-router";
 import ModalWindow from "~/components/ModalWindow.vue";

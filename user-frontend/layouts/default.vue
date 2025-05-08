@@ -5,7 +5,7 @@
       <ModalWindow />
       <SectionsHeader />
       <div class="default__layout-page__container">
-        <div class="default__layout-page__container-slot custom-scroll">
+        <div class="default__layout-page__container-slot custom__scroll">
           <slot />
         </div>
       </div>

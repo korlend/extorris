@@ -1,10 +1,10 @@
 <template>
-  <div class="sidebar-block custom-scroll">
-    <div class="sidebar-block__inner custom-scroll">
+  <div class="sidebar__block custom__scroll">
+    <div class="sidebar__block-inner custom__scroll">
       <template v-for="page in getPages" :key="page.name">
         <router-link
           v-if="!page.collapsable"
-          class="sidebar-block__inner-link"
+          class="sidebar__block-inner-link"
           :class="getLinkClasses(page)"
           :to="page.path">
           <span>
@@ -13,7 +13,7 @@
         </router-link>
         <div
           v-if="page.collapsable"
-          class="sidebar-block__inner-link collapsable"
+          class="sidebar__block-inner-link collapsable"
           :class="getLinkClasses(page)">
           <span>{{ page.name }}</span>
           <v-icon @click="toggleCollapsable(page)">{{
@@ -138,13 +138,13 @@ const getPagesOfParent = (parent: SidebarPage) => {
 </script>
 
 <style lang="scss" scoped>
-.sidebar-block {
+.sidebar__block {
   position: sticky;
   z-index: 100;
   width: 200px;
   backdrop-filter: blur(10px);
 
-  &__inner {
+  &-inner {
     // position: absolute;
     overflow: auto;
     // top: 50px;

@@ -1,5 +1,5 @@
 <template>
-  <span class="string-select">
+  <span class="string__select">
     <v-autocomplete
       v-model="localModel"
       :label="label"
@@ -63,7 +63,7 @@ const updateValue = (value: string) => {
 </script>
 
 <style lang="scss" scoped>
-.string-select {
+.string__select {
   min-width: 250px;
 }
 </style>
