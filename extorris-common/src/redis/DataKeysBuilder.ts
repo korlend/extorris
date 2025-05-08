@@ -1,3 +1,4 @@
+import { exhaustiveCheck } from "../utils";
 import DataKeys from "./DataKeys";
 
 function buildRedisKey(
@@ -27,6 +28,10 @@ function buildRedisKey(key: DataKeys, data?: string | number): string {
       return `${key}:${data}`;
     case DataKeys.ACTIVE_HUB:
       return `${key}:${data}`;
+    case DataKeys.ACTIVE_HUBS_SET:
+      return key;
+    default:
+      exhaustiveCheck(key);
   }
   return key;
 }
