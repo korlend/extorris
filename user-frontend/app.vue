@@ -1,5 +1,5 @@
 <template>
-  <v-app class="custom-scroll">
+  <v-app class="custom__scroll">
     <LocalAlert />
     <NuxtLayout>
       <NuxtPage />
