@@ -5,6 +5,7 @@ import type ShipData from "./ShipData";
 import type ActiveHubData from "./ActiveHubData";
 import type ShipPosition from "./ShipPosition";
 import type ShipUserInstruction from "./ShipUserInstruction";
+import type { RTCalcInstructionData } from "./RTCalcInstruction";
 
 export {
   type UserSession,
@@ -14,4 +15,5 @@ export {
   type ActiveHubData,
   type ShipPosition,
   type ShipUserInstruction,
+  type RTCalcInstructionData,
 };

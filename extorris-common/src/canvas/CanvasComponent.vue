@@ -7,6 +7,13 @@
       <button class="controls-button" @click="snapToCenter">stc</button>
       <span>cmp: {{ canvasMousePos }}</span>
       <span>cs: {{ currentShift }}</span>
+      <span>ps: {{ prevShift }}</span>
+      <span
+        >parent: {{ parentElementRect.width }}
+        {{ parentElementRect.height }}</span
+      >
+      <input v-model="someValue" />
+      <span>cmprm: {{ canvasMousePosRelToMid }}</span>
       <!-- <span>amount: {{ amount }}</span> -->
       <!-- <span
         >timeFromInit:
@@ -46,7 +53,6 @@ import {
   computed,
   watch,
 } from "vue";
-import type Vector2D from "src/interfaces/Vector2D";
 import {
   type CanvasClickEvent,
   type CanvasBlock,
@@ -55,6 +61,7 @@ import {
   CanvasCursors,
 } from "./";
 import { calcDistance } from "../utils/calc";
+import Vector2D from "@/models/Vector2D";
 
 type DrawFunction = (
   context: CanvasRenderingContext2D,
@@ -103,6 +110,8 @@ const canvasParentElementRef = useTemplateRef("canvasParentElementRefName");
 
 const globalActiveHover: Ref<CanvasBlock | null> = ref(null);
 
+const someValue = ref(50);
+
 const amount = ref(0);
 const timeFromInit = new Date();
 
@@ -134,13 +143,13 @@ let draggingEndPosY: number = 0;
 
 let touchStartEvent: MouseEvent | TouchEvent | null = null;
 let touchStartTime: Date | null = null;
-let touchStartCoords: { x: number; y: number } | null = null;
+let touchStartCoords: Vector2D | null = null;
 
 let pinchInitDistance: number | null = null;
 
 const isDragging: Ref<boolean> = ref(false);
-const prevShift: { x: number; y: number } = { x: 0, y: 0 };
-const currentShift: Ref<{ x: number; y: number }> = ref({ x: 0, y: 0 });
+const prevShift: Ref<Vector2D> = ref(new Vector2D(0, 0));
+const currentShift: Ref<Vector2D> = ref(new Vector2D(0, 0));
 
 const windowSize: Ref<{ height: number; width: number }> = ref({
   height: 0,
@@ -149,32 +158,25 @@ const windowSize: Ref<{ height: number; width: number }> = ref({
 
 const cursor: Ref<CanvasCursors> = ref(CanvasCursors.DEFAULT);
 
-let canvasParentElementPos: Vector2D = { x: 0, y: 0 };
-
 watch(windowSize, () => {
-  canvasWidth.value = windowSize.value.width - canvasParentElementPos.x;
-  canvasHeight.value = windowSize.value.height - canvasParentElementPos.y;
-})
+  const { width, height } = parentElementRect.value;
+  canvasWidth.value = width || windowSize.value.width;
+  canvasHeight.value = height || windowSize.value.height;
+});
 
 onBeforeMount(() => {});
 
 onMounted(() => {
-  if (canvasParentElementRef.value) {
-    const { left, top } = canvasParentElementRef.value.getBoundingClientRect();
-    canvasParentElementPos = {
-      x: left,
-      y: top,
-    };
-  }
+  const { width, height } = parentElementRect.value;
+  canvasWidth.value = width || windowSize.value.width;
+  canvasHeight.value = height || windowSize.value.height;
+
   setWindowSizes();
   window.addEventListener("resize", windowResize);
 
   if (props.centerOnRender) {
     snapToCenter();
   }
-
-  // canvasWidth.value = windowSize.value.width - canvasParentElementPos.x;
-  // canvasHeight.value = windowSize.value.height - canvasParentElementPos.y;
 
   context = canvasRef.value?.getContext("2d");
   if (context !== null && context !== undefined) {
@@ -189,11 +191,57 @@ onBeforeUnmount(() => {
   window.removeEventListener("resize", windowResize);
 });
 
+const parentElementRect = computed(() => {
+  if (!canvasParentElementRef?.value) {
+    return {
+      x: 0,
+      y: 0,
+      width: windowSize.value.width,
+      height: windowSize.value.height,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+    };
+  }
+  return canvasParentElementRef.value.getBoundingClientRect();
+});
+
 const canvasClasses = computed(() => {
   const classes = {
     pointer: cursor.value === CanvasCursors.POINTER,
   };
   return classes;
+});
+
+const canvasMousePosRelToMid = computed(() => {
+  const middleX = canvasWidth.value / 2;
+  const middleY = canvasHeight.value / 2;
+  const canvasMousePosX = canvasMousePos.value?.x || 0;
+  const canvasMousePosY = canvasMousePos.value?.y || 0;
+
+  let x = 0;
+  let y = 0;
+
+  if (canvasMousePosX < middleX) {
+    x = -Math.abs(middleX - canvasMousePosX);
+  } else {
+    x = canvasMousePosX - middleX;
+  }
+
+  if (canvasMousePosY < middleY) {
+    y = -Math.abs(middleY - canvasMousePosY);
+  } else {
+    y = canvasMousePosY - middleY;
+  }
+
+  return {
+    flatVector2D: new Vector2D(x, y),
+    percentage: {
+      x: x / middleX,
+      y: y / middleY,
+    },
+  };
 });
 
 const globalActiveHoverStringify = computed(() => {
@@ -230,7 +278,7 @@ const sortedExistingZIndices = computed((): Array<number> => {
     }
     zIndices.push(zindex);
   }
-  zIndices.sort();
+  zIndices.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   return zIndices;
 });
 
@@ -269,7 +317,13 @@ const canvasFill = (
       }
       context.fill(path);
     } else {
-      context.drawImage(path.image, path.width, path.height);
+      context.drawImage(
+        path.image,
+        -path.width / 2,
+        -path.height / 2,
+        path.width,
+        path.height
+      );
     }
     context.restore();
   }
@@ -458,7 +512,7 @@ const getCanvasDrawOptions = (): CanvasDrawOptions => {
   return {
     currentScaling: currentScaling,
     currentShift: currentShift.value,
-    prevShift: prevShift,
+    prevShift: prevShift.value,
     canvasMousePos: canvasMousePos.value,
   };
 };
@@ -521,16 +575,34 @@ const scrollEvent = (event: WheelEvent) => {
   if (newCurrentScaling > maxScaling || newCurrentScaling < minScaling) {
     return;
   }
-  newCurrentScaling =
-    Math.floor(newCurrentScaling * floorScaling) / floorScaling;
+  if (newCurrentScaling !== currentScaling) {
+    newCurrentScaling =
+      Math.floor(newCurrentScaling * floorScaling) / floorScaling;
+
+    const canvasX = canvasWidth.value;
+    const canvasY = canvasHeight.value;
+    const percMousePosRelToMid = canvasMousePosRelToMid.value.percentage;
+    const shiftX =
+      ((Math.pow(percMousePosRelToMid.x, 3) * canvasX) / someValue.value) *
+      Math.pow(newCurrentScaling, 2);
+    const shiftY =
+      ((Math.pow(percMousePosRelToMid.y, 3) * canvasY) / someValue.value) *
+      Math.pow(newCurrentScaling, 2);
+
+    currentShift.value.x = Math.floor(currentShift.value.x - shiftX);
+    currentShift.value.y = Math.floor(currentShift.value.y - shiftY);
+    prevShift.value.x = Math.floor(prevShift.value.x - shiftX);
+    prevShift.value.y = Math.floor(prevShift.value.y - shiftY);
+  }
   currentScaling = newCurrentScaling;
 };
 
 const snapToCenter = () => {
-  currentShift.value.x = windowSize.value.width / 2;
-  currentShift.value.y = windowSize.value.height / 2;
-  prevShift.x = windowSize.value.width / 2;
-  prevShift.y = windowSize.value.height / 2;
+  let { width, height } = parentElementRect.value;
+  currentShift.value.x = width / 2;
+  currentShift.value.y = height / 2;
+  prevShift.value.x = width / 2;
+  prevShift.value.y = height / 2;
 };
 
 const dragStart = (event: MouseEvent | TouchEvent) => {
@@ -549,17 +621,17 @@ const dragStart = (event: MouseEvent | TouchEvent) => {
       dragEnd();
       const touch1 = event?.touches?.[0];
       const touch2 = event?.touches?.[1];
-      const point1 = { x: touch1.clientX, y: touch1.clientY };
-      const point2 = { x: touch2.clientX, y: touch2.clientY };
+      const point1 = new Vector2D(touch1.clientX, touch1.clientY);
+      const point2 = new Vector2D(touch2.clientX, touch2.clientY);
       pinchInitDistance = calcDistance(point1, point2);
       return;
     }
   }
 
-  canvasMousePos.value = { x, y };
+  canvasMousePos.value = new Vector2D(x, y);
   touchStartEvent = event;
   touchStartTime = new Date();
-  touchStartCoords = { x, y };
+  touchStartCoords = new Vector2D(x, y);
 
   isDragging.value = true;
   draggingStartPosX = x;
@@ -574,8 +646,8 @@ const dragEnd = (event?: MouseEvent | TouchEvent) => {
   draggingEndPosX = 0;
   draggingStartPosY = 0;
   draggingEndPosY = 0;
-  prevShift.x = currentShift.value.x;
-  prevShift.y = currentShift.value.y;
+  prevShift.value.x = currentShift.value.x;
+  prevShift.value.y = currentShift.value.y;
 
   if (touchStartTime) {
     const diff = new Date().getTime() - touchStartTime.getTime();
@@ -607,12 +679,15 @@ const dragEvent = (event: MouseEvent | TouchEvent) => {
     }
   }
   if (x !== undefined && y !== undefined) {
-    canvasMousePos.value = { x, y };
+    canvasMousePos.value = new Vector2D(x, y);
     if (isDragging.value) {
+      const { left, top } = parentElementRect.value;
       draggingEndPosX = x;
       draggingEndPosY = y;
-      const newShiftX = prevShift.x + draggingEndPosX - draggingStartPosX;
-      const newShiftY = prevShift.y + draggingEndPosY - draggingStartPosY;
+      const newShiftX =
+        prevShift.value.x + draggingEndPosX - draggingStartPosX + left;
+      const newShiftY =
+        prevShift.value.y + draggingEndPosY - draggingStartPosY + top;
       currentShift.value.x = newShiftX;
       currentShift.value.y = newShiftY;
     }
@@ -623,8 +698,8 @@ const doubleTouchDrag = (event: TouchEvent) => {
   if (event.targetTouches.length === 2) {
     const touch1 = event?.touches?.[0];
     const touch2 = event?.touches?.[1];
-    const point1 = { x: touch1.clientX, y: touch1.clientY };
-    const point2 = { x: touch2.clientX, y: touch2.clientY };
+    const point1 = new Vector2D(touch1.clientX, touch1.clientY);
+    const point2 = new Vector2D(touch2.clientX, touch2.clientY);
     const newPinchDistance = calcDistance(point1, point2);
     if (!pinchInitDistance) {
       pinchInitDistance = newPinchDistance;
@@ -660,8 +735,7 @@ const setWindowSizes = () => {
 
 <style lang="scss" scoped>
 .fps {
-  position: absolute;
-  left: 10px;
+  position: fixed;
   bottom: 50px;
   color: white;
   backdrop-filter: blur(10px);
@@ -675,7 +749,7 @@ const setWindowSizes = () => {
 .controls {
   display: flex;
   flex-flow: row;
-  position: absolute;
+  position: fixed;
   bottom: 0px;
   width: 100%;
   height: 50px;
@@ -707,10 +781,12 @@ const setWindowSizes = () => {
 
 .canvas__block {
   position: relative;
+  width: 100%;
+  height: 100%;
 
   &-canvas {
-    // width: 100%;
-    // height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     // border: 1px solid grey;
   }
 }

@@ -27,6 +27,12 @@ export default class ShipModel extends DBModel<ShipModel> {
   @FieldType(FieldTypes.BOOLEAN)
   is_parked: boolean = false;
 
+  @FieldType(FieldTypes.INT)
+  x: number = 0;
+
+  @FieldType(FieldTypes.INT)
+  y: number = 0;
+
   parseObject(object: DBModelOnlyDBData<ShipModel>): ShipModel {
     const instance = new ShipModel();
     instance.id = object.id;
@@ -34,6 +40,8 @@ export default class ShipModel extends DBModel<ShipModel> {
     instance.main_map_hub_id = object.main_map_hub_id;
     instance.name = object.name;
     instance.is_parked = object.is_parked;
+    instance.x = object.x;
+    instance.y = object.y;
     return instance;
   }
 }

@@ -47,39 +47,43 @@ export const useAuthStore = defineStore("auth", {
       return this.session;
     },
     async logout() {
-      await useAPI("/admin-api/auth/logout", {
+      const { $api } = useNuxtApp();
+      await $api("/admin-api/auth/logout", {
         method: "PUT",
       });
       this.setUserData({});
     },
     async login(username: string, password: string): Promise<Session | null> {
-      const { data } = await useAPI<ResponseAPI>(
-        "/admin-api/auth/login_username",
-        {
-          method: "POST",
-          body: {
-            username,
-            password,
-          },
-        }
-      );
-
-      if (!data.value) {
-        return null;
-      }
-
-      return this.setUserData(data.value.result);
-    },
-    async me(): Promise<Session | null> {
-      const { data } = await useAPI<ResponseAPI>("/admin-api/auth/me", {
-        method: "GET",
+      const { $api } = useNuxtApp();
+      const data = await $api<ResponseAPI>("/admin-api/auth/login_username", {
+        method: "POST",
+        body: {
+          username,
+          password,
+        },
       });
 
-      if (!data.value) {
+      if (!data) {
         return null;
       }
 
-      return this.setUserData(data.value.result);
+      return this.setUserData(data.result);
+    },
+    async me(): Promise<Session | null> {
+      const { $api } = useNuxtApp();
+      try {
+        const data = await $api<ResponseAPI>("/admin-api/auth/me", {
+          method: "GET",
+        });
+
+        if (!data) {
+          return null;
+        }
+
+        return this.setUserData(data.result);
+      } catch (ex) {
+        return null;
+      }
     },
   },
 });

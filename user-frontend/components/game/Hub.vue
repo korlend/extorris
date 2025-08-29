@@ -50,16 +50,22 @@
 
 <script setup lang="ts">
 import {
+  Vector2D,
   CanvasComponent,
   CanvasCursors,
   CommsModels,
   throttle,
   type CanvasBlock,
-  type Vector2D,
+  ConfigDimensionsTypes,
 } from "extorris-common";
 import { useCommsStore } from "~/store/comms";
+import { useConfigStore } from "~/store/config";
 import { useHubStore } from "~/store/hub";
 import { useShipStore } from "~/store/ship";
+
+const emit = defineEmits<{
+  (e: "update:hub-id", hubId: number): void;
+}>();
 
 const router = useRouter();
 const route = useRoute("hub-id");
@@ -70,6 +76,14 @@ interface LocalPortal {
   y: number;
 }
 
+const props = defineProps({
+  hubId: {
+    type: Number,
+    required: true,
+  },
+});
+
+const configStore = useConfigStore();
 const hubStore = useHubStore();
 const shipStore = useShipStore();
 const commsStore = useCommsStore();
@@ -98,8 +112,8 @@ onMounted(async () => {
   shipImage.src = "/default_ship.png";
   await shipStore.loadShipInfo();
 
-  if (hubId.value !== getCurrentHub.value?.id) {
-    await hubStore.loadHub(hubId.value);
+  if (props.hubId !== getCurrentHub.value?.id) {
+    await hubStore.loadHub(props.hubId);
   }
 
   if (getCurrentHub.value?.id) {
@@ -115,12 +129,12 @@ onMounted(async () => {
       if (
         message.messageType === CommsModels.CommsTypesEnum.SHIP_POSITION_CHANGE
       ) {
-        console.log(message.data)
+        // console.log(message.data);
         const data = message.data;
         shipsInHub.value = data.ships;
         let ship;
         if (
-          ship = data.ships.find((v) => v.id === currentUserShip.value.id)
+          (ship = data.ships.find((v) => v.id === currentUserShip.value.id))
         ) {
           // angleSlider.value = ship.angle;
           // speedSlider.value = ship.speed;
@@ -133,13 +147,8 @@ onMounted(async () => {
   // route params still might be not equal to current hub id
   // because user can input custom hub id, which will be unaccessible to them
   // in that case, load hub will return their ship, if it's in flight or otherwise userIsland hub
-  if (getCurrentHub.value?.id && hubId.value !== getCurrentHub.value?.id) {
-    router.replace({
-      name: "hub-id",
-      params: {
-        id: getCurrentHub.value?.id,
-      },
-    });
+  if (getCurrentHub.value?.id && props.hubId !== getCurrentHub.value?.id) {
+    emit("update:hub-id", getCurrentHub.value?.id);
   }
   resetCanvasBlock();
 });
@@ -150,8 +159,8 @@ onBeforeUnmount(() => {
   }
 });
 
-const hubId = computed(() => {
-  return parseInt(route.params.id);
+const dimensionsConfig = computed(() => {
+  return configStore.getDimensions;
 });
 
 const currentUserShip = computed(() => {
@@ -208,10 +217,20 @@ const sendInstructions = throttle(() => {
 
 const resetCanvasBlock = () => {
   canvasBlocks.value = [];
-  if (!getCurrentHub.value) {
+  const dimensions = dimensionsConfig.value;
+  // console.log("dimensions", dimensions);
+  if (!getCurrentHub.value || !dimensions) {
     return;
   }
 
+  const shipCollisionRadius =
+    dimensions[ConfigDimensionsTypes.SHIP_HOVER_RADIUS];
+  const shipWidth = dimensions[ConfigDimensionsTypes.SHIP_DISPLAY_X];
+  const shipHeight = dimensions[ConfigDimensionsTypes.SHIP_DISPLAY_Y];
+  const portalWidth = dimensions[ConfigDimensionsTypes.PORTAL_DISPLAY_X];
+  const portalHeight = dimensions[ConfigDimensionsTypes.PORTAL_DISPLAY_Y];
+  const portalCollisionRadius =
+    dimensions[ConfigDimensionsTypes.SHIP_HOVER_RADIUS];
   const newCanvasBlocks: Array<CanvasBlock> = [];
 
   const hubId = getCurrentHub.value?.id;
@@ -225,27 +244,26 @@ const resetCanvasBlock = () => {
   if (shipImage.complete && shipsInHub.value) {
     for (let i = 0; i < shipsInHub.value.length; i++) {
       const ship = shipsInHub.value[i];
-      const { width, height } = shipImage;
-      const path2d = getRectangle(width, height);
+      const shipCollisionPath = getEllipse(
+        shipCollisionRadius,
+        shipCollisionRadius
+      );
       newCanvasBlocks.push({
-        zindex: 99, // above all
-        position: {
-          x: ship.x,
-          y: ship.y,
-        },
+        zindex: 99, // above everything
+        position: new Vector2D(ship.x, ship.y),
         fill: [
           {
             path: {
               image: shipImage,
-              width: -width / 2,
-              height: -height / 2,
+              width: shipWidth,
+              height: shipHeight,
             },
             // path: path2d,
             rotate: ship.angle,
             // color: `rgb(50,50,200)`,
           },
         ],
-        hoverWhen: [path2d],
+        hoverWhen: [shipCollisionPath],
         hoverChange: {
           cursor: CanvasCursors.POINTER,
         },
@@ -259,20 +277,18 @@ const resetCanvasBlock = () => {
   // portals
   for (let i = 0; i < localPortals.length; i++) {
     const portal = localPortals[i];
-    const path2d = getPortalEllipse(300);
+
+    const portalPath = getEllipse(portalWidth, portalHeight);
     newCanvasBlocks.push({
       zindex: 1, // above grid
-      position: {
-        x: portal.x,
-        y: portal.y,
-      },
+      position: new Vector2D(portal.x, portal.y),
       fill: [
         {
-          path: path2d,
+          path: portalPath,
           color: `rgb(200,50,200)`,
         },
       ],
-      hoverWhen: [path2d],
+      hoverWhen: [portalPath],
       hoverChange: {
         cursor: CanvasCursors.POINTER,
       },
@@ -290,13 +306,10 @@ const resetCanvasBlock = () => {
   // users islands
   for (let i = 0; i < getUsersIslands.value.length; i++) {
     const userIsland = getUsersIslands.value[i];
-    const path2d = getIslandEllipse(300);
+    const path2d = getEllipse(300, 300 * 0.7);
     newCanvasBlocks.push({
       zindex: 2, // above grid and portal
-      position: {
-        x: userIsland.hub_pos_x,
-        y: userIsland.hub_pos_y,
-      },
+      position: new Vector2D(userIsland.hub_pos_x, userIsland.hub_pos_y),
       fill: [
         {
           path: path2d,
@@ -326,7 +339,7 @@ const resetCanvasBlock = () => {
     newCanvasBlocks.push({
       stroke: [
         {
-          path: getLine({ x: i, y: -max / 2 }, { x: i, y: max / 2 }),
+          path: getLine(new Vector2D(i, -max / 2), new Vector2D(i, max / 2)),
           color: `rgb(255,255,255)`,
         },
       ],
@@ -334,7 +347,7 @@ const resetCanvasBlock = () => {
     newCanvasBlocks.push({
       stroke: [
         {
-          path: getLine({ x: -max / 2, y: i }, { x: max / 2, y: i }),
+          path: getLine(new Vector2D(-max / 2, i), new Vector2D(max / 2, i)),
           color: `rgb(255,255,255)`,
         },
       ],
@@ -344,15 +357,9 @@ const resetCanvasBlock = () => {
   canvasBlocks.value = newCanvasBlocks;
 };
 
-const getPortalEllipse = (radius: number): Path2D => {
+const getEllipse = (xRadius: number, yRadius: number): Path2D => {
   const halfEllipse = new Path2D();
-  halfEllipse.ellipse(0, 0, radius * 0.7, radius, 0, 0, Math.PI * 2);
-  return halfEllipse;
-};
-
-const getIslandEllipse = (radius: number): Path2D => {
-  const halfEllipse = new Path2D();
-  halfEllipse.ellipse(0, 0, radius, radius * 0.7, 0, 0, Math.PI * 2);
+  halfEllipse.ellipse(0, 0, xRadius, yRadius, 0, 0, Math.PI * 2);
   return halfEllipse;
 };
 
@@ -375,6 +382,9 @@ const getRectangle = (width: number, height: number): Path2D => {
 
 <style lang="scss" scoped>
 .hub {
+  width: 100%;
+  height: 100%;
+
   &-controls {
     position: fixed;
     z-index: 10;

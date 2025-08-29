@@ -67,7 +67,7 @@ export default class UserRepository extends Repository<UserModel> {
   }
 
   getUserByEmail(email: string) {
-    return this.getBy("email", email, new ParametersLimit(["password"]));
+    return this.getBy("email", email, new ParametersLimit([], ["password"]));
   }
 
   getByFirstname(firstname: string): Promise<UserModel> {
@@ -111,11 +111,11 @@ export default class UserRepository extends Repository<UserModel> {
   }
 
   getUserWithoutPass(id: number) {
-    return this.get(id, new ParametersLimit(["password"]));
+    return this.get(id, new ParametersLimit([], ["password"]));
   }
 
   getAllUsersWithoutPass() {
-    return this.getAll(0, 0, new ParametersLimit(["password"]));
+    return this.getAll(0, 0, new ParametersLimit([], ["password"]));
   }
 
   getTotal(): Promise<number> {

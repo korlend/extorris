@@ -48,7 +48,7 @@ export default class ShipCannonService extends Service<
       await this.unequipAll(user);
     } else if (diffInSlots > 0) {
       part.ship_id = userShip.id;
-      await shipCannonService.update(part, new ParametersLimit([], ["ship_id"]));
+      await shipCannonService.update(part, new ParametersLimit(["ship_id"]));
     }
   }
 

@@ -36,7 +36,7 @@ export default class ShipArmorService extends Service<
     const userShip = await shipService.getBy("user_id", user.id);
 
     part.ship_id = userShip.id;
-    const resp = await this.update(part, new ParametersLimit([], ["ship_id"]));
+    const resp = await this.update(part, new ParametersLimit(["ship_id"]));
     console.log("equipped armor", resp)
 
   }

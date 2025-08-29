@@ -94,9 +94,12 @@ export default class RedisConnector {
     return parsedData;
   }
 
-  public async getActiveHubsIds(): Promise<Array<number>> {
+  public async getActiveHubsIds(rtcalcUuid: string): Promise<Array<number>> {
     const data = await this.client.SMEMBERS(
-      RedisModels.buildRedisKey(RedisModels.DataKeys.ACTIVE_HUBS_SET),
+      RedisModels.buildRedisKey(
+        RedisModels.DataKeys.ACTIVE_HUBS_SET,
+        rtcalcUuid,
+      ),
     );
     if (!data) {
       return [];
@@ -105,36 +108,47 @@ export default class RedisConnector {
     return parsedData;
   }
 
-  public async getActiveHubs(): Promise<Array<RedisModels.ActiveHubData>>;
+  public async getActiveRTCalcInstances() {
+    const data = await this.client.LRANGE(
+      RedisModels.buildRedisKey(RedisModels.DataKeys.RTCALC_INSTANCES),
+      0,
+      -1,
+    );
+    return data;
+  }
+
+  public async getActiveHubs(
+    rtcalcUuid: string,
+  ): Promise<Array<RedisModels.ActiveHubData>>;
   public async getActiveHubs(
     hubsId: number,
   ): Promise<RedisModels.ActiveHubData | null>;
   public async getActiveHubs(
-    hubsIds?: Array<number>,
+    hubsIds: Array<number>,
   ): Promise<Array<RedisModels.ActiveHubData>>;
   public async getActiveHubs(
-    hubsIds?: number | Array<number>,
+    data: number | Array<number> | string,
   ): Promise<
     Array<RedisModels.ActiveHubData> | (RedisModels.ActiveHubData | null) | null
   > {
-    if (typeof hubsIds === "number") {
-      const data = await this.client.GET(
-        RedisModels.buildRedisKey(RedisModels.DataKeys.ACTIVE_HUB, hubsIds),
+    if (typeof data === "number") {
+      const hubData = await this.client.GET(
+        RedisModels.buildRedisKey(RedisModels.DataKeys.ACTIVE_HUB, data),
       );
-      if (!data) {
+      if (!hubData) {
         return null;
       }
-      const parsedData = JSON.parse(data);
-      return parsedData;
+      const parsedData = JSON.parse(hubData);
+      return parsedData as RedisModels.ActiveHubData;
     }
 
-    if (!hubsIds) {
-      hubsIds = await this.getActiveHubsIds();
+    if (typeof data === "string") {
+      data = await this.getActiveHubsIds(data);
     }
 
     const promises: Array<Promise<RedisModels.ActiveHubData | null>> = [];
-    for (let i = 0; i < hubsIds.length; i++) {
-      const hubId = hubsIds[i];
+    for (let i = 0; i < data.length; i++) {
+      const hubId = data[i];
       promises.push(this.getActiveHubs(hubId));
     }
     return Promise.all(promises).then((hubs) => hubs.filter((hub) => !!hub));

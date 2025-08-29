@@ -137,13 +137,20 @@ export default class DBCreateUpdateBuilder {
     tableAlias: String,
     fields: ParametersLimit<T> = new ParametersLimit(),
   ): BuiltUpdateData {
+    // built example
     // UPDATE savage_grove.admins adm
     // join (
     //   SELECT 1 as id, '11' as new_username, '111' as new_email
     //     UNION ALL
     //     SELECT 3, '22', '222'
+    //     UNION ALL
+    //     SELECT 4, '44', '444'
     // ) vals on adm.id = vals.id
     // set username = new_username, email = new_email
+    const fieldsId = "id" as DBModelDBDataKeys<T>;
+    if (fields.include?.length && !fields.include.includes(fieldsId)) {
+      fields.include.push(fieldsId);
+    }
     const firstModel = data[0];
 
     const firstDataMap = firstModel.getParamsAndValues(fields);
@@ -152,6 +159,7 @@ export default class DBCreateUpdateBuilder {
 
     const firstRowQueries: Array<string> = [];
     const endSetRowQueries: Array<string> = [];
+    const firstRowValues: Array<any> = [];
 
     firstDataMap.forEach((value, key) => {
       if (firstModel.isImmutable(key)) {
@@ -159,6 +167,7 @@ export default class DBCreateUpdateBuilder {
       }
 
       names.push(key);
+      firstRowValues.push(value);
       firstRowQueries.push(`? as new_${key}`);
       endSetRowQueries.push(`${key} = new_${key}`);
     });
@@ -167,14 +176,11 @@ export default class DBCreateUpdateBuilder {
       `SELECT ${firstDataMap.get("id" as DBModelDBDataKeys<T>)} as id, ${firstRowQueries.join(",")}`,
     ];
 
-    const values: Array<any> = [];
+    const values: Array<any> = [...firstRowValues];
 
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 1; i < data.length; i++) {
       const model = data[i];
       const dataMap = model.getParamsAndValues(fields);
-
-      // we ignore immutables (which always has id), so put it manually
-      values.push(dataMap.get("id" as DBModelDBDataKeys<T>));
 
       for (let j = 0; j < names.length; j++) {
         const name = names[i];
@@ -185,7 +191,9 @@ export default class DBCreateUpdateBuilder {
         values.push(value);
       }
 
-      queryArray.push(`SELECT ${names.map(() => "?").join(",")}`);
+      queryArray.push(
+        `SELECT ${dataMap.get("id" as DBModelDBDataKeys<T>)},${names.map(() => "?").join(",")}`,
+      );
     }
 
     let queryParametersAndValues: string = `
@@ -213,7 +221,7 @@ export default class DBCreateUpdateBuilder {
 // INSERT INTO ${this.target} (${model.parametersKeys(fields).join(",")})
 // VALUES (${model
 //   .parametersKeys(fields)
-//   .filter((v) => !fields.only.length || fields.only.includes(v))
+//   .filter((v) => !fields.include.length || fields.include.includes(v))
 //   .map(() => "?")
 //   .join(",")})
 // `,

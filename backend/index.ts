@@ -10,7 +10,11 @@ import {
   onListening,
 } from "@src/core/utils/HttpHelpers.js";
 
-import { adminRouter, userRouter } from "@src/routers/index.js";
+import {
+  adminRouter,
+  userRouter,
+  authenticatedRouter,
+} from "@src/routers/index.js";
 
 import "dotenv/config";
 
@@ -18,7 +22,11 @@ import "dotenv/config";
 
 import PropagatedError from "@src/models/PropagatedError.js";
 import ExpressNext from "@src/models/ExpressNext.js";
-import { dbDataInit, redisDataInit } from "@src/initialization/startup.js";
+import {
+  dbDataInit,
+  redisDataInit,
+  cronJobsInit,
+} from "@src/initialization/startup.js";
 import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
 import ExpressResponseGenerator from "@src/core/router/ExpressResponseGenerator.js";
 import RedisConnector from "@src/core/RedisConnector.js";
@@ -26,6 +34,8 @@ import RabbitMQConnector from "@src/core/RabbitMQConnector.js";
 import { CommsModels, RabbitMQModels } from "extorris-common";
 import UserService from "@src/services/user/UserService.js";
 import ChatService from "@src/services/chat/ChatService.js";
+import RTCalcInstanceService from "@src/services/rtcalc/RTCalcInstanceService.js";
+import ShipService from "@src/services/ship/ShipService.js";
 
 // import { createRequire } from "module";
 // const require = createRequire(import.meta.url);
@@ -46,9 +56,11 @@ async function init(): Promise<express.Express> {
 
   await dbDataInit(config);
   await redisDataInit();
+  cronJobsInit();
 
   const userApiUrlPrefix = config.get("userApiUrlPrefix");
   const adminApiUrlPrefix = config.get("adminApiUrlPrefix");
+  const authenticatedApiUrlPrefix = config.get("authenticatedApiUrlPrefix");
 
   const app = express();
 
@@ -64,22 +76,64 @@ async function init(): Promise<express.Express> {
   // app.use(express.Router);
   app.use(adminApiUrlPrefix, adminRouter);
   app.use(userApiUrlPrefix, userRouter);
+  app.use(authenticatedApiUrlPrefix, authenticatedRouter);
 
   const rabbitmq = await RabbitMQConnector.getInstance(
     process.env.RABBITMQ || "amqp://localhost:5672",
   );
 
-  rabbitmq?.setUserChatDequeueCallback((message) => {
-    const chatService = new ChatService();
-    console.log(
-      `user ${message.userId} sent msg ${message.message} to chat ${message.chatId}`,
-    );
-    chatService.userSentMessage(
-      message.message,
-      message.chatId,
-      message.userId,
-    );
-  });
+  rabbitmq?.setDequeueCallback(
+    RabbitMQModels.RabbitMQKeys.USER_SENT_CHAT_MESSAGES,
+    (message) => {
+      console.log(
+        `user ${message.userId} sent msg ${message.message} to chat ${message.chatId}`,
+      );
+      try {
+        const chatService = new ChatService();
+        chatService.userSentMessage(
+          message.message,
+          message.chatId,
+          message.userId,
+        );
+      } catch (ex) {
+        console.error(ex);
+      }
+    },
+  );
+
+  rabbitmq?.setDequeueCallback(
+    RabbitMQModels.RabbitMQKeys.SHIP_ENTER_PORTAL,
+    async (message) => {
+      console.log(
+        `ship: ${message.shipId}, entered portal: ${message.portalId}`,
+      );
+      const shipService = new ShipService();
+      try {
+        await shipService.shipEnteredPortal(
+          message.shipId,
+          message.portalId,
+          message.fromHubId,
+        );
+      } catch (ex) {
+        console.error(ex);
+      }
+    },
+  );
+
+  rabbitmq?.setDequeueCallback(
+    RabbitMQModels.RabbitMQKeys.DECLARE_RTCALC,
+    async (message) => {
+      console.log(`rtcalc instance declared: ${message.uuid}`);
+      try {
+        const rtcalcInstanceService = new RTCalcInstanceService();
+        await rtcalcInstanceService.createNewRTCalcInstance(message.uuid);
+        const redisConnector = await RedisConnector.getInstance();
+        await redisConnector.addActiveRTCalc(message.uuid);
+      } catch (ex) {
+        console.error(ex);
+      }
+    },
+  );
 
   app.get("/rabbit", (req: Request, res: Response, next: NextFunction) => {
     rabbitmq?.channel.checkQueue(

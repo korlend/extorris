@@ -1,7 +1,5 @@
 <template>
-  <div>
-    <GameUserIsland></GameUserIsland>
-  </div>
+  <GameUserIsland></GameUserIsland>
 </template>
 
 <script setup lang="ts">

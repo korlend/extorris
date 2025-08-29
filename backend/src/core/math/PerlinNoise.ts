@@ -1,5 +1,5 @@
+import { Vector2D } from "extorris-common";
 import arrayShuffle from "./ArrayShuffle.js";
-import Vector2D from "./Vector2D.js";
 
 export default class PerlinNoiseHex {
   private wrap: number;

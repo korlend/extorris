@@ -59,15 +59,25 @@ export default abstract class DBModel<T extends DBModel<T>> {
     return this[name];
   }
 
-  getParameterAnnotations(parameterName: DBModelDBDataKeys<T>): ModelPropertyMetadata {
-    return MetadataHelper.getPropertyMetadata<T>(parameterName, this as DBModel<T> as T);
-  };
-
-  isImmutable(parameterName: DBModelDBDataKeys<T>): boolean {
-    return !!MetadataHelper.getPropertyMetadata<T>(parameterName, this as DBModel<T> as T)?.isImmutable;
+  getParameterAnnotations(
+    parameterName: DBModelDBDataKeys<T>,
+  ): ModelPropertyMetadata {
+    return MetadataHelper.getPropertyMetadata<T>(
+      parameterName,
+      this as DBModel<T> as T,
+    );
   }
 
-  toObject(fields: ParametersLimit<T> = new ParametersLimit()): DBModelOnlyDBData<T> {
+  isImmutable(parameterName: DBModelDBDataKeys<T>): boolean {
+    return !!MetadataHelper.getPropertyMetadata<T>(
+      parameterName,
+      this as DBModel<T> as T,
+    )?.isImmutable;
+  }
+
+  toObject(
+    fields: ParametersLimit<T> = new ParametersLimit(),
+  ): DBModelOnlyDBData<T> {
     const entries = this.getEntries(fields);
     return Object.fromEntries(entries) as DBModelOnlyDBData<T>;
   }
@@ -79,11 +89,15 @@ export default abstract class DBModel<T extends DBModel<T>> {
   abstract parseObject(object: DBModelOnlyDBData<T>): T;
 
   prepareREST(): DBModelOnlyDBData<T> {
-    // @ts-ignore
-    return this.toObject(new ParametersLimit<T>(this._RESTExclude)) as DBModelOnlyDBData<T>;
+    return this.toObject(
+      // @ts-ignore
+      new ParametersLimit<T>([], this._RESTExclude),
+    ) as DBModelOnlyDBData<T>;
   }
 
-  getEntries(fields: ParametersLimit<T> = new ParametersLimit()): [DBModelDBDataKeys<T>, T[DBModelDBDataKeys<T>]][] {
+  getEntries(
+    fields: ParametersLimit<T> = new ParametersLimit(),
+  ): [DBModelDBDataKeys<T>, T[DBModelDBDataKeys<T>]][] {
     fields.exclude = [...fields.exclude];
     const entries = Object.entries(this);
     const fixedEntries: [DBModelDBDataKeys<T>, any][] = [];
@@ -91,12 +105,16 @@ export default abstract class DBModel<T extends DBModel<T>> {
     for (let i = 0; i < entries.length; i++) {
       const name = entries[i][0];
       const value = entries[i][1];
-      if (fields.only.length && !fields.only.includes(name as DBModelDBDataKeys<T>)) {
+      if (
+        fields.include.length &&
+        !fields.include.includes(name as DBModelDBDataKeys<T>)
+      ) {
         continue;
       }
       if (
         name.startsWith("_") ||
-        (fields.exclude && fields.exclude.includes(name as DBModelDBDataKeys<T>))
+        (fields.exclude &&
+          fields.exclude.includes(name as DBModelDBDataKeys<T>))
       ) {
         continue;
       }

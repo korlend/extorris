@@ -2,8 +2,17 @@ import ChatTypes from "./enums/ChatTypes";
 import FieldTypes from "./enums/FieldTypes";
 import ShipItemType from "./enums/ShipItemType";
 import HubLinksTypes from "./enums/HubLinksTypes";
+import ConfigDimensionsTypes from "./enums/ConfigDimensionsTypes";
+import RTCalcInstructionsTypes from "./enums/RTCalcInstructionsTypes";
 
-export { FieldTypes, ShipItemType, ChatTypes, HubLinksTypes };
+export {
+  FieldTypes,
+  ShipItemType,
+  ChatTypes,
+  HubLinksTypes,
+  ConfigDimensionsTypes,
+  RTCalcInstructionsTypes,
+};
 
 import type ResponseAPI from "./REST/ResponseAPI";
 import type ResponseCreateUpdateAPI from "./REST/ResponseCreateUpdateAPI";
@@ -16,12 +25,12 @@ import { type DBLogical } from "./types/DBLogical";
 import { type DBOperand } from "./types/DBOperand";
 import { type DBFilterSection } from "./types/DBFilterSection";
 
+import Vector2D from "./models/Vector2D";
 import ModelPropertyMetadata from "./models/ModelPropertyMetadata";
 import ModelPropertyMetadataTypes from "./enums/ModelPropertyMetadataTypes";
 import type KeyAndMetadata from "./interfaces/KeyAndMetadata";
 import type Metadata from "./interfaces/Metadata";
 
-import type Vector2D from "./interfaces/Vector2D";
 import type HexCoordinates from "./interfaces/HexCoordinates";
 import type EntityInfo from "./interfaces/EntityInfo";
 
@@ -37,13 +46,14 @@ export {
 export { type DBLogical, type DBOperand, type DBFilterSection };
 
 export {
+  Vector2D,
   ModelPropertyMetadata,
   ModelPropertyMetadataTypes,
   type KeyAndMetadata,
   type Metadata,
 };
 
-export { type Vector2D, type HexCoordinates, type EntityInfo };
+export { type HexCoordinates, type EntityInfo };
 
 /* vue components */
 import { CanvasComponent } from "./canvas";

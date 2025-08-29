@@ -1,4 +1,4 @@
-import type Vector2D from "src/interfaces/Vector2D";
+import type Vector2D from "src/models/Vector2D";
 
 export default interface CanvasDrawOptions {
   currentScaling: number;

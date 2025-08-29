@@ -13,7 +13,7 @@ import {
   HexDirection,
 } from "./hexagonHelper";
 import { throttle } from "./throttle";
-import { calcDistance } from "./calc";
+import { calcDistance, isPointInCircle } from "./calc";
 import { randomCheck, randomInt } from "./randomizers";
 import { exhaustiveCheck } from "./helpers";
 import { getEllipse, getLine, getRectangle } from "./figureGenerators";
@@ -35,6 +35,7 @@ export {
   randomCheck,
   randomInt,
   calcDistance,
+  isPointInCircle,
   exhaustiveCheck,
   getEllipse,
   getLine,

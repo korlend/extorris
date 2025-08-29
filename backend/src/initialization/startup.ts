@@ -5,6 +5,7 @@ import ParametersLimit from "@src/models/ParametersLimit.js";
 import SearchRequestData from "@src/models/SearchRequestData.js";
 import AdminRoleService from "@src/services/admin/AdminRoleService.js";
 import AdminService from "@src/services/admin/AdminService.js";
+import ConfigDimensionsService from "@src/services/ConfigDimensionsService.js";
 import MainMapHubService from "@src/services/main_map/MainMapHubService.js";
 import PortalService from "@src/services/main_map/PortalService.js";
 import ShipService from "@src/services/ship/ShipService.js";
@@ -13,6 +14,12 @@ import UserSessionService from "@src/services/user/UserSessionService.js";
 import UserIslandService from "@src/services/UserIslandService.js";
 import getAdminRoles from "defaults/models/getAdminRoles.js";
 import getAdmins from "defaults/models/getAdmins.js";
+import getConfigDimensions from "defaults/models/getConfigDimensions.js";
+
+import cronJobs from "@src/cronJobs/index.js";
+import RTCalcInstanceHubService from "@src/services/rtcalc/RTCalcInstanceHubService.js";
+import RTCalcInstanceService from "@src/services/rtcalc/RTCalcInstanceService.js";
+import { RTCalcInstructionsTypes } from "extorris-common";
 
 async function dbDataInit(config: any) {
   const promises = [];
@@ -51,6 +58,36 @@ async function dbDataInit(config: any) {
       }
       resolve(true);
     }),
+    // writing objects width/height config to db
+    new Promise(async (resolve) => {
+      const configDimensionsService = new ConfigDimensionsService();
+
+      const configDimensions = await getConfigDimensions();
+      await configDimensionsService.createUpdateAll(configDimensions, ["name"]);
+      resolve(true);
+    }),
+    // reinit of rtcalc services
+    new Promise(async (resolve) => {
+      const rtcalcInstanceHubService = new RTCalcInstanceHubService();
+      const rtcalcInstanceService = new RTCalcInstanceService();
+      const instances = await rtcalcInstanceService.getAll(0, 100000);
+      await rtcalcInstanceHubService.deleteAll(
+        await rtcalcInstanceHubService.getAll(
+          0,
+          100000,
+          new ParametersLimit(["id"]),
+        ),
+      );
+      await rtcalcInstanceService.deleteAll(instances);
+      for (let i = 0; i < instances.length; i++) {
+        const instance = instances[i];
+        const redisConnector = await RedisConnector.getInstance();
+        redisConnector.writeRTCalcInstruction(instance.uuid, {
+          type: RTCalcInstructionsTypes.REINIT_RTCALC,
+        });
+      }
+      resolve(true);
+    }),
   );
 
   await Promise.all(promises);
@@ -81,12 +118,12 @@ async function redisDataInit() {
     promises.push(redisConnector.writeUserIdShipId(userId, shipId));
   }
 
-  // writing not parked ships
+  // getting not parked ships
   const shipService = new ShipService();
   const mainMapHubService = new MainMapHubService();
   const ships = await shipService.getAllBy("is_parked", false);
 
-  // writing active hubs
+  // writing not parked ships, getting active hubs
   const activeHubsFilters: Array<DBFilter<MainMapHubModel>> = [];
   for (let i = 0; i < ships.length; i++) {
     const ship = ships[i];
@@ -94,13 +131,16 @@ async function redisDataInit() {
       continue;
     }
     activeHubsFilters.push(new DBFilter("id", ship.main_map_hub_id));
+    promises.push(shipService.writeShipToRedis(ship));
+    promises.push(redisConnector.writeShipPosition(ship));
   }
 
+  // writing active hubs
   if (activeHubsFilters.length) {
     const activeHubs = await mainMapHubService.getSearchAll(
       new SearchRequestData(0, 10000),
       activeHubsFilters,
-      new ParametersLimit([], ["id"]),
+      new ParametersLimit(["id"]),
     );
     for (let i = 0; i < activeHubs.items.length; i++) {
       const hub = activeHubs.items[i];
@@ -111,4 +151,11 @@ async function redisDataInit() {
   await Promise.all(promises);
 }
 
-export { dbDataInit, redisDataInit };
+function cronJobsInit() {
+  for (let i = 0; i < cronJobs.length; i++) {
+    const job = cronJobs[i];
+    job.start();
+  }
+}
+
+export { dbDataInit, redisDataInit, cronJobsInit };

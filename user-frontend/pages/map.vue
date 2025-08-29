@@ -1,7 +1,5 @@
 <template>
-  <div>
-    <GameMainMap></GameMainMap>
-  </div>
+  <GameMainMap></GameMainMap>
 </template>
 
 <script setup lang="ts">

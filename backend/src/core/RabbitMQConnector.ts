@@ -49,17 +49,16 @@ export default class RabbitMQConnector {
     }
 
     if (!url) {
-      console.error("No url for rabbitmq was presented (use env var e.g. RABBITMQ=amqp://localhost:5672)")
+      console.error(
+        "No url for rabbitmq was presented (use env var e.g. RABBITMQ=amqp://localhost:5672)",
+      );
       return null;
     }
 
     const connection = await RabbitMQConnector.createConnection(url);
     const channel = await RabbitMQConnector.createChannel(connection);
 
-    const queueKeys = [
-      RabbitMQModels.RabbitMQKeys.USER_SENT_CHAT_MESSAGES,
-      RabbitMQModels.RabbitMQKeys.CHAT_UPDATE_FOR_COMMS,
-    ];
+    const queueKeys = Object.values(RabbitMQModels.RabbitMQKeys);
 
     for (let i = 0; i < queueKeys.length; i++) {
       channel.assertQueue(queueKeys[i], {
@@ -70,18 +69,19 @@ export default class RabbitMQConnector {
     return (RabbitMQConnector.instance = new RabbitMQConnector(channel));
   }
 
-  enqueueChatMessage(message: RabbitMQModels.RabbitMQChatUpdate) {
-    this.channel.sendToQueue(
-      RabbitMQModels.RabbitMQKeys.CHAT_UPDATE_FOR_COMMS,
-      Buffer.from(JSON.stringify(message)),
-    );
+  enqueueMessage<T extends RabbitMQModels.RabbitMQKeys>(
+    type: T,
+    message: RabbitMQModels.RabbitMQMessage<T>,
+  ) {
+    this.channel.sendToQueue(type, Buffer.from(JSON.stringify(message)));
   }
 
-  setUserChatDequeueCallback(
-    callback: (message: RabbitMQModels.RabbitMQUserChatMessage) => void,
+  setDequeueCallback<T extends RabbitMQModels.RabbitMQKeys>(
+    type: T,
+    callback: (message: RabbitMQModels.RabbitMQMessage<T>) => void,
   ) {
     this.channel.consume(
-      RabbitMQModels.RabbitMQKeys.USER_SENT_CHAT_MESSAGES,
+      type,
       (msg: callbackApi.Message | null) => {
         if (!msg) {
           return;

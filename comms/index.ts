@@ -23,31 +23,35 @@ const resendPositions = async (wsServer: NodeWSServer) => {
   }
   // console.log("Sending positions... ", timesSent);
   const redis = await RedisConnector.getInstance();
-  const activeHubs = await redis.getActiveHubs();
-  for (let i = 0; i < activeHubs.length; i++) {
-    const hub = activeHubs[i];
-    const shipsPositions = await redis.getShipsPositions(hub.shipIds);
-    if (!shipsPositions) {
-      continue;
-    }
-    wsServer.sendHubData(
-      {
-        fromWhere: CommsModels.CommsSourceEnum.COMMS_SERVICE,
-        messageType: CommsModels.CommsTypesEnum.SHIP_POSITION_CHANGE,
-        data: {
-          ships: shipsPositions.map((pos) => ({
-            id: pos.id,
-            angle: pos.angle,
-            hp: pos.hp,
-            speed: pos.speed,
-            x: pos.x,
-            y: pos.y,
-          })),
-          hubId: hub.id,
+  const activeRTCalcInstances = await redis.getActiveRTCalcInstances();
+  for (let i = 0; i < activeRTCalcInstances.length; i++) {
+    const rtcalcUuid = activeRTCalcInstances[i];
+    const activeHubs = await redis.getActiveHubs(rtcalcUuid);
+    for (let j = 0; j < activeHubs.length; j++) {
+      const hub = activeHubs[j];
+      const shipsPositions = await redis.getShipsPositions(hub.shipIds);
+      if (!shipsPositions) {
+        continue;
+      }
+      wsServer.sendHubData(
+        {
+          fromWhere: CommsModels.CommsSourceEnum.COMMS_SERVICE,
+          messageType: CommsModels.CommsTypesEnum.SHIP_POSITION_CHANGE,
+          data: {
+            ships: shipsPositions.map((pos) => ({
+              id: pos.id,
+              angle: pos.angle,
+              hp: pos.hp,
+              speed: pos.speed,
+              x: pos.x,
+              y: pos.y,
+            })),
+            hubId: hub.id,
+          },
         },
-      },
-      hub.id,
-    );
+        hub.id,
+      );
+    }
   }
   timesSent++;
   setTimeout(() => resendPositions(wsServer), recalcTimeoutMS);
@@ -66,33 +70,39 @@ async function init() {
   const wsServer = new NodeWSServer(server);
   resendPositions(wsServer);
 
-  rabbitmq?.setChatDequeueCallback((message) => {
-    console.log("dequeuing message for chat", message);
-    wsServer.send(
-      {
-        fromWhere: CommsModels.CommsSourceEnum.COMMS_SERVICE,
-        messageType: CommsModels.CommsTypesEnum.CHAT_CHANGE,
-        data: {
-          id: message.id,
-          chatId: message.chatId,
-          message: message.message,
-          userId: message.userId,
+  rabbitmq?.setDequeueCallback(
+    RabbitMQModels.RabbitMQKeys.CHAT_UPDATE_FOR_COMMS,
+    (message) => {
+      console.log("dequeuing message for chat", message);
+      wsServer.send(
+        {
+          fromWhere: CommsModels.CommsSourceEnum.COMMS_SERVICE,
+          messageType: CommsModels.CommsTypesEnum.CHAT_CHANGE,
+          data: {
+            id: message.id,
+            chatId: message.chatId,
+            message: message.message,
+            userId: message.userId,
+          },
         },
-      },
-      message.updateUserIds,
-    );
-  });
+        message.updateUserIds,
+      );
+    },
+  );
 
   wsServer.setOnMessage(async (ws, message, userId) => {
     if (
       message.fromWhere === CommsModels.CommsSourceEnum.USER_CLIENT &&
       message.messageType === CommsModels.CommsTypesEnum.CHAT_CHANGE
     ) {
-      rabbitmq?.enqueueUserChatMessage({
-        chatId: message.data.chatId,
-        message: message.data.message,
-        userId,
-      });
+      rabbitmq?.enqueueMessage(
+        RabbitMQModels.RabbitMQKeys.USER_SENT_CHAT_MESSAGES,
+        {
+          chatId: message.data.chatId,
+          message: message.data.message,
+          userId,
+        },
+      );
       return;
     }
 

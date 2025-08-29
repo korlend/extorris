@@ -7,6 +7,7 @@ export default class PropagatedError extends Error {
 
   constructor(responseType?: ExpressResponseTypes, text?: string) {
     super(text);
+    console.trace("error occured", responseType, text);
     this.responseType = responseType || ExpressResponseTypes.ERROR;
     this.responseCode = ExpressResponseCodes[this.responseType];
   }

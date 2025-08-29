@@ -87,7 +87,7 @@ onBeforeUnmount(() => {
 
 onMounted(() => {
   console.log("onMounted test hub");
-  shipImage.src = "http://localhost:8090/images/default_ship.png";
+  shipImage.src = "http://localhost:8093/images/default_ship.png";
   /*
   for showing portals on main map
   bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)

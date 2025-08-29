@@ -53,6 +53,14 @@ export default abstract class Service<
     return this.repo.getBy(key, value, fields);
   }
 
+  /**
+   *
+   * @param key model key
+   * @param value model value
+   * @param fields model keys restrictions
+   * @param limit no limit if undefined
+   * @returns data array
+   */
   async getAllBy<K extends DBDataKeys>(
     key: K,
     value: T[K],
@@ -211,8 +219,7 @@ export default abstract class Service<
     );
     if (!dbData) {
       dbData = await this._create(data, fields);
-    }
-    else {
+    } else {
       data.id = dbData.id;
       dbData = await this._update(data, fields);
     }

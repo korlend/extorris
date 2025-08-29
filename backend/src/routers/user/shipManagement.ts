@@ -70,45 +70,11 @@ router.put(
     const { user } = res.locals;
 
     const shipService = new ShipService();
-    const userIslandService = new UserIslandService();
-    const hubService = new MainMapHubService();
-    let userShip = await shipService.getBy("user_id", user.id);
-
-    if (!userShip) {
-      throw new PropagatedError(ExpressResponseTypes.ERROR, "user has no ship");
-    }
-
-    const isShipReadyToFly = await shipService.isShipReadyToFly(userShip.id);
-
-    if (!isShipReadyToFly) {
-      throw new PropagatedError(
-        ExpressResponseTypes.ERROR,
-        "ship doesn't have necessary items equipped",
-      );
-    }
-
-    const userIsland = await userIslandService.getBy("user_id", user.id);
-    if (!userIsland.main_map_hub_id) {
-      throw new PropagatedError(
-        ExpressResponseTypes.ERROR,
-        "user island is not linked to a hub",
-      );
-    }
-
-    userShip.main_map_hub_id = userIsland.main_map_hub_id;
-    userShip.is_parked = false;
-
-    userShip = await shipService.update(userShip);
-    const redis = await RedisConnector.getInstance();
-    const userIslandHub = await hubService.get(userIsland.main_map_hub_id);
-
-    await shipService.writeShipToRedis(userShip);
-    await redis.writeShipPosition(userShip, userIsland);
-    await hubService.writeActiveHubToRedis(userIslandHub.id);
+    const userShip = await shipService.flyOutFromIsland(user.id);
 
     next(
       ExpressResponseGenerator.getResponse(ExpressResponseTypes.SUCCESS, {
-        userShip,
+        userShip: userShip.prepareREST(),
       }),
     );
   },
@@ -137,7 +103,7 @@ router.put(
     userShip = await shipService.update(userShip);
 
     const redis = await RedisConnector.getInstance();
-    await redis.writeShipPosition(userShip, userIsland);
+    await redis.writeShipPosition(userShip);
 
     if (shipWasAtHubId) {
       await hubService.writeActiveHubToRedis(shipWasAtHubId);

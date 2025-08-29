@@ -64,13 +64,13 @@ import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 import MittEvents from "~/core/enums/MittEvents";
 
 import {
+  Vector2D,
   CanvasComponent,
   CanvasCursors,
   type CanvasBlock,
   type CanvasClickEvent,
   type CanvasDrawOptions,
   type CanvasElement,
-  type Vector2D,
 } from "extorris-common";
 
 const { $mittEmit } = useNuxtApp();
@@ -169,8 +169,8 @@ const resetCanvasBlock = (iteration?: any) => {
           stroke: [
             {
               path: getLine(
-                { x: 0, y: 0 },
-                { x: linkedHubPos.x - pos.x, y: linkedHubPos.y - pos.y }
+                new Vector2D(0, 0),
+                new Vector2D(linkedHubPos.x - pos.x, linkedHubPos.y - pos.y)
               ),
               color: `rgb(250,0,0)`,
             },
@@ -268,7 +268,7 @@ const calcPos = (
   const isLeftRow = itemNumber > depth * 4;
 
   if (depth == 0) {
-    return { x: initialPositionX, y: initialPositionY };
+    return new Vector2D(initialPositionX, initialPositionY);
   }
 
   if (isTopRow) {
@@ -322,7 +322,7 @@ const calcPos = (
     }
   }
 
-  return { x: Math.floor(x), y: Math.floor(y) };
+  return new Vector2D(Math.floor(x), Math.floor(y));
 };
 
 const loadMainMap = async (mainMapId: number | string) => {
@@ -386,6 +386,9 @@ const openModal = () => {
 
 <style lang="scss" scoped>
 .main__map {
+  width: 100%;
+  height: 100%;
+
   &-selectors {
     position: fixed;
     top: 60px;

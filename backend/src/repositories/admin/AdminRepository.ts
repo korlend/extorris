@@ -21,7 +21,9 @@ export default class AdminRepository extends Repository<AdminModel> {
         [id],
       )
       .then((resp) =>
-        this.modelFromDataPacket(resp).then((adminModel) => adminModel.password),
+        this.modelFromDataPacket(resp).then(
+          (adminModel) => adminModel.password,
+        ),
       );
   }
 
@@ -50,7 +52,7 @@ export default class AdminRepository extends Repository<AdminModel> {
   }
 
   getAdminByEmail(email: string) {
-    return this.getBy("email", email, new ParametersLimit(["password"]));
+    return this.getBy("email", email, new ParametersLimit([], ["password"]));
   }
 
   getByFirstname(firstname: string): Promise<AdminModel> {
@@ -94,11 +96,11 @@ export default class AdminRepository extends Repository<AdminModel> {
   }
 
   getAdminWithoutPass(id: number) {
-    return this.get(id, new ParametersLimit(["password"]));
+    return this.get(id, new ParametersLimit([], ["password"]));
   }
 
   getAllAdminsWithoutPass() {
-    return this.getAll(0, 0, new ParametersLimit(["password"]));
+    return this.getAll(0, 0, new ParametersLimit([], ["password"]));
   }
 
   // removeSessions(adminId: number) {

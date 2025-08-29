@@ -13,6 +13,8 @@ import RedisConnector from "@src/core/RedisConnector.js";
 import ShipService from "../ship/ShipService.js";
 import UserIslandService from "../UserIslandService.js";
 import PortalService from "./PortalService.js";
+import RTCalcInstanceService from "../rtcalc/RTCalcInstanceService.js";
+import { RTCalcInstructionsTypes } from "extorris-common";
 
 export default class MainMapHubService extends Service<
   MainMapHubModel,
@@ -36,11 +38,21 @@ export default class MainMapHubService extends Service<
     return mainMapHub;
   }
 
-  async writeActiveHubToRedis(hubId: number) {
+  async writeActiveHubToRedis(hubId: number): Promise<string | null> {
     const redisConnector = await RedisConnector.getInstance();
 
     if (!redisConnector) {
-      return;
+      return null;
+    }
+
+    const rtcalcInstanceService = new RTCalcInstanceService();
+
+    const rtcalcInstanceUuid =
+      await rtcalcInstanceService.assignHubToRTCalcInstance(hubId);
+
+    if (!rtcalcInstanceUuid) {
+      console.error();
+      return null;
     }
 
     const shipService = new ShipService();
@@ -54,12 +66,16 @@ export default class MainMapHubService extends Service<
       hub.id,
     );
     const hubShips = await shipService.getAllBy("main_map_hub_id", hub.id);
-    await redisConnector.writeActiveHub(
-      hub,
-      portals,
-      userIslands,
-      hubShips.map((v) => v.id),
-    );
+    await redisConnector.writeRTCalcInstruction(rtcalcInstanceUuid, {
+      type: RTCalcInstructionsTypes.ENLIST_ACTIVE_HUB,
+      data: RedisConnector.buildActiveHub(
+        hub,
+        portals,
+        userIslands,
+        hubShips.map((v) => v.id),
+      ),
+    });
+    return rtcalcInstanceUuid;
   }
 
   async getRandomUserIslandSpawnPoint(

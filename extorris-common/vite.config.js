@@ -5,6 +5,11 @@ import dts from "vite-plugin-dts";
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "./src"),
+    }
+  },
   plugins: [
     vue(),
     cssInjectedByJsPlugin({ useStrictCSP: true, relativeCSSInjection: false }),

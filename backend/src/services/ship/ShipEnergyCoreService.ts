@@ -35,6 +35,6 @@ export default class ShipEnergyCoreService extends Service<
     const userShip = await shipService.getBy("user_id", user.id);
 
     part.ship_id = userShip.id;
-    await this.update(part, new ParametersLimit([], ["ship_id"]));
+    await this.update(part, new ParametersLimit(["ship_id"]));
   }
 }

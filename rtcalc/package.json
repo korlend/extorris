@@ -44,6 +44,7 @@
     "dotenv": "^16.4.7",
     "express": "^5.0.0",
     "extorris-common": "portal:../extorris-common",
+    "uuid": "^11.1.0",
     "ws": "^8.18.0"
   },
   "packageManager": "yarn@4.5.0"

@@ -22,7 +22,7 @@ const route = useRoute();
 
 <style lang="scss" scoped>
 .default__layout {
-  max-height: 100vh;
+  height: 100vh;
 
   &-page__container {
     height: 100%;

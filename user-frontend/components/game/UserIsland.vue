@@ -1,7 +1,6 @@
 <template>
   <div class="home__page">
     <CanvasComponent
-      class="home__page-canvas"
       :class="getClasses"
       :draw-function="draw"
       :draw-modal-function="drawModal"
@@ -12,6 +11,7 @@
 
 <script setup lang="ts">
 import {
+  Vector2D,
   CanvasComponent,
   CanvasCursors,
   type CanvasBlock,
@@ -58,7 +58,7 @@ onMounted(() => {
     },
     {
       zindex: 1,
-      position: { x: -1000, y: 0 },
+      position: new Vector2D(-1000, 0),
       fill: [
         {
           path: shipyard.roof,
@@ -213,10 +213,7 @@ const clickEvent = (canvasEvent: CanvasClickEvent) => {};
 }
 
 .home__page {
-  &-canvas {
-    // width: 100%;
-    // height: 100%;
-    // border: 1px solid grey;
-  }
+  width: 100%;
+  height: 100%;
 }
 </style>

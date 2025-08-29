@@ -1,9 +1,10 @@
 {
   "host": "0.0.0.0",
-  "port": 8090,
+  "port": 8093,
   "urlRoot": "",
   "userApiUrlPrefix": "/api",
   "adminApiUrlPrefix": "/admin-api",
+  "authenticatedApiUrlPrefix": "/authenticated",
   "imagesDirectory": "./public/images",
   "database": {
     "mysql": {
@@ -44,5 +45,9 @@
         "/auth/login_email"
       ]
     }
+  },
+  "rtcalcOrchestrator": {
+    "hubsPerService": 100,
+    "serviceAliveLinger": 3600
   }
 }

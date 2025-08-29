@@ -6,7 +6,7 @@ import {
 import ChatRepository from "@src/repositories/chat/ChatRepository.js";
 import Service from "../Service.js";
 import DBFilter from "@src/models/DBFilter.js";
-import { ChatTypes } from "extorris-common";
+import { ChatTypes, RabbitMQModels } from "extorris-common";
 import SearchRequestData from "@src/models/SearchRequestData.js";
 import ChatUserService from "./ChatUserService.js";
 import ChatMessageService from "./ChatMessageService.js";
@@ -99,12 +99,15 @@ export default class ChatService extends Service<ChatModel, ChatRepository> {
       return;
     }
     const rabbitmq = await RabbitMQConnector.getInstance();
-    rabbitmq?.enqueueChatMessage({
-      id: chatMessage.id,
-      chatId: chatMessage.chat_id,
-      message: chatMessage.message,
-      userId: chatMessage.user_id,
-      updateUserIds,
-    });
+    rabbitmq?.enqueueMessage(
+      RabbitMQModels.RabbitMQKeys.CHAT_UPDATE_FOR_COMMS,
+      {
+        id: chatMessage.id,
+        chatId: chatMessage.chat_id,
+        message: chatMessage.message,
+        userId: chatMessage.user_id,
+        updateUserIds,
+      },
+    );
   }
 }

@@ -34,7 +34,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || "http://localhost:8090",
+      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || "http://localhost:8093",
       commsUrl: process.env.NUXT_PUBLIC_COMMS_URL || "ws://localhost:8091",
     },
   },

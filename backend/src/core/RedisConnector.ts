@@ -63,7 +63,7 @@ export default class RedisConnector {
     };
   }
 
-  private buildActiveHub(
+  public static buildActiveHub(
     hub: MainMapHubModel,
     portals: Array<PortalModel>,
     userIslands: Array<UserIslandModel>,
@@ -96,7 +96,7 @@ export default class RedisConnector {
     return activeHub;
   }
 
-  private buildShipData(
+  public static buildShipData(
     ship: ShipModel,
     shipArmor: ShipArmorModel,
     shipCannons: Array<ShipCannonModel>,
@@ -137,14 +137,20 @@ export default class RedisConnector {
   }
 
   private addUserSession(session: RedisModels.UserSession) {
-    this.client.SET(
+    return this.client.SET(
       RedisModels.buildRedisKey(
         RedisModels.DataKeys.USER_SESSIONS,
         session.token,
       ),
       JSON.stringify(session),
     );
-    return;
+  }
+
+  public addActiveRTCalc(rtcalcUuid: string) {
+    return this.client.RPUSH(
+      RedisModels.buildRedisKey(RedisModels.DataKeys.RTCALC_INSTANCES),
+      rtcalcUuid,
+    );
   }
 
   public async writeUserSession(
@@ -174,35 +180,6 @@ export default class RedisConnector {
     this.addUserSession(redisUserSession);
   }
 
-  // TODO: make atomic, maybe make a queue and rtcalc worker is responsible for writing data
-  // or maybe we are doing it 1 time during first boot? - no
-  // more logic will be here, probably, nests, islands, monsters, trees
-  // split hubs by keys and make a ids list of active hubs
-  public async writeActiveHub(
-    hub: MainMapHubModel,
-    portals: Array<PortalModel>,
-    userIslands: Array<UserIslandModel>,
-    shipIds: Array<number>,
-  ) {
-    // pushing hub id to set
-    await this.client.SADD(
-      RedisModels.buildRedisKey(RedisModels.DataKeys.ACTIVE_HUBS_SET),
-      hub.id.toString(),
-    );
-
-    // adding active hub
-    const builtActiveHub = this.buildActiveHub(
-      hub,
-      portals,
-      userIslands,
-      shipIds,
-    );
-    this.client.SET(
-      RedisModels.buildRedisKey(RedisModels.DataKeys.ACTIVE_HUB, hub.id),
-      JSON.stringify(builtActiveHub),
-    );
-  }
-
   public async writeShipData(
     ship: ShipModel,
     shipArmor: ShipArmorModel,
@@ -211,7 +188,7 @@ export default class RedisConnector {
     shipEngine: ShipEngineModel,
     shipHull: ShipHullModel,
   ) {
-    const shipData = this.buildShipData(
+    const shipData = RedisConnector.buildShipData(
       ship,
       shipArmor,
       shipCannons,
@@ -225,12 +202,12 @@ export default class RedisConnector {
     );
   }
 
-  public async writeShipPosition(ship: ShipModel, userIsland: UserIslandModel) {
+  public async writeShipPosition(ship: ShipModel) {
     const shipPosition: RedisModels.ShipPosition = {
       id: ship.id,
       user_id: ship.user_id || 0,
-      x: userIsland.hub_pos_x,
-      y: userIsland.hub_pos_y,
+      x: ship.x,
+      y: ship.y,
       speed: 0,
       angle: 0,
       hp: 1000,
@@ -240,6 +217,32 @@ export default class RedisConnector {
       RedisModels.buildRedisKey(RedisModels.DataKeys.SHIP_POSITION, ship.id),
       JSON.stringify(shipPosition),
     );
+  }
+
+  public async writeRTCalcInstruction(
+    rtcalcUuid: string,
+    instruction: RedisModels.RTCalcInstructionData,
+  ) {
+    await this.client.RPUSH(
+      RedisModels.buildRedisKey(
+        RedisModels.DataKeys.RTCALC_INSTRUCTIONS,
+        rtcalcUuid,
+      ),
+      JSON.stringify(instruction),
+    );
+  }
+
+  public async getShipPosition(
+    shipId: number,
+  ): Promise<RedisModels.ShipPosition | null> {
+    const data = await this.client.GET(
+      RedisModels.buildRedisKey(RedisModels.DataKeys.SHIP_POSITION, shipId),
+    );
+    if (!data) {
+      return null;
+    }
+    const parsedData = JSON.parse(data);
+    return parsedData;
   }
 
   public deleteUserSession(sessionToken: string) {

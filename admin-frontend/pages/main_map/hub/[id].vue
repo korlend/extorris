@@ -12,13 +12,13 @@ import LocalAlertTypes from "~/core/models/local_alerts/LocalAlertTypes";
 import MittEvents from "~/core/enums/MittEvents";
 
 import {
+  Vector2D,
   CanvasComponent,
   CanvasCursors,
   type CanvasBlock,
   type CanvasClickEvent,
   type CanvasDrawOptions,
   type CanvasElement,
-  type Vector2D,
 } from "extorris-common";
 
 const { $mittEmit } = useNuxtApp();
@@ -74,10 +74,10 @@ const resetCanvasBlock = (iteration?: any) => {
     const portal = hubData.value.fromPortals[i];
     newCanvasBlocks.push({
       zindex: 1,
-      position: {
-        x: portal.from_hub_position_x,
-        y: portal.from_hub_position_y,
-      },
+      position: new Vector2D(
+        portal.from_hub_position_x,
+        portal.from_hub_position_y
+      ),
       fill: [
         {
           path: getHalfEllipse(300),
@@ -91,10 +91,10 @@ const resetCanvasBlock = (iteration?: any) => {
     const portal = hubData.value.toPortals[i];
     newCanvasBlocks.push({
       zindex: 1,
-      position: {
-        x: portal.to_hub_position_x,
-        y: portal.to_hub_position_y,
-      },
+      position: new Vector2D(
+        portal.to_hub_position_x,
+        portal.to_hub_position_y
+      ),
       fill: [
         {
           path: getHalfEllipse(300),
@@ -111,7 +111,7 @@ const resetCanvasBlock = (iteration?: any) => {
     newCanvasBlocks.push({
       stroke: [
         {
-          path: getLine({ x: i, y: -max / 2 }, { x: i, y: max / 2 }),
+          path: getLine(new Vector2D(i, -max / 2), new Vector2D(i, max / 2)),
           color: `rgb(255,255,255)`,
         },
       ],
@@ -119,7 +119,7 @@ const resetCanvasBlock = (iteration?: any) => {
     newCanvasBlocks.push({
       stroke: [
         {
-          path: getLine({ x: -max / 2, y: i }, { x: max / 2, y: i }),
+          path: getLine(new Vector2D(-max / 2, i), new Vector2D(max / 2, i)),
           color: `rgb(255,255,255)`,
         },
       ],

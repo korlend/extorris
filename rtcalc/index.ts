@@ -1,27 +1,39 @@
-import http from "http";
-import express, { Request, Response, NextFunction } from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
+import { v4 as uuidv4 } from "uuid";
 
 import "dotenv/config";
 
 import RabbitMQConnector from "@src/RabbitMQConnector.js";
 import RedisConnector from "@src/RedisConnector.js";
-
-let healthcheck = 0;
+import {
+  isPointInCircle,
+  RabbitMQModels,
+  RedisModels,
+  RTCalcInstructionsTypes,
+  Vector2D,
+} from "extorris-common";
 
 const recalcTimeoutMS = 50;
 let cycleActive = true;
 let timesCalculated = 0;
 
-const calculatePositions = async () => {
+const calculatePositions = async (
+  uuid: string,
+  rabbitmq: RabbitMQConnector,
+  redis: RedisConnector,
+) => {
   if (!cycleActive) {
-    setTimeout(calculatePositions, recalcTimeoutMS);
+    setTimeout(
+      () => calculatePositions(uuid, rabbitmq, redis),
+      recalcTimeoutMS,
+    );
     return;
   }
+
+  const instructions = await readInstructions(uuid, redis);
+  await executeInstructions(instructions, uuid, rabbitmq, redis);
+
   // console.log("Calculating positions... ", timesCalculated);
-  const redis = await RedisConnector.getInstance();
-  const activeHubs = await redis.getActiveHubs();
+  const activeHubs = await redis.getActiveHubs(uuid);
   for (let i = 0; i < activeHubs.length; i++) {
     const hub = activeHubs[i];
     const ships = await redis.getShipData(hub.shipIds);
@@ -47,16 +59,43 @@ const calculatePositions = async () => {
       shipPosition.angle = targetAngle;
       shipPosition.speed = targetSpeed;
 
-      // calculate new position
+      // calculate new ship position
       const { angle, speed } = shipPosition;
       const previousTime = new Date(shipPosition.lastUpdate);
       const currentTime = new Date();
       const one_rad = 180 / Math.PI;
       const radians = angle / one_rad;
       const sin = Math.sin(radians);
-      const radius = (currentTime.getTime() - previousTime.getTime()) / 1000 * speed;
+      const radius =
+        ((currentTime.getTime() - previousTime.getTime()) / 1000) * speed;
       let sk1 = sin * radius;
       let sk2 = Math.sqrt(Math.pow(radius, 2) - Math.pow(sk1, 2));
+
+      // check portals collisions
+      const portals = hub.portals;
+      const shipPosVector = new Vector2D(shipPosition.x, shipPosition.y);
+      let collisionPortal = null;
+      for (let i = 0; i < portals.length; i++) {
+        const portal = portals[i];
+        const portalVector = new Vector2D(portal.x, portal.y);
+        if (isPointInCircle(shipPosVector, portalVector, 250)) {
+          collisionPortal = portal;
+          break;
+        }
+      }
+
+      if (collisionPortal) {
+        console.log(
+          `ship: ${ship.id}, entered portal: ${collisionPortal.id}, ${new Date().getMilliseconds()}`,
+        );
+        rabbitmq.enqueueMessage(RabbitMQModels.RabbitMQKeys.SHIP_ENTER_PORTAL, {
+          shipId: ship.id,
+          portalId: collisionPortal.id,
+          fromHubId: hub.id,
+        });
+      }
+
+      // check island collisions
 
       // write new position
       if (angle > 90 && angle < 270) {
@@ -71,60 +110,135 @@ const calculatePositions = async () => {
     }
   }
   timesCalculated++;
-  setTimeout(calculatePositions, recalcTimeoutMS);
+  setTimeout(() => calculatePositions(uuid, rabbitmq, redis), recalcTimeoutMS);
+};
+
+const readInstructions = async (uuid: string, redis: RedisConnector) => {
+  const instructions = await redis.getRTCalcInstructions(uuid);
+  return instructions;
+};
+
+const executeInstructions = async (
+  instructions: Array<RedisModels.RTCalcInstructionData>,
+  uuid: string,
+  rabbitmq: RabbitMQConnector,
+  redis: RedisConnector,
+) => {
+  for (let i = 0; i < instructions.length; i++) {
+    const instruction = instructions[i];
+    await executeInstruction(instruction, uuid, rabbitmq, redis);
+  }
+};
+
+const executeInstruction = async (
+  instruction: RedisModels.RTCalcInstructionData,
+  uuid: string,
+  rabbitmq: RabbitMQConnector,
+  redis: RedisConnector,
+) => {
+  switch (instruction.type) {
+    case RTCalcInstructionsTypes.ENLIST_ACTIVE_HUB: {
+      await redis.writeActiveHub(uuid, instruction.data);
+      // console.log(`instruction ${instruction.type} executed`);
+      break;
+    }
+
+    case RTCalcInstructionsTypes.SHUTDOWN_RTCALC: {
+      await redis.removeActiveHub(uuid, instruction.hubId);
+      console.log(`instruction ${instruction.type} executed`);
+      break;
+    }
+
+    case RTCalcInstructionsTypes.ADD_SHIP_TO_HUB: {
+      const targetHub = await redis.getActiveHubs(instruction.hubId);
+      if (!targetHub) {
+        console.error(
+          `Hub (${instruction.hubId}) doesn't exist in redis for rtcalc (${uuid})`,
+        );
+        break;
+      }
+      targetHub.shipIds.push(instruction.shipId);
+      await redis.writeActiveHub(uuid, targetHub);
+      console.log(`instruction ${instruction.type} executed`);
+      break;
+    }
+
+    case RTCalcInstructionsTypes.REMOVE_SHIP_FROM_HUB: {
+      const targetHub = await redis.getActiveHubs(instruction.hubId);
+      if (!targetHub) {
+        console.error(
+          `Hub (${instruction.hubId}) doesn't exist in redis for rtcalc (${uuid})`,
+        );
+        break;
+      }
+      const newShipIds = targetHub.shipIds.filter(
+        (shipId) => shipId === instruction.shipId,
+      );
+      targetHub.shipIds = newShipIds;
+      await redis.writeActiveHub(uuid, targetHub);
+      console.log(`instruction ${instruction.type} executed`);
+      break;
+    }
+
+    case RTCalcInstructionsTypes.CHANGE_SHIP_POSITION: {
+      const { shipId, newPosX, newPosY, newAngle } = instruction;
+      const previousShipPosition = await redis.getShipPosition(shipId);
+      if (!previousShipPosition) {
+        console.error(`Ship (${shipId}) position doesn't exist in redis`);
+        break;
+      }
+      await redis.writeShipPosition({
+        id: previousShipPosition.id,
+        user_id: previousShipPosition.user_id,
+        x: newPosX,
+        y: newPosY,
+        angle: newAngle,
+        speed: 0,
+        hp: previousShipPosition.hp,
+        lastUpdate: previousShipPosition.lastUpdate,
+      });
+      console.log(`instruction ${instruction.type} executed`);
+      break;
+    }
+
+    case RTCalcInstructionsTypes.REINIT_RTCALC: {
+      await declareRTCalcService(rabbitmq);
+      console.log(`instruction ${instruction.type} executed`);
+      break;
+    }
+  }
+};
+
+const declareRTCalcService = async (rabbitmq: RabbitMQConnector) => {
+  const uuid = uuidv4();
+  await rabbitmq.enqueueMessage(RabbitMQModels.RabbitMQKeys.DECLARE_RTCALC, {
+    uuid,
+  });
+  return uuid;
 };
 
 async function init() {
-  const app = express();
-  const server = http.createServer(app);
-  const host = process.env.HOST || "0.0.0.0";
-  const port = process.env.PORT ? parseInt(process.env.PORT) : 8092;
+  const rabbitAddress = process.env.RABBITMQ || "amqp://localhost:5672";
+  const rabbitmq = await RabbitMQConnector.getInstance(rabbitAddress);
 
-  const rabbitmq = await RabbitMQConnector.getInstance(
-    process.env.RABBITMQ || "amqp://localhost:5672",
-  );
+  if (!rabbitmq) {
+    console.error(`Rabbit in ${rabbitAddress} unavailable, can't start`);
+    return;
+  }
 
-  calculatePositions();
-
-  app.use(cors());
-
-  app.set("port", port);
-
-  app.use(bodyParser.json({}));
-
-  app.all(
-    "/activate_calculations",
-    (req: Request, res: Response, next: NextFunction) => {
-      cycleActive = true;
-      res.status(200).send(cycleActive);
-    },
-  );
-
-  app.all(
-    "/disable_calculations",
-    (req: Request, res: Response, next: NextFunction) => {
-      cycleActive = false;
-      res.status(200).send(cycleActive);
-    },
-  );
-
-  app.all("/test", (req: Request, res: Response, next: NextFunction) => {
-    healthcheck = healthcheck + 1;
-    res.status(200).send(healthcheck);
+  const redisAddress = process.env.REDIS || "redis://127.0.0.1:6379";
+  const redis = await RedisConnector.getInstance({
+    url: redisAddress,
   });
 
-  app.all("/healthcheck", (req: Request, res: Response, next: NextFunction) => {
-    healthcheck = healthcheck + 1;
-    res.status(200).send(healthcheck);
-  });
+  if (!redis) {
+    console.error(`Redis in ${redisAddress} unavailable, can't start`);
+    return;
+  }
 
-  // catch 404 and forward to error handler
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    res.status(404).send();
-  });
+  const uuid = await declareRTCalcService(rabbitmq);
 
-  server.listen(port, host);
-  return app;
+  calculatePositions(uuid, rabbitmq, redis);
 }
 
-export const viteNodeApp = await init();
+export const app = await init();

@@ -1,5 +1,5 @@
 /**
- * return function which will call "func" only once in delay
+ * return function which will call "func" exactly once in delay
  * @param func
  * @param delay in milliseconds
  */
@@ -16,10 +16,5 @@ export function throttle(func: Function, delay: number) {
       }, delay + 1);
       return;
     }
-    // if (now.getTime() - lastCall.getTime() < delay) {
-    //   console.log("--------------------------------------------------------- EXEC");
-    //   func(lastArgs);
-    //   lastCall = new Date();
-    // }
   }
 }

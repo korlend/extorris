@@ -117,9 +117,7 @@ export default abstract class Repository<
     return this._anyModelFromDataPacket(dataObj, this.model);
   }
 
-  protected async _anyModelsFromDataPacket(
-    dataObj: any,
-  ): Promise<Array<any>> {
+  protected async _anyModelsFromDataPacket(dataObj: any): Promise<Array<any>> {
     const dataArray: Array<T> = [];
 
     for (let i = 0; i < dataObj.length; i++) {

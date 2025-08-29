@@ -4,11 +4,14 @@ import type { ResponseAPI } from "extorris-common";
 import type Session from "~/core/interfaces/Session";
 import { useCommsStore } from "@/store/comms";
 
-type PostAuthCallback = (session: Session) => void;
+type PostAuthCallback<T = any> = (session: Session) => Promise<T>;
 
 interface AuthState {
   session: Session;
-  postAuthCallbacks: Array<PostAuthCallback>;
+  postAuthCallbacks: Array<{
+    cb: PostAuthCallback;
+    resolve: (value: any | PromiseLike<any>) => void;
+  }>;
 }
 
 export const useAuthStore = defineStore("auth", {
@@ -60,7 +63,8 @@ export const useAuthStore = defineStore("auth", {
       return this.session;
     },
     async logout() {
-      await useAPI("/api/auth/logout", {
+      const { $api } = useNuxtApp();
+      await $api("/api/auth/logout", {
         method: "PUT",
       });
       this.setUserData({});
@@ -68,7 +72,8 @@ export const useAuthStore = defineStore("auth", {
       commsStore.disconnect();
     },
     async login(username: string, password: string): Promise<Session | null> {
-      const { data } = await useAPI<ResponseAPI>("/api/auth/login", {
+      const { $api } = useNuxtApp();
+      const data = await $api<ResponseAPI>("/api/auth/login", {
         method: "POST",
         body: {
           username,
@@ -76,11 +81,11 @@ export const useAuthStore = defineStore("auth", {
         },
       });
 
-      if (!data.value || !data.value.result) {
+      if (!data?.result) {
         throw new Error();
       }
 
-      const userData = this.setUserData(data.value.result);
+      const userData = this.setUserData(data.result);
       this.executePostAuth();
       return userData;
     },
@@ -89,7 +94,8 @@ export const useAuthStore = defineStore("auth", {
       email: string,
       password: string
     ): Promise<Session | null> {
-      const { data } = await useAPI<ResponseAPI>("/api/auth/register", {
+      const { $api } = useNuxtApp();
+      const data = await $api<ResponseAPI>("/api/auth/register", {
         method: "POST",
         body: {
           username,
@@ -98,22 +104,27 @@ export const useAuthStore = defineStore("auth", {
         },
       });
 
-      if (!data.value || !data.value.result) {
+      if (!data?.result) {
         throw new Error();
       }
 
-      return this.setUserData(data.value.result);
+      return this.setUserData(data.result);
     },
-    async addPostAuthCallback(callback: PostAuthCallback) {
+    async addPostAuthCallback<T>(callback: PostAuthCallback<T>) {
       if (typeof callback !== "function") {
         return;
       }
 
       if (this.authChecked) {
-        await callback(this.session);
-        return;
+        return await callback(this.session);
       }
-      this.postAuthCallbacks.push(callback);
+      const promise = new Promise<T>((resolve) => {
+        this.postAuthCallbacks.push({
+          cb: callback,
+          resolve,
+        });
+      });
+      return promise;
     },
     async executePostAuth() {
       if (!this.authChecked || !this.session.token) {
@@ -122,24 +133,26 @@ export const useAuthStore = defineStore("auth", {
       const commsStore = useCommsStore();
       commsStore.connect(this.session.token);
       for (let i = 0; i < this.postAuthCallbacks.length; i++) {
-        const cb = this.postAuthCallbacks[i];
+        const { cb, resolve } = this.postAuthCallbacks[i];
         if (typeof cb === "function") {
-          await cb(this.session);
+          const result = await cb(this.session);
+          resolve(result);
         }
       }
       this.postAuthCallbacks = [];
     },
     async me(): Promise<Session | null> {
+      const { $api } = useNuxtApp();
       try {
-        const { data } = await useAPI<ResponseAPI>("/api/auth/me", {
+        const data = await $api<ResponseAPI>("/api/auth/me", {
           method: "GET",
         });
 
-        if (!data.value || !data.value.result) {
+        if (!data?.result) {
           throw new Error();
         }
 
-        const userData = this.setUserData(data.value.result);
+        const userData = this.setUserData(data.result);
         this.executePostAuth();
         return userData;
       } catch (ex) {
