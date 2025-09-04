@@ -1,19 +1,3 @@
-import ChatTypes from "./enums/ChatTypes";
-import FieldTypes from "./enums/FieldTypes";
-import ShipItemType from "./enums/ShipItemType";
-import HubLinksTypes from "./enums/HubLinksTypes";
-import ConfigDimensionsTypes from "./enums/ConfigDimensionsTypes";
-import RTCalcInstructionsTypes from "./enums/RTCalcInstructionsTypes";
-
-export {
-  FieldTypes,
-  ShipItemType,
-  ChatTypes,
-  HubLinksTypes,
-  ConfigDimensionsTypes,
-  RTCalcInstructionsTypes,
-};
-
 import type ResponseAPI from "./REST/ResponseAPI";
 import type ResponseCreateUpdateAPI from "./REST/ResponseCreateUpdateAPI";
 import type ResponseEntityInfoAPI from "./REST/ResponseEntityInfoAPI";
@@ -27,7 +11,6 @@ import { type DBFilterSection } from "./types/DBFilterSection";
 
 import Vector2D from "./models/Vector2D";
 import ModelPropertyMetadata from "./models/ModelPropertyMetadata";
-import ModelPropertyMetadataTypes from "./enums/ModelPropertyMetadataTypes";
 import type KeyAndMetadata from "./interfaces/KeyAndMetadata";
 import type Metadata from "./interfaces/Metadata";
 
@@ -45,13 +28,7 @@ export {
 
 export { type DBLogical, type DBOperand, type DBFilterSection };
 
-export {
-  Vector2D,
-  ModelPropertyMetadata,
-  ModelPropertyMetadataTypes,
-  type KeyAndMetadata,
-  type Metadata,
-};
+export { Vector2D, ModelPropertyMetadata, type KeyAndMetadata, type Metadata };
 
 export { type HexCoordinates, type EntityInfo };
 
@@ -69,6 +46,7 @@ export default {
 
 export * from "./canvas";
 export * from "./utils";
+export * from "./enums";
 
 export * as CommsModels from "./comms";
 export * as RedisModels from "./redis";

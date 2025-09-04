@@ -482,6 +482,7 @@ CREATE TABLE
     `id` int unsigned NOT NULL AUTO_INCREMENT,
     `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `last_check` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `uuid` varchar(255) NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `rtcalc_instances_unique_uuid` (`uuid`)

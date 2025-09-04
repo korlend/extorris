@@ -109,10 +109,8 @@ export default class RedisConnector {
   }
 
   public async getActiveRTCalcInstances() {
-    const data = await this.client.LRANGE(
+    const data = await this.client.SMEMBERS(
       RedisModels.buildRedisKey(RedisModels.DataKeys.RTCALC_INSTANCES),
-      0,
-      -1,
     );
     return data;
   }

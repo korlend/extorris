@@ -18,11 +18,14 @@ export default class RTCalcInstanceModel extends DBModel<RTCalcInstanceModel> {
 
   @Immutable
   @FieldType(FieldTypes.DATE)
-  created?: Date = new Date();
+  created: Date = new Date();
 
   @Immutable
   @FieldType(FieldTypes.DATE)
-  updated?: Date = new Date();
+  updated: Date = new Date();
+
+  @FieldType(FieldTypes.DATE)
+  last_check: Date = new Date();
 
   parseObject(
     object: DBModelOnlyDBData<RTCalcInstanceModel>,
@@ -32,6 +35,7 @@ export default class RTCalcInstanceModel extends DBModel<RTCalcInstanceModel> {
     instance.uuid = object.uuid;
     instance.created = object.created;
     instance.updated = object.updated;
+    instance.last_check = object.last_check;
     return instance;
   }
 }

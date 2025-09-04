@@ -31,11 +31,7 @@
       :height="canvasHeight"
       @wheel="scrollEvent"
       @touchstart="dragStart"
-      @touchend="dragEnd"
-      @mousedown="dragStart"
-      @mouseup="dragEnd"
-      @touchmove="dragEvent"
-      @mousemove="dragEvent">
+      @mousedown="dragStart">
       <div>loading</div>
     </canvas>
   </div>
@@ -173,6 +169,10 @@ onMounted(() => {
 
   setWindowSizes();
   window.addEventListener("resize", windowResize);
+  window.addEventListener("touchend", dragEnd);
+  window.addEventListener("mouseup", dragEnd);
+  window.addEventListener("touchmove", dragEvent);
+  window.addEventListener("mousemove", dragEvent);
 
   if (props.centerOnRender) {
     snapToCenter();
@@ -189,6 +189,10 @@ onBeforeUnmount(() => {
   // window.removeEventListener("mousemove", dragEvent);
   // window.removeEventListener("touchmove", dragEvent);
   window.removeEventListener("resize", windowResize);
+  window.removeEventListener("touchend", dragEnd);
+  window.removeEventListener("mouseup", dragEnd);
+  window.removeEventListener("touchmove", dragEvent);
+  window.removeEventListener("mousemove", dragEvent);
 });
 
 const parentElementRect = computed(() => {
@@ -244,11 +248,11 @@ const canvasMousePosRelToMid = computed(() => {
   };
 });
 
-const globalActiveHoverStringify = computed(() => {
-  const activeHover = globalActiveHover.value;
+// const globalActiveHoverStringify = computed(() => {
+//   const activeHover = globalActiveHover.value;
 
-  return activeHover?.name;
-});
+//   return activeHover?.name;
+// });
 
 const canvasBlocksByZIndex = computed(
   (): Record<number, Array<CanvasBlock>> => {
@@ -667,8 +671,8 @@ const dragEvent = (event: MouseEvent | TouchEvent) => {
   event.preventDefault();
   let x, y;
   if (event instanceof MouseEvent) {
-    x = event.layerX;
-    y = event.layerY;
+    x = event.clientX;
+    y = event.clientY;
   } else if (event instanceof TouchEvent) {
     if (event.targetTouches.length === 1) {
       x = event?.touches?.[0].clientX;

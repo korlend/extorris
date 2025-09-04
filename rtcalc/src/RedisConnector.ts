@@ -23,6 +23,14 @@ export default class RedisConnector {
     return this.client;
   }
 
+  public get isOpen() {
+    return this.client.isOpen;
+  }
+
+  public get isReady() {
+    return this.client.isReady;
+  }
+
   public disconnect() {
     this.client.disconnect();
   }

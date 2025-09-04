@@ -4,8 +4,9 @@ import {
   type RedisClientType,
 } from "redis";
 
-import { RedisModels } from "extorris-common";
+import { ConfigDimensionsTypes, RedisModels } from "extorris-common";
 import {
+  ConfigDimensionsModel,
   MainMapHubModel,
   PortalModel,
   ShipArmorModel,
@@ -52,15 +53,6 @@ export default class RedisConnector {
 
     // @ts-expect-error
     return (RedisConnector.instance = new RedisConnector(client, config));
-  }
-
-  private buildUserSession(session: UserSessionModel): RedisModels.UserSession {
-    return {
-      id: session.id,
-      user_id: session.user_id,
-      token: session.token,
-      expire: session.expire,
-    };
   }
 
   public static buildActiveHub(
@@ -136,6 +128,30 @@ export default class RedisConnector {
     return shipData;
   }
 
+  public addActiveRTCalc(rtcalcUuid: string) {
+    return this.client.SADD(
+      RedisModels.buildRedisKey(RedisModels.DataKeys.RTCALC_INSTANCES),
+      rtcalcUuid,
+    );
+  }
+
+  public removeActiveRTCalc(rtcalcUuid: string) {
+    return this.client.SREM(
+      RedisModels.buildRedisKey(RedisModels.DataKeys.RTCALC_INSTANCES),
+      rtcalcUuid,
+    );
+  }
+
+  // #region user sessions
+  private buildUserSession(session: UserSessionModel): RedisModels.UserSession {
+    return {
+      id: session.id,
+      user_id: session.user_id,
+      token: session.token,
+      expire: session.expire,
+    };
+  }
+
   private addUserSession(session: RedisModels.UserSession) {
     return this.client.SET(
       RedisModels.buildRedisKey(
@@ -146,10 +162,12 @@ export default class RedisConnector {
     );
   }
 
-  public addActiveRTCalc(rtcalcUuid: string) {
-    return this.client.RPUSH(
-      RedisModels.buildRedisKey(RedisModels.DataKeys.RTCALC_INSTANCES),
-      rtcalcUuid,
+  public deleteUserSession(sessionToken: string) {
+    return this.client.DEL(
+      RedisModels.buildRedisKey(
+        RedisModels.DataKeys.USER_SESSIONS,
+        sessionToken,
+      ),
     );
   }
 
@@ -179,6 +197,60 @@ export default class RedisConnector {
       this.buildUserSession(data);
     this.addUserSession(redisUserSession);
   }
+
+  public async getUserSession(
+    sessionToken: string,
+  ): Promise<RedisModels.UserSession | null> {
+    const data = await this.client.GET(
+      RedisModels.buildRedisKey(
+        RedisModels.DataKeys.USER_SESSIONS,
+        sessionToken,
+      ),
+    );
+    if (!data) {
+      return null;
+    }
+    const parsedData = JSON.parse(data);
+    return parsedData;
+  }
+  // #endregion user sessions
+
+  // #region config dimensions
+  private addConfigDimensions(configDimension: ConfigDimensionsModel) {
+    if (!configDimension?.name) {
+      return null;
+    }
+    return this.client.SET(
+      RedisModels.buildRedisKey(
+        RedisModels.DataKeys.CONFIG_DIMENSIONS,
+        configDimension.name,
+      ),
+      configDimension.value,
+    );
+  }
+
+  public async writeConfigDimensions(
+    sessions: Array<ConfigDimensionsModel>,
+  ): Promise<void>;
+  public async writeConfigDimensions(session: ConfigDimensionsModel): Promise<void>;
+  public async writeConfigDimensions(
+    data: ConfigDimensionsModel | Array<ConfigDimensionsModel>,
+  ): Promise<void>;
+  public async writeConfigDimensions(
+    data: ConfigDimensionsModel | Array<ConfigDimensionsModel>,
+  ) {
+    if (data instanceof Array) {
+      const promises = [];
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        promises.push(this.addConfigDimensions(item));
+      }
+      await Promise.all(promises);
+      return;
+    }
+    this.addConfigDimensions(data);
+  }
+  // #endregion config dimensions
 
   public async writeShipData(
     ship: ShipModel,
@@ -237,31 +309,6 @@ export default class RedisConnector {
   ): Promise<RedisModels.ShipPosition | null> {
     const data = await this.client.GET(
       RedisModels.buildRedisKey(RedisModels.DataKeys.SHIP_POSITION, shipId),
-    );
-    if (!data) {
-      return null;
-    }
-    const parsedData = JSON.parse(data);
-    return parsedData;
-  }
-
-  public deleteUserSession(sessionToken: string) {
-    return this.client.DEL(
-      RedisModels.buildRedisKey(
-        RedisModels.DataKeys.USER_SESSIONS,
-        sessionToken,
-      ),
-    );
-  }
-
-  public async getUserSession(
-    sessionToken: string,
-  ): Promise<RedisModels.UserSession | null> {
-    const data = await this.client.GET(
-      RedisModels.buildRedisKey(
-        RedisModels.DataKeys.USER_SESSIONS,
-        sessionToken,
-      ),
     );
     if (!data) {
       return null;

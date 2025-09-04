@@ -9,8 +9,4 @@ export default class RTCalcInstanceHubService extends Service<
   constructor() {
     super(new RTCalcInstanceHubRepository());
   }
-
-  getRTCalcInstanceWithLeastHubs(): Promise<number | undefined> {
-    return this.repo.getRTCalcInstanceWithLeastHubs();
-  }
 }

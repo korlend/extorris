@@ -57,6 +57,7 @@ import {
   throttle,
   type CanvasBlock,
   ConfigDimensionsTypes,
+  HubEventTypes,
 } from "extorris-common";
 import { useCommsStore } from "~/store/comms";
 import { useConfigStore } from "~/store/config";
@@ -126,20 +127,31 @@ onMounted(async () => {
     });
 
     commsCallbackId = commsStore.addOnMessage((message) => {
-      if (
-        message.messageType === CommsModels.CommsTypesEnum.SHIP_POSITION_CHANGE
-      ) {
-        // console.log(message.data);
-        const data = message.data;
-        shipsInHub.value = data.ships;
-        let ship;
-        if (
-          (ship = data.ships.find((v) => v.id === currentUserShip.value.id))
-        ) {
-          // angleSlider.value = ship.angle;
-          // speedSlider.value = ship.speed;
+      switch (message.messageType) {
+        case CommsModels.CommsTypesEnum.SHIP_POSITION_CHANGE: {
+          // console.log(message.data);
+          const data = message.data;
+          shipsInHub.value = data.ships;
+          let ship;
+          if (
+            (ship = data.ships.find((v) => v.id === currentUserShip.value.id))
+          ) {
+            // angleSlider.value = ship.angle;
+            // speedSlider.value = ship.speed;
+          }
+          resetCanvasBlock();
+          break;
         }
-        resetCanvasBlock();
+        case CommsModels.CommsTypesEnum.HUB_EVENT: {
+          const data = message.data;
+          switch (data.type) {
+            case HubEventTypes.USER_CHANGED_HUB: {
+              switchHub(data.newHubId);
+              break;
+            }
+          }
+          break;
+        }
       }
     });
   }
@@ -229,8 +241,6 @@ const resetCanvasBlock = () => {
   const shipHeight = dimensions[ConfigDimensionsTypes.SHIP_DISPLAY_Y];
   const portalWidth = dimensions[ConfigDimensionsTypes.PORTAL_DISPLAY_X];
   const portalHeight = dimensions[ConfigDimensionsTypes.PORTAL_DISPLAY_Y];
-  const portalCollisionRadius =
-    dimensions[ConfigDimensionsTypes.SHIP_HOVER_RADIUS];
   const newCanvasBlocks: Array<CanvasBlock> = [];
 
   const hubId = getCurrentHub.value?.id;
@@ -293,12 +303,7 @@ const resetCanvasBlock = () => {
         cursor: CanvasCursors.POINTER,
       },
       clickCallback: () => {
-        router.replace({
-          name: "hub-id",
-          params: {
-            id: portal.toHubId,
-          },
-        });
+        switchHub(portal.toHubId);
       },
     });
   }
@@ -355,6 +360,15 @@ const resetCanvasBlock = () => {
   }
 
   canvasBlocks.value = newCanvasBlocks;
+};
+
+const switchHub = (hubId: number) => {
+  router.replace({
+    name: "hub-id",
+    params: {
+      id: hubId,
+    },
+  });
 };
 
 const getEllipse = (xRadius: number, yRadius: number): Path2D => {

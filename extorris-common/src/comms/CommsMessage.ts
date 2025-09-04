@@ -1,5 +1,7 @@
 import type CommsTypesEnum from "./CommsTypesEnum";
 import type CommsSourceEnum from "./CommsSourceEnum";
+import type { HubEventTypes } from "@/enums";
+import type { HubEvent } from "@/types/HubEvent";
 
 interface CommsIncMessageChat {
   fromWhere: CommsSourceEnum.USER_CLIENT;
@@ -45,7 +47,7 @@ interface CommsOutMessagePosition {
       hp: number;
       x: number;
       y: number;
-    }>,
+    }>;
     hubId: number;
     // portals: Array<any>
     // enemies: Array<any>
@@ -61,10 +63,26 @@ interface CommsIncMessageSubscribeToHub {
 
   data: {
     hubId: number;
-  },
+  };
 }
 
-type CommsIncMessage = CommsIncMessageChat | CommsIncMessagePosition | CommsIncMessageSubscribeToHub;
-type CommsOutMessage = CommsOutMessageChat | CommsOutMessagePosition;
+interface CommsOutMessageHubEvent {
+  fromWhere: CommsSourceEnum.COMMS_SERVICE;
+  messageType: CommsTypesEnum.HUB_EVENT;
+
+  data: HubEvent;
+}
+
+// messages from User to Comms
+type CommsIncMessage =
+  | CommsIncMessageChat
+  | CommsIncMessagePosition
+  | CommsIncMessageSubscribeToHub;
+
+// messages from Comms to User
+type CommsOutMessage =
+  | CommsOutMessageChat
+  | CommsOutMessagePosition
+  | CommsOutMessageHubEvent;
 
 export { type CommsIncMessage, type CommsOutMessage };

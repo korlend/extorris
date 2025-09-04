@@ -6,7 +6,6 @@ import SearchRequestData from "@src/models/SearchRequestData.js";
 import MainMapHubService from "@src/services/main_map/MainMapHubService.js";
 import ShipService from "@src/services/ship/ShipService.js";
 import { CronJob } from "cron";
-import { promises } from "dns";
 
 export default CronJob.from({
   cronTime: "*/10 * * * * *",

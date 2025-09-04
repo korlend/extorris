@@ -35,12 +35,17 @@ interface RTCalcInstructionReinitRtcalc {
   type: RTCalcInstructionsTypes.REINIT_RTCALC;
 }
 
+interface RTCalcInstructionCheckAlive {
+  type: RTCalcInstructionsTypes.CHECK_ALIVE;
+}
+
 type RTCalcInstructionData =
   | RTCalcInstructionEnlistActiveHub
   | RTCalcInstructionAddShipToHub
   | RTCalcInstructionRemoveShipFromHub
   | RTCalcInstructionChangeShipPosition
   | RTCalcInstructionShutdownRtcalc
-  | RTCalcInstructionReinitRtcalc;
+  | RTCalcInstructionReinitRtcalc
+  | RTCalcInstructionCheckAlive;
 
 export { type RTCalcInstructionData };

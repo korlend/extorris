@@ -14,6 +14,10 @@ export default class RTCalcInstanceService extends Service<
     super(new RTCalcInstanceRepository());
   }
 
+  getRTCalcInstanceWithLeastHubs(): Promise<number | undefined> {
+    return this.repo.getRTCalcInstanceWithLeastHubs();
+  }
+
   /**
    *
    * @param hubId
@@ -26,6 +30,7 @@ export default class RTCalcInstanceService extends Service<
       hubId,
     );
 
+    // is hub already assigned
     if (existingAssignment?.rtcalc_instance_id) {
       const rtCalcInstance = await this.get(
         existingAssignment?.rtcalc_instance_id,
@@ -33,14 +38,16 @@ export default class RTCalcInstanceService extends Service<
       return rtCalcInstance.uuid;
     }
 
-    const rtcalcIdWithLeastHubs =
-      await rtCalcInstanceHubService.getRTCalcInstanceWithLeastHubs();
+    // find rtcalc to assign hub to
+    const rtcalcIdWithLeastHubs = await this.getRTCalcInstanceWithLeastHubs();
 
+    // can't find rtcalc
     if (!rtcalcIdWithLeastHubs) {
       const firstRTCalcInstance = (await this.getAll(0, 1))?.[0];
       return firstRTCalcInstance?.uuid;
     }
 
+    // create assignment of hub to rtcalc
     const newAssignedRTCalcHub = new RTCalcInstanceHubModel();
     newAssignedRTCalcHub.main_map_hub_id = hubId;
     newAssignedRTCalcHub.rtcalc_instance_id = rtcalcIdWithLeastHubs;

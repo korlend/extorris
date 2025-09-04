@@ -16,16 +16,22 @@ const recalcTimeoutMS = 50;
 let cycleActive = true;
 let timesCalculated = 0;
 
-const calculatePositions = async (
-  uuid: string,
-  rabbitmq: RabbitMQConnector,
-  redis: RedisConnector,
-) => {
+let lastCheckAlive: Date | undefined;
+
+const globalUUID: string = uuidv4();
+let rabbitmq: RabbitMQConnector;
+let redis: RedisConnector;
+
+const calculatePositions = async () => {
+  const uuid = globalUUID;
+  const now = new Date();
+  if (lastCheckAlive && now.getTime() - lastCheckAlive.getTime() > 10000) {
+    await declareRTCalcService(uuid, rabbitmq);
+    lastCheckAlive = now;
+  }
+
   if (!cycleActive) {
-    setTimeout(
-      () => calculatePositions(uuid, rabbitmq, redis),
-      recalcTimeoutMS,
-    );
+    setTimeout(() => calculatePositions(), recalcTimeoutMS);
     return;
   }
 
@@ -110,7 +116,7 @@ const calculatePositions = async (
     }
   }
   timesCalculated++;
-  setTimeout(() => calculatePositions(uuid, rabbitmq, redis), recalcTimeoutMS);
+  setTimeout(() => calculatePositions(), recalcTimeoutMS);
 };
 
 const readInstructions = async (uuid: string, redis: RedisConnector) => {
@@ -202,43 +208,60 @@ const executeInstruction = async (
     }
 
     case RTCalcInstructionsTypes.REINIT_RTCALC: {
-      await declareRTCalcService(rabbitmq);
+      await declareRTCalcService(uuid, rabbitmq);
       console.log(`instruction ${instruction.type} executed`);
+      break;
+    }
+
+    case RTCalcInstructionsTypes.CHECK_ALIVE: {
+      lastCheckAlive = new Date();
+      await checkAliveRTCalc(uuid, rabbitmq);
       break;
     }
   }
 };
 
-const declareRTCalcService = async (rabbitmq: RabbitMQConnector) => {
-  const uuid = uuidv4();
+const declareRTCalcService = async (
+  uuid: string,
+  rabbitmq: RabbitMQConnector,
+) => {
   await rabbitmq.enqueueMessage(RabbitMQModels.RabbitMQKeys.DECLARE_RTCALC, {
     uuid,
   });
-  return uuid;
+};
+
+const checkAliveRTCalc = async (uuid: string, rabbitmq: RabbitMQConnector) => {
+  await rabbitmq.enqueueMessage(
+    RabbitMQModels.RabbitMQKeys.RTCALC_CHECK_ALIVE,
+    {
+      uuid,
+    },
+  );
 };
 
 async function init() {
   const rabbitAddress = process.env.RABBITMQ || "amqp://localhost:5672";
-  const rabbitmq = await RabbitMQConnector.getInstance(rabbitAddress);
+  const localRabbitmq = await RabbitMQConnector.getInstance(rabbitAddress);
 
-  if (!rabbitmq) {
+  if (!localRabbitmq) {
     console.error(`Rabbit in ${rabbitAddress} unavailable, can't start`);
     return;
   }
+  rabbitmq = localRabbitmq;
 
   const redisAddress = process.env.REDIS || "redis://127.0.0.1:6379";
-  const redis = await RedisConnector.getInstance({
+  redis = await RedisConnector.getInstance({
     url: redisAddress,
   });
 
-  if (!redis) {
+  if (!redis.isReady) {
     console.error(`Redis in ${redisAddress} unavailable, can't start`);
     return;
   }
 
-  const uuid = await declareRTCalcService(rabbitmq);
+  await declareRTCalcService(globalUUID, rabbitmq);
 
-  calculatePositions(uuid, rabbitmq, redis);
+  calculatePositions();
 }
 
 export const app = await init();

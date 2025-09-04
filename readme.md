@@ -1,10 +1,7 @@
 ## Description
 
-This repository by no means the template of how you should do things.
-For backend there is no ORM (like TypeORM or sequalize) usage or some beautiful Node frameworks like Nest, it's just a convoluted self implementation of Service/Repository/Model with strong typization and annotations usage on models.
-
-At top level there is an attempt to make some code shareable between Frontend and Backend services, which is not fully implemented.
-Currently I'm thinking how to solve my d.ts file containing duplicates of some types with "_2" in the end.
+A game where you fly around between zones, connected by portals.
+In the future versions: destroy monsters, upgrade your ship, build your town in home island.
 
 Beware of console.logs and TODOs.
 

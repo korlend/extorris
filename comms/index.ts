@@ -90,6 +90,21 @@ async function init() {
     },
   );
 
+  rabbitmq?.setDequeueCallback(
+    RabbitMQModels.RabbitMQKeys.NOTIFY_USER_OF_HUB_EVENT,
+    (message) => {
+      console.log("dequeuing message for chat", message);
+      wsServer.send(
+        {
+          fromWhere: CommsModels.CommsSourceEnum.COMMS_SERVICE,
+          messageType: CommsModels.CommsTypesEnum.HUB_EVENT,
+          data: message.data,
+        },
+        message.userIds,
+      );
+    },
+  );
+
   wsServer.setOnMessage(async (ws, message, userId) => {
     if (
       message.fromWhere === CommsModels.CommsSourceEnum.USER_CLIENT &&

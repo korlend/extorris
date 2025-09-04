@@ -27,12 +27,9 @@ import {
   redisDataInit,
   cronJobsInit,
 } from "@src/initialization/startup.js";
-import ExpressResponseTypes from "@src/enums/ExpressResponseTypes.js";
-import ExpressResponseGenerator from "@src/core/router/ExpressResponseGenerator.js";
 import RedisConnector from "@src/core/RedisConnector.js";
 import RabbitMQConnector from "@src/core/RabbitMQConnector.js";
-import { CommsModels, RabbitMQModels } from "extorris-common";
-import UserService from "@src/services/user/UserService.js";
+import { RabbitMQModels } from "extorris-common";
 import ChatService from "@src/services/chat/ChatService.js";
 import RTCalcInstanceService from "@src/services/rtcalc/RTCalcInstanceService.js";
 import ShipService from "@src/services/ship/ShipService.js";
@@ -85,9 +82,6 @@ async function init(): Promise<express.Express> {
   rabbitmq?.setDequeueCallback(
     RabbitMQModels.RabbitMQKeys.USER_SENT_CHAT_MESSAGES,
     (message) => {
-      console.log(
-        `user ${message.userId} sent msg ${message.message} to chat ${message.chatId}`,
-      );
       try {
         const chatService = new ChatService();
         chatService.userSentMessage(
@@ -104,9 +98,6 @@ async function init(): Promise<express.Express> {
   rabbitmq?.setDequeueCallback(
     RabbitMQModels.RabbitMQKeys.SHIP_ENTER_PORTAL,
     async (message) => {
-      console.log(
-        `ship: ${message.shipId}, entered portal: ${message.portalId}`,
-      );
       const shipService = new ShipService();
       try {
         await shipService.shipEnteredPortal(
@@ -123,12 +114,34 @@ async function init(): Promise<express.Express> {
   rabbitmq?.setDequeueCallback(
     RabbitMQModels.RabbitMQKeys.DECLARE_RTCALC,
     async (message) => {
-      console.log(`rtcalc instance declared: ${message.uuid}`);
       try {
         const rtcalcInstanceService = new RTCalcInstanceService();
-        await rtcalcInstanceService.createNewRTCalcInstance(message.uuid);
+        const existingRtcalc = await rtcalcInstanceService.getBy("uuid", message.uuid)
+        if (!existingRtcalc) {
+          await rtcalcInstanceService.createNewRTCalcInstance(message.uuid);
+        } else {
+          existingRtcalc.last_check = new Date();
+          await rtcalcInstanceService.update(existingRtcalc);
+        }
         const redisConnector = await RedisConnector.getInstance();
         await redisConnector.addActiveRTCalc(message.uuid);
+      } catch (ex) {
+        console.error(ex);
+      }
+    },
+  );
+
+  rabbitmq?.setDequeueCallback(
+    RabbitMQModels.RabbitMQKeys.RTCALC_CHECK_ALIVE,
+    async (message) => {
+      try {
+        const rtcalcInstanceService = new RTCalcInstanceService();
+        const rtcalcInstance = await rtcalcInstanceService.getBy(
+          "uuid",
+          message.uuid,
+        );
+        rtcalcInstance.last_check = new Date();
+        await rtcalcInstanceService.update(rtcalcInstance);
       } catch (ex) {
         console.error(ex);
       }

@@ -30,10 +30,13 @@ import MainMapHubService from "../main_map/MainMapHubService.js";
 import UserIslandService from "../UserIslandService.js";
 import {
   ConfigDimensionsTypes,
+  HubEventTypes,
+  RabbitMQModels,
   RTCalcInstructionsTypes,
 } from "extorris-common";
 import ConfigDimensionsService from "../ConfigDimensionsService.js";
 import PortalService from "../main_map/PortalService.js";
+import RabbitMQConnector from "@src/core/RabbitMQConnector.js";
 
 export default class ShipService extends Service<ShipModel, ShipRepository> {
   constructor() {
@@ -243,11 +246,6 @@ export default class ShipService extends Service<ShipModel, ShipRepository> {
       throw new PropagatedError(ExpressResponseTypes.ERROR, "user has no ship");
     }
 
-    // in case "entering portal" event is duplicated
-    if (userShip.main_map_hub_id === fromHubId) {
-      return null;
-    }
-
     const enteredPortal = await portalService.get(portalId);
     const fromHub = await hubService.get(fromHubId);
 
@@ -268,17 +266,22 @@ export default class ShipService extends Service<ShipModel, ShipRepository> {
       inPortalHubId = enteredPortal.to_hub_id;
     }
 
+    // in case "entering portal" event is duplicated
+    if (userShip.main_map_hub_id === outPortalHubId) {
+      return null;
+    }
+
     if (!outPortalHubId) {
       throw new PropagatedError(
         ExpressResponseTypes.ERROR,
-        `During ship entering portal, OUT portal is not assigned at portal id: ${portalId}`,
+        `During ship entering portal, OUT hub is not assigned at portal id: ${portalId}`,
       );
     }
 
     if (!inPortalHubId) {
       throw new PropagatedError(
         ExpressResponseTypes.ERROR,
-        `During ship entering portal, IN portal is not assigned at portal id: ${portalId}`,
+        `During ship entering portal, IN hub is not assigned at portal id: ${portalId}`,
       );
     }
 
@@ -297,6 +300,7 @@ export default class ShipService extends Service<ShipModel, ShipRepository> {
     userShip.main_map_hub_id = outPortalHubId;
 
     const redis = await RedisConnector.getInstance();
+    const rabbitmq = await RabbitMQConnector.getInstance();
 
     const newRtcalcUuid =
       await hubService.writeActiveHubToRedis(outPortalHubId);
@@ -335,6 +339,18 @@ export default class ShipService extends Service<ShipModel, ShipRepository> {
       newPosX: userShip.x,
       newPosY: userShip.y,
     });
+    if (rabbitmq) {
+      rabbitmq.enqueueMessage(
+        RabbitMQModels.RabbitMQKeys.NOTIFY_USER_OF_HUB_EVENT,
+        {
+          data: {
+            type: HubEventTypes.USER_CHANGED_HUB,
+            newHubId: outPortalHubId,
+          },
+          userIds: [userId],
+        },
+      );
+    }
 
     return userShip;
   }

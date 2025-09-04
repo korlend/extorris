@@ -1,9 +1,14 @@
+import type { ConfigDimensionsTypes } from "@/enums";
 import { exhaustiveCheck } from "../utils";
 import DataKeys from "./DataKeys";
 
 function buildRedisKey(
   key: DataKeys.USER_SESSIONS,
   sessionToken: string
+): string;
+function buildRedisKey(
+  key: DataKeys.CONFIG_DIMENSIONS,
+  type: ConfigDimensionsTypes
 ): string;
 function buildRedisKey(
   key: DataKeys.ACTIVE_HUBS_SET,
@@ -25,6 +30,8 @@ function buildRedisKey(key: DataKeys.RTCALC_INSTANCES): string;
 function buildRedisKey(key: DataKeys, data?: string | number): string {
   switch (key) {
     case DataKeys.USER_SESSIONS:
+      return `${key}:${data}`;
+    case DataKeys.CONFIG_DIMENSIONS:
       return `${key}:${data}`;
     case DataKeys.SHIP_DATA:
       return `${key}:${data}`;
