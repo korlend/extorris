@@ -178,7 +178,7 @@ const executeInstruction = async (
         break;
       }
       const newShipIds = targetHub.shipIds.filter(
-        (shipId) => shipId === instruction.shipId,
+        (shipId) => shipId !== instruction.shipId,
       );
       targetHub.shipIds = newShipIds;
       await redis.writeActiveHub(uuid, targetHub);
