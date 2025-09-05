@@ -133,12 +133,24 @@ export default class NodeWSServer {
     if (!this.hubSubscribedUsersIds[hubId]) {
       this.hubSubscribedUsersIds[hubId] = new Set([userId]);
     } else {
+      this.deleteHubSubscribe(userId);
       this.hubSubscribedUsersIds[hubId].add(userId);
     }
-    console.log("SET of hubSubscribedUsersIds", this.hubSubscribedUsersIds, this.hubSubscribedUsersIds[hubId])
+    console.log(
+      "SET of hubSubscribedUsersIds",
+      this.hubSubscribedUsersIds,
+      this.hubSubscribedUsersIds[hubId],
+    );
   }
 
-  private deleteHubSubscribe(userId: number, hubId: number) {
+  private deleteHubSubscribe(userId: number, hubId?: number) {
+    if (!hubId) {
+      const hubIds = Object.keys(this.hubSubscribedUsersIds);
+      for (let i = 0; i < hubIds.length; i++) {
+        this.deleteHubSubscribe(userId, parseInt(hubIds[i]));
+      }
+      return;
+    }
     if (this.hubSubscribedUsersIds[hubId]) {
       this.hubSubscribedUsersIds[hubId].delete(userId);
     }
@@ -186,6 +198,7 @@ export default class NodeWSServer {
     }
     userSet.forEach((userId) => {
       this.sendUserMessage(message, this.userMappedWebSockets[userId], () => {
+        // on fail
         this.deleteHubSubscribe(userId, hubId);
       });
     });
